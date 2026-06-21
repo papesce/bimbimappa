@@ -1,0 +1,47 @@
+import { MapPin, ExternalLink, Trash2 } from 'lucide-react'
+
+export default function PlacesList({ places, onDelete }) {
+  if (places.length === 0) {
+    return (
+      <div className="empty-state">
+        <MapPin size={32} strokeWidth={1.5} />
+        <p>No places saved yet.</p>
+        <p className="empty-sub">Tap "Add place" to drop the first pin.</p>
+      </div>
+    )
+  }
+
+  return (
+    <ul className="places-list">
+      {places.map((place) => (
+        <li key={place.id} className="place-card">
+          <div className="place-card-body">
+            <p className="place-name">{place.name}</p>
+            <p className="place-address">{place.address}</p>
+            {place.notes && <p className="place-notes">"{place.notes}"</p>}
+          </div>
+          <div className="place-card-actions">
+            {place.source_url && (
+              <a
+                href={place.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="action-link"
+                title="View source"
+              >
+                <ExternalLink size={14} />
+              </a>
+            )}
+            <button
+              className="action-btn danger"
+              onClick={() => onDelete(place.id)}
+              title="Remove"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        </li>
+      ))}
+    </ul>
+  )
+}
