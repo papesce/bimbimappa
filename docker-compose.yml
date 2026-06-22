@@ -1,0 +1,11 @@
+services:
+  app:
+    build:
+      context: .
+      args:
+        VITE_SUPABASE_URL: ${VITE_SUPABASE_URL}
+        VITE_SUPABASE_ANON_KEY: ${VITE_SUPABASE_ANON_KEY}
+        VITE_GOOGLE_PLACES_API_KEY: ${VITE_GOOGLE_PLACES_API_KEY}
+        VITE_HOUSEHOLD_TOKEN: ${VITE_HOUSEHOLD_TOKEN}
+    ports:
+      - "8080:8080"
