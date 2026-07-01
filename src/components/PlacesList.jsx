@@ -1,6 +1,6 @@
-import { MapPin, ExternalLink, Trash2 } from 'lucide-react'
+import { MapPin, ExternalLink, Trash2, Pencil } from 'lucide-react'
 
-export default function PlacesList({ places, onDelete }) {
+export default function PlacesList({ places, onDelete, onEdit }) {
   if (places.length === 0) {
     return (
       <div className="empty-state">
@@ -32,6 +32,13 @@ export default function PlacesList({ places, onDelete }) {
                 <ExternalLink size={14} />
               </a>
             )}
+            <button
+              className="action-btn"
+              onClick={() => onEdit(place)}
+              title="Edit"
+            >
+              <Pencil size={14} />
+            </button>
             <button
               className="action-btn danger"
               onClick={() => onDelete(place.id)}

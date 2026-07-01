@@ -1,7 +1,7 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Trash2, ExternalLink } from 'lucide-react'
+import { Trash2, ExternalLink, Pencil } from 'lucide-react'
 
 // Fix Leaflet's broken default icon paths in Vite
 delete L.Icon.Default.prototype._getIconUrl
@@ -27,7 +27,7 @@ const customIcon = L.divIcon({
   popupAnchor: [0, -36],
 })
 
-export default function Map({ places, onDelete }) {
+export default function Map({ places, onDelete, onEdit }) {
   // Default center: Buenos Aires. Will auto-fit if places exist.
   const defaultCenter = [-34.6037, -58.3816]
   const defaultZoom = places.length === 0 ? 5 : 10
@@ -74,6 +74,12 @@ export default function Map({ places, onDelete }) {
                     <ExternalLink size={12} /> Source
                   </a>
                 )}
+                <button
+                  onClick={() => onEdit(place)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
+                >
+                  <Pencil size={12} /> Edit
+                </button>
                 <button
                   onClick={() => onDelete(place.id)}
                   style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#999', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}

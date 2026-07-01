@@ -10,8 +10,9 @@ import './index.css'
 
 export default function App() {
   const { authed } = useAuth()
-  const { places, loading, addPlace, deletePlace } = usePlaces()
+  const { places, loading, addPlace, deletePlace, updatePlace } = usePlaces()
   const [panel, setPanel] = useState(null) // null | 'add' | 'list'
+  const [editingPlace, setEditingPlace] = useState(null)
 
   if (!authed) return <AccessDenied />
 
@@ -20,7 +21,7 @@ export default function App() {
       {/* Map fills the screen */}
       <div className="map-wrapper">
         {!loading && (
-          <Map places={places} onDelete={deletePlace} />
+          <Map places={places} onDelete={deletePlace} onEdit={setEditingPlace} />
         )}
       </div>
 
@@ -48,15 +49,16 @@ export default function App() {
       </header>
 
       {/* Sliding side panel */}
-      {panel && (
+      {(panel || editingPlace) && (
         <aside className="side-panel">
-          {panel === 'add' && (
+          {panel === 'add' && !editingPlace && (
             <AddPlacePanel
+              key="add"
               onAdd={addPlace}
               onClose={() => setPanel(null)}
             />
           )}
-          {panel === 'list' && (
+          {panel === 'list' && !editingPlace && (
             <div className="panel">
               <div className="panel-header">
                 <h2>Saved places</h2>
@@ -64,8 +66,16 @@ export default function App() {
                   <X size={18} />
                 </button>
               </div>
-              <PlacesList places={places} onDelete={deletePlace} />
+              <PlacesList places={places} onDelete={deletePlace} onEdit={setEditingPlace} />
             </div>
+          )}
+          {editingPlace && (
+            <AddPlacePanel
+              key={editingPlace.id}
+              editPlace={editingPlace}
+              onUpdate={updatePlace}
+              onClose={() => { setEditingPlace(null); setPanel(null) }}
+            />
           )}
         </aside>
       )}

@@ -1,15 +1,18 @@
 import { useState } from 'react'
-import { MapPin, Link, StickyNote, Search, Loader, X } from 'lucide-react'
+import { MapPin, Link, StickyNote, Search, Loader, X, Pencil } from 'lucide-react'
 import { geocodePlace } from '../lib/geocode'
 
-export default function AddPlacePanel({ onAdd, onClose }) {
-  const [name, setName] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [notes, setNotes] = useState('')
-  const [sourceUrl, setSourceUrl] = useState('')
+export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
+  const isEditing = !!editPlace
+  const [name, setName] = useState(editPlace?.name || '')
+  const [searchQuery, setSearchQuery] = useState(editPlace?.address || '')
+  const [notes, setNotes] = useState(editPlace?.notes || '')
+  const [sourceUrl, setSourceUrl] = useState(editPlace?.source_url || '')
   const [status, setStatus] = useState('idle') // idle | searching | saving | error
   const [errorMsg, setErrorMsg] = useState('')
-  const [resolved, setResolved] = useState(null) // { lat, lng, formattedAddress }
+  const [resolved, setResolved] = useState(
+    editPlace ? { lat: editPlace.lat, lng: editPlace.lng, formattedAddress: editPlace.address } : null
+  )
 
   async function handleSearch(e) {
     e.preventDefault()
@@ -36,15 +39,21 @@ export default function AddPlacePanel({ onAdd, onClose }) {
 
     setStatus('saving')
     try {
-      await onAdd({
+      const data = {
         name: name.trim(),
         address: resolved.formattedAddress,
         lat: resolved.lat,
         lng: resolved.lng,
         notes: notes.trim(),
-        sourceUrl: sourceUrl.trim(),
-      })
-      // Reset
+        source_url: sourceUrl.trim(),
+      }
+
+      if (isEditing) {
+        await onUpdate(editPlace.id, data)
+      } else {
+        await onAdd({ ...data, sourceUrl: sourceUrl.trim() })
+      }
+
       setName('')
       setSearchQuery('')
       setNotes('')
@@ -61,7 +70,7 @@ export default function AddPlacePanel({ onAdd, onClose }) {
   return (
     <div className="panel">
       <div className="panel-header">
-        <h2>Add a place</h2>
+        <h2>{isEditing ? 'Edit place' : 'Add a place'}</h2>
         <button className="icon-btn" onClick={onClose} aria-label="Close">
           <X size={18} />
         </button>
@@ -70,7 +79,7 @@ export default function AddPlacePanel({ onAdd, onClose }) {
       {/* Step 1: find the location */}
       <form onSubmit={handleSearch} className="field-group">
         <label className="field-label">
-          <Search size={14} /> Search address or place name
+          <Search size={14} /> {isEditing ? 'Change address or location' : 'Search address or place name'}
         </label>
         <div className="input-row">
           <input
@@ -136,9 +145,9 @@ export default function AddPlacePanel({ onAdd, onClose }) {
           style={{ marginTop: '16px' }}
         >
           {status === 'saving' ? (
-            <><Loader size={14} className="spin" /> Saving…</>
+            <><Loader size={14} className="spin" /> {isEditing ? 'Updating…' : 'Saving…'}</>
           ) : (
-            'Save to map'
+            <>{isEditing ? <Pencil size={14} /> : <MapPin size={14} />} {isEditing ? 'Update' : 'Save to map'}</>
           )}
         </button>
       </form>

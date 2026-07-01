@@ -24,3 +24,6 @@ create policy "Public insert" on places
 
 create policy "Public delete" on places
   for delete using (true);
+
+create policy "Public update" on places
+  for update using (true);
