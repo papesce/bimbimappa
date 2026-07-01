@@ -59,11 +59,11 @@ export function usePlaces() {
       .update(updates)
       .eq('id', id)
       .select()
-      .single()
 
     if (error) throw new Error(error.message)
-    setPlaces((prev) => prev.map((p) => (p.id === id ? data : p)))
-    return data
+    if (!data || data.length === 0) throw new Error('Update failed — check that the UPDATE RLS policy is applied in Supabase')
+    setPlaces((prev) => prev.map((p) => (p.id === id ? data[0] : p)))
+    return data[0]
   }
 
   return { places, loading, error, addPlace, deletePlace, updatePlace, refetch: fetchPlaces }
