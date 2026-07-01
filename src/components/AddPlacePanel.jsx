@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MapPin, Link, StickyNote, Search, Loader, X, Pencil } from 'lucide-react'
+import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar } from 'lucide-react'
 import { geocodePlace } from '../lib/geocode'
 
 export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
@@ -8,6 +8,8 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
   const [searchQuery, setSearchQuery] = useState(editPlace?.address || '')
   const [notes, setNotes] = useState(editPlace?.notes || '')
   const [sourceUrl, setSourceUrl] = useState(editPlace?.source_url || '')
+  const [dateFrom, setDateFrom] = useState(editPlace?.date_from || '')
+  const [dateTo, setDateTo] = useState(editPlace?.date_to || '')
   const [status, setStatus] = useState('idle') // idle | searching | saving | error
   const [errorMsg, setErrorMsg] = useState('')
   const [resolved, setResolved] = useState(
@@ -46,6 +48,8 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
         lng: resolved.lng,
         notes: notes.trim(),
         source_url: sourceUrl.trim(),
+        date_from: dateFrom || null,
+        date_to: dateTo || null,
       }
 
       if (isEditing) {
@@ -124,6 +128,36 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
           onChange={(e) => setSourceUrl(e.target.value)}
           type="url"
         />
+
+        <label className="field-label" style={{ marginTop: '12px' }}>
+          <Calendar size={14} /> Date <span className="optional">(optional — single day or range)</span>
+        </label>
+        <div className="input-row">
+          <input
+            className="input"
+            type="date"
+            value={dateFrom}
+            onChange={e => setDateFrom(e.target.value)}
+            aria-label="From date"
+          />
+          <input
+            className="input"
+            type="date"
+            value={dateTo}
+            onChange={e => setDateTo(e.target.value)}
+            aria-label="To date"
+          />
+          {(dateFrom || dateTo) && (
+            <button
+              className="action-btn"
+              type="button"
+              onClick={() => { setDateFrom(''); setDateTo('') }}
+              title="Clear dates"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
 
         <label className="field-label" style={{ marginTop: '12px' }}>
           <StickyNote size={14} /> Notes <span className="optional">(optional)</span>

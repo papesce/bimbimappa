@@ -8,14 +8,25 @@ import { usePlaces } from './hooks/usePlaces'
 import { useAuth } from './hooks/useAuth'
 import './index.css'
 
-function getFilterStart(filter) {
+function getFilterRange(filter) {
   const now = new Date()
+  const year = now.getFullYear()
+  const month = now.getMonth()
+
   if (filter === 'all') return null
-  if (filter === 'month') return new Date(now.getFullYear(), now.getMonth(), 1)
-  if (filter === 'week') {
-    const daysSinceMonday = (now.getDay() + 6) % 7
-    return new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceMonday)
+
+  if (filter === 'month') {
+    return {
+      start: new Date(year, month, 1),
+      end: new Date(year, month + 1, 0, 23, 59, 59, 999),
+    }
   }
+
+  // week (Mon–Sun)
+  const daysSinceMonday = (now.getDay() + 6) % 7
+  const monday = new Date(year, month, now.getDate() - daysSinceMonday)
+  const sunday = new Date(year, month, now.getDate() - daysSinceMonday + 6, 23, 59, 59, 999)
+  return { start: monday, end: sunday }
 }
 
 export default function App() {
@@ -25,9 +36,16 @@ export default function App() {
   const [editingPlace, setEditingPlace] = useState(null)
   const [filter, setFilter] = useState('all')
 
-  const filterStart = getFilterStart(filter)
-  const filteredPlaces = filterStart
-    ? places.filter(p => new Date(p.created_at) >= filterStart)
+  const filterRange = getFilterRange(filter)
+  const filteredPlaces = filterRange
+    ? places.filter(p => {
+        if (!p.date_from) return false
+        const [fy, fm, fd] = p.date_from.split('-').map(Number)
+        const from = new Date(fy, fm - 1, fd)
+        const [ty, tm, td] = (p.date_to || p.date_from).split('-').map(Number)
+        const to = new Date(ty, tm - 1, td, 23, 59, 59, 999)
+        return to >= filterRange.start && from <= filterRange.end
+      })
     : places
 
   if (!authed) return <AccessDenied />

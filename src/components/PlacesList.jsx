@@ -26,6 +26,14 @@ export default function PlacesList({ places, onDelete, onEdit, activeFilter }) {
           <div className="place-card-body">
             <p className="place-name">{place.name}</p>
             <p className="place-address">{place.address}</p>
+            {place.date_from && (
+              <p className="place-date">
+                {new Date(place.date_from + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                {place.date_to && place.date_to !== place.date_from
+                  ? `–${new Date(place.date_to + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                  : ''}
+              </p>
+            )}
             {place.notes && <p className="place-notes">"{place.notes}"</p>}
           </div>
           <div className="place-card-actions">

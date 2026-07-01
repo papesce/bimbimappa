@@ -286,6 +286,13 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   margin-top: 2px;
 }
 
+.place-date {
+  font-size: 12px;
+  color: var(--coral);
+  margin-top: 4px;
+  font-weight: 600;
+}
+
 .place-notes {
   font-size: 12px;
   color: var(--text);

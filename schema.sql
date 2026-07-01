@@ -9,6 +9,8 @@ create table if not exists places (
   lng         double precision not null,
   notes       text,
   source_url  text,
+  date_from   date,
+  date_to     date,
   created_at  timestamptz default now()
 );
 
