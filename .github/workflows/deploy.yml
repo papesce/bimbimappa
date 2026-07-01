@@ -24,6 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Auto-tag version
+        id: tag
         run: |
           LATEST_TAG=$(git tag --list 'v*' --sort=-version:refname | head -n1)
           if [ -z "$LATEST_TAG" ]; then
@@ -37,6 +38,7 @@ jobs:
           fi
           git tag "$NEW_TAG"
           git push origin "$NEW_TAG"
+          echo "version=$NEW_TAG" >> "$GITHUB_OUTPUT"
 
       - id: auth
         uses: google-github-actions/auth@v2
@@ -54,6 +56,7 @@ jobs:
             --build-arg VITE_SUPABASE_ANON_KEY="${{ secrets.VITE_SUPABASE_ANON_KEY }}" \
             --build-arg VITE_GOOGLE_PLACES_API_KEY="${{ secrets.VITE_GOOGLE_PLACES_API_KEY }}" \
             --build-arg VITE_HOUSEHOLD_TOKEN="${{ secrets.VITE_HOUSEHOLD_TOKEN }}" \
+            --build-arg VITE_APP_VERSION="${{ steps.tag.outputs.version }}" \
             -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }} \
             -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:latest \
             .

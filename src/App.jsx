@@ -30,6 +30,9 @@ export default function App() {
         <div className="topbar-brand">
           <MapPin size={18} strokeWidth={2.5} />
           <span>Family Fun Map</span>
+          {import.meta.env.VITE_APP_VERSION && (
+            <span className="version-badge">{import.meta.env.VITE_APP_VERSION}</span>
+          )}
         </div>
         <div className="topbar-actions">
           <span className="pin-count">{places.length} {places.length === 1 ? 'place' : 'places'}</span>

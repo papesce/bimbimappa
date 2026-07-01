@@ -56,6 +56,16 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   letter-spacing: -0.02em;
 }
 
+.version-badge {
+  font-size: 10px;
+  font-weight: 500;
+  color: var(--sub);
+  background: var(--mist);
+  padding: 1px 6px;
+  border-radius: 4px;
+  letter-spacing: normal;
+}
+
 .topbar-actions {
   display: flex;
   align-items: center;
