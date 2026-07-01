@@ -1,12 +1,20 @@
 import { MapPin, ExternalLink, Trash2, Pencil } from 'lucide-react'
 
-export default function PlacesList({ places, onDelete, onEdit }) {
+export default function PlacesList({ places, onDelete, onEdit, activeFilter }) {
   if (places.length === 0) {
+    const messages = {
+      week: 'No places added this week.',
+      month: 'No places added this month.',
+    }
     return (
       <div className="empty-state">
         <MapPin size={32} strokeWidth={1.5} />
-        <p>No places saved yet.</p>
-        <p className="empty-sub">Tap "Add place" to drop the first pin.</p>
+        <p>{messages[activeFilter] || 'No places saved yet.'}</p>
+        <p className="empty-sub">
+          {activeFilter && activeFilter !== 'all'
+            ? 'Try switching to "All" to see everything.'
+            : 'Tap "Add place" to drop the first pin.'}
+        </p>
       </div>
     )
   }
@@ -41,7 +49,9 @@ export default function PlacesList({ places, onDelete, onEdit }) {
             </button>
             <button
               className="action-btn danger"
-              onClick={() => onDelete(place.id)}
+              onClick={() => {
+                if (window.confirm(`Remove "${place.name}"?`)) onDelete(place.id)
+              }}
               title="Remove"
             >
               <Trash2 size={14} />

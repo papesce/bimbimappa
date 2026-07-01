@@ -365,6 +365,37 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 @keyframes spin { to { transform: rotate(360deg); } }
 .spin { animation: spin 0.8s linear infinite; }
 
+/* ─── Filter pills ──────────────────────────────────────────────── */
+.filter-bar {
+  display: flex;
+  gap: 4px;
+}
+
+.filter-pill {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  border: 1.5px solid var(--border);
+  border-radius: 20px;
+  background: white;
+  color: var(--sub);
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+
+.filter-pill:hover {
+  border-color: var(--coral);
+  color: var(--coral);
+}
+
+.filter-pill.active {
+  background: var(--coral);
+  color: white;
+  border-color: var(--coral);
+}
+
 /* ─── Mobile ────────────────────────────────────────────────────── */
 @media (max-width: 480px) {
   .side-panel { width: 100vw; }

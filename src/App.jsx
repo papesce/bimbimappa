@@ -8,24 +8,44 @@ import { usePlaces } from './hooks/usePlaces'
 import { useAuth } from './hooks/useAuth'
 import './index.css'
 
+function getFilterStart(filter) {
+  const now = new Date()
+  if (filter === 'all') return null
+  if (filter === 'month') return new Date(now.getFullYear(), now.getMonth(), 1)
+  if (filter === 'week') {
+    const daysSinceMonday = (now.getDay() + 6) % 7
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate() - daysSinceMonday)
+  }
+}
+
 export default function App() {
   const { authed } = useAuth()
   const { places, loading, addPlace, deletePlace, updatePlace } = usePlaces()
-  const [panel, setPanel] = useState(null) // null | 'add' | 'list'
+  const [panel, setPanel] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
+  const [filter, setFilter] = useState('all')
+
+  const filterStart = getFilterStart(filter)
+  const filteredPlaces = filterStart
+    ? places.filter(p => new Date(p.created_at) >= filterStart)
+    : places
 
   if (!authed) return <AccessDenied />
 
+  const FILTERS = [
+    { key: 'all', label: 'All' },
+    { key: 'week', label: 'This Week' },
+    { key: 'month', label: 'This Month' },
+  ]
+
   return (
     <div className="app">
-      {/* Map fills the screen */}
       <div className="map-wrapper">
         {!loading && (
-          <Map places={places} onDelete={deletePlace} onEdit={setEditingPlace} />
+          <Map places={filteredPlaces} onDelete={deletePlace} onEdit={setEditingPlace} />
         )}
       </div>
 
-      {/* Top bar */}
       <header className="topbar">
         <div className="topbar-brand">
           <MapPin size={18} strokeWidth={2.5} />
@@ -35,7 +55,20 @@ export default function App() {
           )}
         </div>
         <div className="topbar-actions">
-          <span className="pin-count">{places.length} {places.length === 1 ? 'place' : 'places'}</span>
+          <div className="filter-bar">
+            {FILTERS.map(f => (
+              <button
+                key={f.key}
+                className={`filter-pill${filter === f.key ? ' active' : ''}`}
+                onClick={() => setFilter(f.key)}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          <span className="pin-count">
+            {filteredPlaces.length} of {places.length} {places.length === 1 ? 'place' : 'places'}
+          </span>
           <button
             className="btn-secondary small"
             onClick={() => setPanel(panel === 'list' ? null : 'list')}
@@ -51,7 +84,6 @@ export default function App() {
         </div>
       </header>
 
-      {/* Sliding side panel */}
       {(panel || editingPlace) && (
         <aside className="side-panel">
           {panel === 'add' && !editingPlace && (
@@ -69,7 +101,12 @@ export default function App() {
                   <X size={18} />
                 </button>
               </div>
-              <PlacesList places={places} onDelete={deletePlace} onEdit={setEditingPlace} />
+              <PlacesList
+                places={filteredPlaces}
+                onDelete={deletePlace}
+                onEdit={setEditingPlace}
+                activeFilter={filter}
+              />
             </div>
           )}
           {editingPlace && (
