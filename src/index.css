@@ -181,6 +181,29 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   color: var(--ink);
 }
 
+.panel-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.step-indicator {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sub);
+  background: var(--mist);
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.step-2.locked {
+  opacity: 0.4;
+  pointer-events: none;
+  user-select: none;
+}
+
 /* ─── Form elements ─────────────────────────────────────────────── */
 .field-group {
   padding: 16px 20px 0;

@@ -133,9 +133,16 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
     <div className="panel">
       <div className="panel-header">
         <h2>{isEditing ? 'Edit place' : 'Add a place'}</h2>
-        <button className="icon-btn" onClick={onClose} aria-label="Close">
-          <X size={18} />
-        </button>
+        <div className="panel-header-right">
+          {!isEditing && (
+            <span className="step-indicator">
+              Step {resolved ? '2' : '1'} of 2
+            </span>
+          )}
+          <button className="icon-btn" onClick={onClose} aria-label="Close">
+            <X size={18} />
+          </button>
+        </div>
       </div>
 
       <div className="panel-body">
@@ -157,6 +164,10 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
           </div>
         </form>
 
+        {errorMsg && status === 'error' && !resolved && (
+          <p className="error-msg" style={{ padding: '4px 20px 0' }}>{errorMsg}</p>
+        )}
+
         {resolved && (
           <LocationPreview
             resolved={resolved}
@@ -164,8 +175,12 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
           />
         )}
 
-        {/* Step 2: fill in the details */}
-        <form id="details-form" onSubmit={handleSave} className="field-group">
+        {/* Step 2: fill in the details — locked until location is resolved */}
+        <form
+          id="details-form"
+          onSubmit={handleSave}
+          className={`field-group step-2${!resolved && !isEditing ? ' locked' : ''}`}
+        >
           <label className="field-label">
             <MapPin size={14} /> Place name
           </label>
@@ -229,7 +244,7 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
             rows={3}
           />
 
-          {errorMsg && <p className="error-msg">{errorMsg}</p>}
+          {errorMsg && resolved && <p className="error-msg">{errorMsg}</p>}
         </form>
       </div>
 
