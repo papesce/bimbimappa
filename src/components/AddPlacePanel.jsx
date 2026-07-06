@@ -1,21 +1,50 @@
+import { useEffect } from 'react'
 import { useState } from 'react'
 import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar, CheckCircle2, RotateCcw } from 'lucide-react'
+import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
+import L from 'leaflet'
 import { geocodePlace } from '../lib/geocode'
 
-const MAPS_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY
+// Coral marker — matches the main map style, slightly smaller
+const previewIcon = L.divIcon({
+  className: '',
+  html: `<div style="
+    background:#FF6B6B;width:22px;height:22px;
+    border-radius:50% 50% 50% 0;transform:rotate(-45deg);
+    border:2px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);
+  "></div>`,
+  iconSize: [22, 22],
+  iconAnchor: [11, 22],
+})
+
+// Flies to the new coords whenever lat/lng change (MapContainer ignores prop updates)
+function MiniMapController({ lat, lng }) {
+  const map = useMap()
+  useEffect(() => {
+    map.setView([lat, lng], 15)
+  }, [lat, lng]) // eslint-disable-line react-hooks/exhaustive-deps
+  return null
+}
 
 function LocationPreview({ resolved, onReset }) {
   const { lat, lng, formattedAddress } = resolved
-  const staticSrc = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=320x140&scale=2&markers=color:red%7C${lat},${lng}&key=${MAPS_KEY}&style=feature:poi%7Cvisibility:off`
 
   return (
     <div className="location-preview">
-      <img
-        className="location-preview-map"
-        src={staticSrc}
-        alt="Map preview"
-        loading="lazy"
-      />
+      <div className="location-preview-map">
+        <MapContainer
+          center={[lat, lng]}
+          zoom={15}
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={true}
+          scrollWheelZoom={true}
+          attributionControl={false}
+        >
+          <MiniMapController lat={lat} lng={lng} />
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <Marker position={[lat, lng]} icon={previewIcon} />
+        </MapContainer>
+      </div>
       <div className="location-preview-body">
         <div className="location-preview-status">
           <CheckCircle2 size={14} />

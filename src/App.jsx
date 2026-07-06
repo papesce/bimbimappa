@@ -90,34 +90,44 @@ export default function App() {
           )}
         </div>
         <div className="topbar-actions">
-          <div className="filter-bar">
-            {FILTERS.map(f => (
-              <button
-                key={f.key}
-                className={`filter-pill${filter === f.key ? ' active' : ''}`}
-                onClick={() => setFilter(f.key)}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
           <span className="pin-count">
             {filteredPlaces.length} of {places.length} {places.length === 1 ? 'place' : 'places'}
           </span>
           <button
-            className="btn-secondary small"
+            className={`icon-btn${panel === 'list' ? ' active' : ''}`}
             onClick={() => setPanel(panel === 'list' ? null : 'list')}
+            aria-label="Saved places"
+            title="Saved places"
           >
-            <List size={14} /> List
-          </button>
-          <button
-            className="btn-primary small"
-            onClick={() => setPanel(panel === 'add' ? null : 'add')}
-          >
-            <Plus size={14} /> Add place
+            <List size={18} />
           </button>
         </div>
       </header>
+
+      {/* Filter chip strip — floats below the topbar over the map */}
+      <div className="filter-strip">
+        {FILTERS.map(f => (
+          <button
+            key={f.key}
+            className={`filter-pill${filter === f.key ? ' active' : ''}`}
+            onClick={() => setFilter(f.key)}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* FAB — primary action, bottom-right; hidden while any panel is open */}
+      {!panel && !editingPlace && (
+        <button
+          className="fab"
+          onClick={() => setPanel('add')}
+          aria-label="Add place"
+          title="Add place"
+        >
+          <Plus size={22} strokeWidth={2.5} />
+        </button>
+      )}
 
       {(panel || editingPlace) && (
         <aside className="side-panel">
