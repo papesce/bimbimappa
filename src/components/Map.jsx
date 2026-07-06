@@ -79,6 +79,14 @@ export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone 
             <div className="popup">
               <p className="popup-name">{place.name}</p>
               <p className="popup-address">{place.address}</p>
+              {place.date_from && (
+                <p className="popup-date">
+                  {new Date(place.date_from + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                  {place.date_to && place.date_to !== place.date_from
+                    ? `–${new Date(place.date_to + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                    : ''}
+                </p>
+              )}
               {place.notes && (
                 <p className="popup-notes">"{place.notes}"</p>
               )}
