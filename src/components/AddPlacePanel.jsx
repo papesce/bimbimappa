@@ -1,6 +1,35 @@
 import { useState } from 'react'
-import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar } from 'lucide-react'
+import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar, CheckCircle2, RotateCcw } from 'lucide-react'
 import { geocodePlace } from '../lib/geocode'
+
+const MAPS_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY
+
+function LocationPreview({ resolved, onReset }) {
+  const { lat, lng, formattedAddress } = resolved
+  const staticSrc = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=320x140&scale=2&markers=color:red%7C${lat},${lng}&key=${MAPS_KEY}&style=feature:poi%7Cvisibility:off`
+
+  return (
+    <div className="location-preview">
+      <img
+        className="location-preview-map"
+        src={staticSrc}
+        alt="Map preview"
+        loading="lazy"
+      />
+      <div className="location-preview-body">
+        <div className="location-preview-status">
+          <CheckCircle2 size={14} />
+          <span>Location found</span>
+        </div>
+        <p className="location-preview-address">{formattedAddress}</p>
+        <p className="location-preview-coords">{lat.toFixed(5)}, {lng.toFixed(5)}</p>
+        <button type="button" className="location-preview-reset" onClick={onReset}>
+          <RotateCcw size={11} /> Not right? Search again
+        </button>
+      </div>
+    </div>
+  )
+}
 
 export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
   const isEditing = !!editPlace
@@ -99,10 +128,10 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
       </form>
 
       {resolved && (
-        <div className="resolved-badge">
-          <MapPin size={13} />
-          <span>{resolved.formattedAddress}</span>
-        </div>
+        <LocationPreview
+          resolved={resolved}
+          onReset={() => { setResolved(null); setSearchQuery('') }}
+        />
       )}
 
       {/* Step 2: fill in the details */}

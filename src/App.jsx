@@ -30,11 +30,22 @@ function getFilterRange(filter) {
 }
 
 export default function App() {
-  const { authed } = useAuth()
+  const { authed, login } = useAuth()
   const { places, loading, addPlace, deletePlace, updatePlace } = usePlaces()
   const [panel, setPanel] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
   const [filter, setFilter] = useState('all')
+  const [focusPlace, setFocusPlace] = useState(null)
+
+  async function handleAdd(data) {
+    const result = await addPlace(data)
+    if (result) setFocusPlace({ lat: result.lat, lng: result.lng })
+  }
+
+  async function handleUpdate(id, data) {
+    const result = await updatePlace(id, data)
+    if (result) setFocusPlace({ lat: result.lat, lng: result.lng })
+  }
 
   const filterRange = getFilterRange(filter)
   const filteredPlaces = filterRange
@@ -48,7 +59,7 @@ export default function App() {
       })
     : places
 
-  if (!authed) return <AccessDenied />
+  if (!authed) return <AccessDenied onLogin={login} />
 
   const FILTERS = [
     { key: 'all', label: 'All' },
@@ -60,7 +71,13 @@ export default function App() {
     <div className="app">
       <div className="map-wrapper">
         {!loading && (
-          <Map places={filteredPlaces} onDelete={deletePlace} onEdit={setEditingPlace} />
+          <Map
+            places={filteredPlaces}
+            onDelete={deletePlace}
+            onEdit={setEditingPlace}
+            focusPlace={focusPlace}
+            onFocusDone={() => setFocusPlace(null)}
+          />
         )}
       </div>
 
@@ -107,7 +124,7 @@ export default function App() {
           {panel === 'add' && !editingPlace && (
             <AddPlacePanel
               key="add"
-              onAdd={addPlace}
+              onAdd={handleAdd}
               onClose={() => setPanel(null)}
             />
           )}
@@ -131,7 +148,7 @@ export default function App() {
             <AddPlacePanel
               key={editingPlace.id}
               editPlace={editingPlace}
-              onUpdate={updatePlace}
+              onUpdate={handleUpdate}
               onClose={() => { setEditingPlace(null); setPanel(null) }}
             />
           )}

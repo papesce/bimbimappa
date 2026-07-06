@@ -1,6 +1,9 @@
-import { MapPin, ExternalLink, Trash2, Pencil } from 'lucide-react'
+import { useState } from 'react'
+import { MapPin, ExternalLink, Trash2, Pencil, Check, X } from 'lucide-react'
 
 export default function PlacesList({ places, onDelete, onEdit, activeFilter }) {
+  const [confirmingId, setConfirmingId] = useState(null)
+
   if (places.length === 0) {
     const messages = {
       week: 'No places added this week.',
@@ -35,6 +38,26 @@ export default function PlacesList({ places, onDelete, onEdit, activeFilter }) {
               </p>
             )}
             {place.notes && <p className="place-notes">"{place.notes}"</p>}
+
+            {confirmingId === place.id && (
+              <div className="delete-confirm-row">
+                <span>Remove?</span>
+                <button
+                  className="action-btn danger"
+                  onClick={() => { onDelete(place.id); setConfirmingId(null) }}
+                  title="Yes, remove"
+                >
+                  <Check size={13} />
+                </button>
+                <button
+                  className="action-btn"
+                  onClick={() => setConfirmingId(null)}
+                  title="Cancel"
+                >
+                  <X size={13} />
+                </button>
+              </div>
+            )}
           </div>
           <div className="place-card-actions">
             {place.source_url && (
@@ -56,10 +79,8 @@ export default function PlacesList({ places, onDelete, onEdit, activeFilter }) {
               <Pencil size={14} />
             </button>
             <button
-              className="action-btn danger"
-              onClick={() => {
-                if (window.confirm(`Remove "${place.name}"?`)) onDelete(place.id)
-              }}
+              className={`action-btn${confirmingId === place.id ? ' danger' : ''}`}
+              onClick={() => setConfirmingId(confirmingId === place.id ? null : place.id)}
               title="Remove"
             >
               <Trash2 size={14} />

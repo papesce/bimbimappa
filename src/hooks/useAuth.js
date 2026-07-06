@@ -33,10 +33,19 @@ export function useAuth() {
     }
   }, [])
 
+  function login(token) {
+    if (token === HOUSEHOLD_TOKEN) {
+      localStorage.setItem(STORAGE_KEY, token)
+      setAuthed(true)
+      return true
+    }
+    return false
+  }
+
   function logout() {
     localStorage.removeItem(STORAGE_KEY)
     setAuthed(false)
   }
 
-  return { authed, logout }
+  return { authed, login, logout }
 }
