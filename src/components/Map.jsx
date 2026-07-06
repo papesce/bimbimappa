@@ -50,8 +50,54 @@ const customIcon = L.divIcon({
   popupAnchor: [0, -36],
 })
 
-export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone }) {
+const newIcon = L.divIcon({
+  className: '',
+  html: `
+    <div style="position:relative;width:36px;height:36px;">
+      <div class="new-marker-ring"></div>
+      <div style="
+        background: #FF6B6B;
+        width: 36px;
+        height: 36px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        border: 3px solid white;
+        box-shadow: 0 2px 12px rgba(255,107,107,0.6);
+        position: relative;
+        z-index: 1;
+      "></div>
+    </div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 36],
+  popupAnchor: [0, -40],
+})
+
+// Auto-opens the popup for the newly added marker
+function AutoOpenPopup({ markerRef }) {
+  useEffect(() => {
+    if (markerRef.current) markerRef.current.openPopup()
+  }, [markerRef])
+  return null
+}
+
+// Opens the popup for a place selected from the list, after fly-to completes
+function PopupOpener({ markerRefs, popupPlaceId, onPopupDone }) {
+  const map = useMap()
+  useEffect(() => {
+    const handler = () => {
+      const ref = markerRefs.current[popupPlaceId]
+      if (ref) ref.openPopup()
+      onPopupDone()
+    }
+    map.once('moveend', handler)
+    return () => map.off('moveend', handler)
+  }, [popupPlaceId]) // eslint-disable-line react-hooks/exhaustive-deps
+  return null
+}
+
+export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone }) {
   const [confirmingId, setConfirmingId] = useState(null)
+  const markerRefs = useRef({})
   const defaultCenter = [-34.6037, -58.3816]
   const defaultZoom = 5
 
@@ -64,78 +110,112 @@ export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone 
       className="main-map"
     >
       <MapController places={places} focusPlace={focusPlace} onFocusDone={onFocusDone} />
+      {popupPlaceId && (
+        <PopupOpener
+          markerRefs={markerRefs}
+          popupPlaceId={popupPlaceId}
+          onPopupDone={onPopupDone}
+        />
+      )}
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {places.map((place) => (
-        <Marker
+      {places.map((place) => {
+        const isNew = place.id === newPlaceId
+        return (
+        <NewMarker
           key={place.id}
-          position={[place.lat, place.lng]}
-          icon={customIcon}
-        >
-          <Popup minWidth={220}>
-            <div className="popup">
-              <p className="popup-name">{place.name}</p>
-              <p className="popup-address">{place.address}</p>
-              {place.date_from && (
-                <p className="popup-date">
-                  {new Date(place.date_from + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                  {place.date_to && place.date_to !== place.date_from
-                    ? `–${new Date(place.date_to + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
-                    : ''}
-                </p>
-              )}
-              {place.notes && (
-                <p className="popup-notes">"{place.notes}"</p>
-              )}
-              <div className="popup-actions">
-                {place.source_url && (
-                  <a
-                    href={place.source_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="popup-action-link"
-                  >
-                    <ExternalLink size={12} /> Source
-                  </a>
-                )}
-                <button className="popup-action-btn" onClick={() => onEdit(place)}>
-                  <Pencil size={12} /> Edit
-                </button>
-                <button
-                  className={`popup-action-btn${confirmingId === place.id ? ' danger' : ''}`}
-                  onClick={() => setConfirmingId(confirmingId === place.id ? null : place.id)}
-                  style={{ marginLeft: 'auto' }}
-                  title="Remove"
-                >
-                  <Trash2 size={12} />
-                </button>
-              </div>
-              {confirmingId === place.id && (
-                <div className="popup-confirm-row">
-                  <span>Remove?</span>
-                  <button
-                    className="popup-action-btn danger"
-                    onClick={() => { onDelete(place.id); setConfirmingId(null) }}
-                    title="Yes, remove"
-                  >
-                    <Check size={12} />
-                  </button>
-                  <button
-                    className="popup-action-btn"
-                    onClick={() => setConfirmingId(null)}
-                    title="Cancel"
-                  >
-                    <X size={12} />
-                  </button>
-                </div>
-              )}
-            </div>
-          </Popup>
-        </Marker>
-      ))}
+          place={place}
+          icon={isNew ? newIcon : customIcon}
+          isNew={isNew}
+          confirmingId={confirmingId}
+          setConfirmingId={setConfirmingId}
+          onDelete={onDelete}
+          onEdit={onEdit}
+          markerRefs={markerRefs}
+        />
+        )
+      })}
     </MapContainer>
+  )
+}
+
+function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete, onEdit, markerRefs }) {
+  const markerRef = useRef(null)
+
+  useEffect(() => {
+    markerRefs.current[place.id] = markerRef.current
+    return () => { delete markerRefs.current[place.id] }
+  })
+
+  return (
+    <Marker
+      ref={markerRef}
+      position={[place.lat, place.lng]}
+      icon={icon}
+    >
+      {isNew && <AutoOpenPopup markerRef={markerRef} />}
+      <Popup minWidth={220}>
+        <div className="popup">
+          <p className="popup-name">{place.name}</p>
+          <p className="popup-address">{place.address}</p>
+          {place.date_from && (
+            <p className="popup-date">
+              {new Date(place.date_from + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+              {place.date_to && place.date_to !== place.date_from
+                ? `–${new Date(place.date_to + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
+                : ''}
+            </p>
+          )}
+          {place.notes && (
+            <p className="popup-notes">"{place.notes}"</p>
+          )}
+          <div className="popup-actions">
+            {place.source_url && (
+              <a
+                href={place.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="popup-action-link"
+              >
+                <ExternalLink size={12} /> Source
+              </a>
+            )}
+            <button className="popup-action-btn" onClick={() => onEdit(place)}>
+              <Pencil size={12} /> Edit
+            </button>
+            <button
+              className={`popup-action-btn${confirmingId === place.id ? ' danger' : ''}`}
+              onClick={() => setConfirmingId(confirmingId === place.id ? null : place.id)}
+              style={{ marginLeft: 'auto' }}
+              title="Remove"
+            >
+              <Trash2 size={12} />
+            </button>
+          </div>
+          {confirmingId === place.id && (
+            <div className="popup-confirm-row">
+              <span>Remove?</span>
+              <button
+                className="popup-action-btn danger"
+                onClick={() => { onDelete(place.id); setConfirmingId(null) }}
+                title="Yes, remove"
+              >
+                <Check size={12} />
+              </button>
+              <button
+                className="popup-action-btn"
+                onClick={() => setConfirmingId(null)}
+                title="Cancel"
+              >
+                <X size={12} />
+              </button>
+            </div>
+          )}
+        </div>
+      </Popup>
+    </Marker>
   )
 }

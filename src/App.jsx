@@ -36,15 +36,26 @@ export default function App() {
   const [editingPlace, setEditingPlace] = useState(null)
   const [filter, setFilter] = useState('all')
   const [focusPlace, setFocusPlace] = useState(null)
+  const [newPlaceId, setNewPlaceId] = useState(null)
+  const [popupPlaceId, setPopupPlaceId] = useState(null)
 
   async function handleAdd(data) {
     const result = await addPlace(data)
-    if (result) setFocusPlace({ lat: result.lat, lng: result.lng })
+    if (result) {
+      setFocusPlace({ lat: result.lat, lng: result.lng })
+      setNewPlaceId(result.id)
+      setPopupPlaceId(result.id)
+      setTimeout(() => setNewPlaceId(null), 4000)
+      setPanel(null)
+    }
   }
 
   async function handleUpdate(id, data) {
     const result = await updatePlace(id, data)
-    if (result) setFocusPlace({ lat: result.lat, lng: result.lng })
+    if (result) {
+      setFocusPlace({ lat: result.lat, lng: result.lng })
+      setPopupPlaceId(result.id)
+    }
   }
 
   const filterRange = getFilterRange(filter)
@@ -76,6 +87,9 @@ export default function App() {
           onEdit={setEditingPlace}
           focusPlace={focusPlace}
           onFocusDone={() => setFocusPlace(null)}
+          newPlaceId={newPlaceId}
+          popupPlaceId={popupPlaceId}
+          onPopupDone={() => setPopupPlaceId(null)}
         />
       </div>
 
@@ -148,7 +162,11 @@ export default function App() {
                 places={filteredPlaces}
                 onDelete={deletePlace}
                 onEdit={setEditingPlace}
-                onLocate={(place) => { setFocusPlace({ lat: place.lat, lng: place.lng }); setPanel(null) }}
+                onLocate={(place) => {
+                  setFocusPlace({ lat: place.lat, lng: place.lng })
+                  setPopupPlaceId(place.id)
+                  setPanel(null)
+                }}
                 activeFilter={filter}
               />
             </div>

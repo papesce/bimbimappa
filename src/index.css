@@ -432,6 +432,37 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   margin-top: 8px;
 }
 
+/* ─── Search bar ────────────────────────────────────────────────── */
+.search-bar {
+  position: relative;
+  padding: 12px 16px 4px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-20%);
+  color: var(--sub);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  padding: 8px 12px 8px 32px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  color: var(--text);
+  background: var(--mist);
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.search-input:focus { border-color: var(--accent); background: white; }
+.search-input::-webkit-search-cancel-button { cursor: pointer; }
+
 /* ─── Places list ───────────────────────────────────────────────── */
 .places-list {
   list-style: none;
@@ -532,6 +563,25 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .delete-confirm-row .action-btn { padding: 2px; }
+
+/* ─── New marker pulse ring ─────────────────────────────────────── */
+.new-marker-ring {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 52px;
+  height: 52px;
+  margin: -26px 0 0 -26px;
+  border-radius: 50%;
+  background: rgba(255, 107, 107, 0.35);
+  animation: marker-pulse 1s ease-out infinite;
+  z-index: 0;
+}
+
+@keyframes marker-pulse {
+  0%   { transform: scale(0.6); opacity: 1; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
 
 /* ─── Map popup ─────────────────────────────────────────────────── */
 .popup {

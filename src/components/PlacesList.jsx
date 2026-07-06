@@ -1,8 +1,18 @@
 import { useState } from 'react'
-import { MapPin, ExternalLink, Trash2, Pencil, Check, X, Navigation } from 'lucide-react'
+import { MapPin, ExternalLink, Trash2, Pencil, Check, X, Navigation, Search } from 'lucide-react'
 
 export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter }) {
   const [confirmingId, setConfirmingId] = useState(null)
+  const [query, setQuery] = useState('')
+
+  const q = query.trim().toLowerCase()
+  const visible = q
+    ? places.filter(p =>
+        p.name?.toLowerCase().includes(q) ||
+        p.address?.toLowerCase().includes(q) ||
+        p.notes?.toLowerCase().includes(q)
+      )
+    : places
 
   if (places.length === 0) {
     const messages = {
@@ -23,8 +33,25 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
   }
 
   return (
+    <>
+      <div className="search-bar">
+        <Search size={14} className="search-icon" />
+        <input
+          className="search-input"
+          type="search"
+          placeholder="Search places…"
+          value={query}
+          onChange={e => setQuery(e.target.value)}
+        />
+      </div>
+      {visible.length === 0 && q && (
+        <div className="empty-state">
+          <Search size={28} strokeWidth={1.5} />
+          <p>No results for "{query}"</p>
+        </div>
+      )}
     <ul className="places-list">
-      {places.map((place) => (
+      {visible.map((place) => (
         <li key={place.id} className="place-card">
           <button
             className="place-card-body"
@@ -100,5 +127,6 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
         </li>
       ))}
     </ul>
+    </>
   )
 }
