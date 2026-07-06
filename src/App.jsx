@@ -127,43 +127,42 @@ export default function App() {
         </button>
       )}
 
-      {(panel || editingPlace) && (
-        <aside className="side-panel">
-          {panel === 'add' && !editingPlace && (
-            <AddPlacePanel
-              key="add"
-              onAdd={handleAdd}
-              onClose={() => setPanel(null)}
-            />
-          )}
-          {panel === 'list' && !editingPlace && (
-            <div className="panel">
-              <div className="panel-header">
-                <h2>Saved places</h2>
-                <button className="icon-btn" onClick={() => setPanel(null)}>
-                  <X size={18} />
-                </button>
-              </div>
-              <div className="panel-body">
-                <PlacesList
-                  places={filteredPlaces}
-                  onDelete={deletePlace}
-                  onEdit={setEditingPlace}
-                  activeFilter={filter}
-                />
-              </div>
+      <aside className={`side-panel${(panel || editingPlace) ? ' open' : ''}`}>
+        {panel === 'add' && !editingPlace && (
+          <AddPlacePanel
+            key="add"
+            onAdd={handleAdd}
+            onClose={() => setPanel(null)}
+          />
+        )}
+        {panel === 'list' && !editingPlace && (
+          <div className="panel">
+            <div className="panel-header">
+              <h2>Saved places</h2>
+              <button className="icon-btn" onClick={() => setPanel(null)}>
+                <X size={18} />
+              </button>
             </div>
-          )}
-          {editingPlace && (
-            <AddPlacePanel
-              key={editingPlace.id}
-              editPlace={editingPlace}
-              onUpdate={handleUpdate}
-              onClose={() => { setEditingPlace(null); setPanel(null) }}
-            />
-          )}
-        </aside>
-      )}
+            <div className="panel-body">
+              <PlacesList
+                places={filteredPlaces}
+                onDelete={deletePlace}
+                onEdit={setEditingPlace}
+                onLocate={(place) => { setFocusPlace({ lat: place.lat, lng: place.lng }); setPanel(null) }}
+                activeFilter={filter}
+              />
+            </div>
+          </div>
+        )}
+        {editingPlace && (
+          <AddPlacePanel
+            key={editingPlace.id}
+            editPlace={editingPlace}
+            onUpdate={handleUpdate}
+            onClose={() => { setEditingPlace(null); setPanel(null) }}
+          />
+        )}
+      </aside>
     </div>
   )
 }

@@ -51,7 +51,6 @@ function LocationPreview({ resolved, onReset }) {
           <span>Location found</span>
         </div>
         <p className="location-preview-address">{formattedAddress}</p>
-        <p className="location-preview-coords">{lat.toFixed(5)}, {lng.toFixed(5)}</p>
         <button type="button" className="location-preview-reset" onClick={onReset}>
           <RotateCcw size={11} /> Not right? Search again
         </button>
@@ -207,20 +206,26 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
             <Calendar size={14} /> Date <span className="optional">(optional — single day or range)</span>
           </label>
           <div className="input-row">
-            <input
-              className="input"
-              type="date"
-              value={dateFrom}
-              onChange={e => setDateFrom(e.target.value)}
-              aria-label="From date"
-            />
-            <input
-              className="input"
-              type="date"
-              value={dateTo}
-              onChange={e => setDateTo(e.target.value)}
-              aria-label="To date"
-            />
+            <div className="date-field">
+              <span className="date-field-label">From</span>
+              <input
+                className="input"
+                type="date"
+                value={dateFrom}
+                onChange={e => setDateFrom(e.target.value)}
+                aria-label="From date"
+              />
+            </div>
+            <div className="date-field">
+              <span className="date-field-label">To</span>
+              <input
+                className="input"
+                type="date"
+                value={dateTo}
+                onChange={e => setDateTo(e.target.value)}
+                aria-label="To date"
+              />
+            </div>
             {(dateFrom || dateTo) && (
               <button
                 className="action-btn"

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { MapPin, ExternalLink, Trash2, Pencil, Check, X } from 'lucide-react'
+import { MapPin, ExternalLink, Trash2, Pencil, Check, X, Navigation } from 'lucide-react'
 
-export default function PlacesList({ places, onDelete, onEdit, activeFilter }) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter }) {
   const [confirmingId, setConfirmingId] = useState(null)
 
   if (places.length === 0) {
@@ -26,7 +26,11 @@ export default function PlacesList({ places, onDelete, onEdit, activeFilter }) {
     <ul className="places-list">
       {places.map((place) => (
         <li key={place.id} className="place-card">
-          <div className="place-card-body">
+          <button
+            className="place-card-body"
+            onClick={() => onLocate(place)}
+            title="Show on map"
+          >
             <p className="place-name">{place.name}</p>
             <p className="place-address">{place.address}</p>
             {place.date_from && (
@@ -58,8 +62,15 @@ export default function PlacesList({ places, onDelete, onEdit, activeFilter }) {
                 </button>
               </div>
             )}
-          </div>
+          </button>
           <div className="place-card-actions">
+            <button
+              className="action-btn locate"
+              onClick={() => onLocate(place)}
+              title="Show on map"
+            >
+              <Navigation size={14} />
+            </button>
             {place.source_url && (
               <a
                 href={place.source_url}
