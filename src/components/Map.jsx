@@ -59,6 +59,7 @@ export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone 
       zoom={defaultZoom}
       style={{ height: '100%', width: '100%' }}
       zoomControl={true}
+      className="main-map"
     >
       <MapController places={places} focusPlace={focusPlace} onFocusDone={onFocusDone} />
       <TileLayer

@@ -31,6 +31,9 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   z-index: 0;
 }
 
+/* ─── Leaflet control offset — main map only, clears topbar + filter strip ─── */
+.main-map .leaflet-top.leaflet-left { top: 108px; }
+
 /* ─── Top bar ───────────────────────────────────────────────────── */
 .topbar {
   position: absolute;
@@ -148,8 +151,20 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   flex-direction: column;
   background: white;
   height: 100%;
+  overflow: hidden;
+}
+
+.panel-body {
+  flex: 1;
   overflow-y: auto;
-  padding-bottom: 32px;
+  padding-bottom: 8px;
+}
+
+.panel-footer {
+  flex-shrink: 0;
+  padding: 12px 20px 20px;
+  border-top: 1px solid var(--border);
+  background: white;
 }
 
 .panel-header {

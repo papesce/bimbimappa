@@ -146,12 +146,14 @@ export default function App() {
                   <X size={18} />
                 </button>
               </div>
-              <PlacesList
-                places={filteredPlaces}
-                onDelete={deletePlace}
-                onEdit={setEditingPlace}
-                activeFilter={filter}
-              />
+              <div className="panel-body">
+                <PlacesList
+                  places={filteredPlaces}
+                  onDelete={deletePlace}
+                  onEdit={setEditingPlace}
+                  activeFilter={filter}
+                />
+              </div>
             </div>
           )}
           {editingPlace && (

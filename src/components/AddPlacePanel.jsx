@@ -138,103 +138,108 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
         </button>
       </div>
 
-      {/* Step 1: find the location */}
-      <form onSubmit={handleSearch} className="field-group">
-        <label className="field-label">
-          <Search size={14} /> {isEditing ? 'Change address or location' : 'Search address or place name'}
-        </label>
-        <div className="input-row">
-          <input
-            className="input"
-            placeholder="e.g. Temaiken Zoo, Buenos Aires"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button className="btn-secondary" type="submit" disabled={status === 'searching'}>
-            {status === 'searching' ? <Loader size={14} className="spin" /> : 'Find'}
-          </button>
-        </div>
-      </form>
-
-      {resolved && (
-        <LocationPreview
-          resolved={resolved}
-          onReset={() => { setResolved(null); setSearchQuery('') }}
-        />
-      )}
-
-      {/* Step 2: fill in the details */}
-      <form onSubmit={handleSave} className="field-group">
-        <label className="field-label">
-          <MapPin size={14} /> Place name
-        </label>
-        <input
-          className="input"
-          placeholder="What do you call this place?"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          required
-        />
-
-        <label className="field-label" style={{ marginTop: '12px' }}>
-          <Link size={14} /> Paste the Instagram / TikTok link <span className="optional">(optional)</span>
-        </label>
-        <input
-          className="input"
-          placeholder="https://www.instagram.com/p/..."
-          value={sourceUrl}
-          onChange={(e) => setSourceUrl(e.target.value)}
-          type="url"
-        />
-
-        <label className="field-label" style={{ marginTop: '12px' }}>
-          <Calendar size={14} /> Date <span className="optional">(optional — single day or range)</span>
-        </label>
-        <div className="input-row">
-          <input
-            className="input"
-            type="date"
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            aria-label="From date"
-          />
-          <input
-            className="input"
-            type="date"
-            value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-            aria-label="To date"
-          />
-          {(dateFrom || dateTo) && (
-            <button
-              className="action-btn"
-              type="button"
-              onClick={() => { setDateFrom(''); setDateTo('') }}
-              title="Clear dates"
-            >
-              <X size={14} />
+      <div className="panel-body">
+        {/* Step 1: find the location */}
+        <form onSubmit={handleSearch} className="field-group">
+          <label className="field-label">
+            <Search size={14} /> {isEditing ? 'Change address or location' : 'Search address or place name'}
+          </label>
+          <div className="input-row">
+            <input
+              className="input"
+              placeholder="e.g. Temaiken Zoo, Buenos Aires"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button className="btn-secondary" type="submit" disabled={status === 'searching'}>
+              {status === 'searching' ? <Loader size={14} className="spin" /> : 'Find'}
             </button>
-          )}
-        </div>
+          </div>
+        </form>
 
-        <label className="field-label" style={{ marginTop: '12px' }}>
-          <StickyNote size={14} /> Notes <span className="optional">(optional)</span>
-        </label>
-        <textarea
-          className="input textarea"
-          placeholder="Good for toddlers, bring sunscreen, closed Mondays..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={3}
-        />
+        {resolved && (
+          <LocationPreview
+            resolved={resolved}
+            onReset={() => { setResolved(null); setSearchQuery('') }}
+          />
+        )}
 
-        {errorMsg && <p className="error-msg">{errorMsg}</p>}
+        {/* Step 2: fill in the details */}
+        <form id="details-form" onSubmit={handleSave} className="field-group">
+          <label className="field-label">
+            <MapPin size={14} /> Place name
+          </label>
+          <input
+            className="input"
+            placeholder="What do you call this place?"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+          />
 
+          <label className="field-label" style={{ marginTop: '12px' }}>
+            <Link size={14} /> Paste the Instagram / TikTok link <span className="optional">(optional)</span>
+          </label>
+          <input
+            className="input"
+            placeholder="https://www.instagram.com/p/..."
+            value={sourceUrl}
+            onChange={(e) => setSourceUrl(e.target.value)}
+            type="url"
+          />
+
+          <label className="field-label" style={{ marginTop: '12px' }}>
+            <Calendar size={14} /> Date <span className="optional">(optional — single day or range)</span>
+          </label>
+          <div className="input-row">
+            <input
+              className="input"
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              aria-label="From date"
+            />
+            <input
+              className="input"
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              aria-label="To date"
+            />
+            {(dateFrom || dateTo) && (
+              <button
+                className="action-btn"
+                type="button"
+                onClick={() => { setDateFrom(''); setDateTo('') }}
+                title="Clear dates"
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          <label className="field-label" style={{ marginTop: '12px' }}>
+            <StickyNote size={14} /> Notes <span className="optional">(optional)</span>
+          </label>
+          <textarea
+            className="input textarea"
+            placeholder="Good for toddlers, bring sunscreen, closed Mondays..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            rows={3}
+          />
+
+          {errorMsg && <p className="error-msg">{errorMsg}</p>}
+        </form>
+      </div>
+
+      {/* Sticky footer — Save button always visible */}
+      <div className="panel-footer">
         <button
           className="btn-primary"
           type="submit"
+          form="details-form"
           disabled={!resolved || !name.trim() || status === 'saving'}
-          style={{ marginTop: '16px' }}
         >
           {status === 'saving' ? (
             <><Loader size={14} className="spin" /> {isEditing ? 'Updating…' : 'Saving…'}</>
@@ -242,7 +247,7 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
             <>{isEditing ? <Pencil size={14} /> : <MapPin size={14} />} {isEditing ? 'Update' : 'Save to map'}</>
           )}
         </button>
-      </form>
+      </div>
     </div>
   )
 }
