@@ -69,16 +69,14 @@ export default function App() {
 
   return (
     <div className="app">
-      <div className="map-wrapper">
-        {!loading && (
-          <Map
-            places={filteredPlaces}
-            onDelete={deletePlace}
-            onEdit={setEditingPlace}
-            focusPlace={focusPlace}
-            onFocusDone={() => setFocusPlace(null)}
-          />
-        )}
+      <div className={`map-wrapper${loading ? ' map-loading' : ''}`}>
+        <Map
+          places={filteredPlaces}
+          onDelete={deletePlace}
+          onEdit={setEditingPlace}
+          focusPlace={focusPlace}
+          onFocusDone={() => setFocusPlace(null)}
+        />
       </div>
 
       <header className="topbar">

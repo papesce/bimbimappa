@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -6,13 +6,15 @@ import { Trash2, ExternalLink, Pencil, Check, X } from 'lucide-react'
 
 function MapController({ places, focusPlace, onFocusDone }) {
   const map = useMap()
+  const hasFit = useRef(false)
 
-  // On mount: fit all existing markers in view
+  // Once places load for the first time, fit all markers in view
   useEffect(() => {
-    if (places.length === 0) return
+    if (hasFit.current || places.length === 0) return
+    hasFit.current = true
     const bounds = L.latLngBounds(places.map(p => [p.lat, p.lng]))
     map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 })
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [places]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // On new/edited place: fly to it
   useEffect(() => {
@@ -74,62 +76,54 @@ export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone 
           icon={customIcon}
         >
           <Popup minWidth={220}>
-            <div style={{ fontFamily: 'system-ui, sans-serif' }}>
-              <p style={{ fontWeight: 700, fontSize: '15px', margin: '0 0 4px' }}>
-                {place.name}
-              </p>
-              <p style={{ fontSize: '12px', color: '#666', margin: '0 0 8px' }}>
-                {place.address}
-              </p>
+            <div className="popup">
+              <p className="popup-name">{place.name}</p>
+              <p className="popup-address">{place.address}</p>
               {place.notes && (
-                <p style={{ fontSize: '13px', margin: '0 0 8px', fontStyle: 'italic' }}>
-                  "{place.notes}"
-                </p>
+                <p className="popup-notes">"{place.notes}"</p>
               )}
-              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+              <div className="popup-actions">
                 {place.source_url && (
                   <a
                     href={place.source_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px', color: '#FF6B6B', textDecoration: 'none' }}
+                    className="popup-action-link"
                   >
                     <ExternalLink size={12} /> Source
                   </a>
                 )}
-                <button
-                  onClick={() => onEdit(place)}
-                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
-                >
+                <button className="popup-action-btn" onClick={() => onEdit(place)}>
                   <Pencil size={12} /> Edit
                 </button>
-                {confirmingId === place.id ? (
-                  <>
-                    <span style={{ fontSize: '12px', color: '#e05555', marginLeft: 'auto' }}>Remove?</span>
-                    <button
-                      onClick={() => { onDelete(place.id); setConfirmingId(null) }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#e05555', display: 'flex', alignItems: 'center', gap: '2px', fontSize: '12px' }}
-                      title="Yes, remove"
-                    >
-                      <Check size={12} /> Yes
-                    </button>
-                    <button
-                      onClick={() => setConfirmingId(null)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#999', display: 'flex', alignItems: 'center', gap: '2px', fontSize: '12px' }}
-                      title="Cancel"
-                    >
-                      <X size={12} /> No
-                    </button>
-                  </>
-                ) : (
-                  <button
-                    onClick={() => setConfirmingId(place.id)}
-                    style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#999', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '12px' }}
-                  >
-                    <Trash2 size={12} /> Remove
-                  </button>
-                )}
+                <button
+                  className={`popup-action-btn${confirmingId === place.id ? ' danger' : ''}`}
+                  onClick={() => setConfirmingId(confirmingId === place.id ? null : place.id)}
+                  style={{ marginLeft: 'auto' }}
+                  title="Remove"
+                >
+                  <Trash2 size={12} />
+                </button>
               </div>
+              {confirmingId === place.id && (
+                <div className="popup-confirm-row">
+                  <span>Remove?</span>
+                  <button
+                    className="popup-action-btn danger"
+                    onClick={() => { onDelete(place.id); setConfirmingId(null) }}
+                    title="Yes, remove"
+                  >
+                    <Check size={12} />
+                  </button>
+                  <button
+                    className="popup-action-btn"
+                    onClick={() => setConfirmingId(null)}
+                    title="Cancel"
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              )}
             </div>
           </Popup>
         </Marker>
