@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { MapPin, ExternalLink, Trash2, Pencil, Check, X, Navigation, Search } from 'lucide-react'
+import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 
 export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [query, setQuery] = useState('')
+  const [navOpenId, setNavOpenId] = useState(null)
 
   const q = query.trim().toLowerCase()
   const visible = q
@@ -98,6 +100,21 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             >
               <Navigation size={14} />
             </button>
+            <div className="nav-wrapper">
+              <button
+                className="action-btn nav-btn"
+                onClick={() => setNavOpenId(navOpenId === place.id ? null : place.id)}
+                title="Navigate"
+              >
+                <MapPin size={14} />
+              </button>
+              {navOpenId === place.id && (
+                <div className="nav-menu">
+                  <a href={googleMapsUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="nav-menu-item" onClick={() => setNavOpenId(null)}>Google Maps</a>
+                  <a href={wazeUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="nav-menu-item" onClick={() => setNavOpenId(null)}>Waze</a>
+                </div>
+              )}
+            </div>
             {place.source_url && (
               <a
                 href={place.source_url}

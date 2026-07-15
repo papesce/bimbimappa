@@ -1,27 +1,35 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Trash2, ExternalLink, Pencil, Check, X } from 'lucide-react'
+import { Trash2, ExternalLink, Pencil, Check, X, Navigation } from 'lucide-react'
+import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 
-function MapController({ places, focusPlace, onFocusDone }) {
+function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone }) {
   const map = useMap()
-  const hasFit = useRef(false)
 
-  // Once places load for the first time, fit all markers in view
+  // Fit the camera to the full radius circle + any matched markers
   useEffect(() => {
-    if (hasFit.current || places.length === 0) return
-    hasFit.current = true
-    const bounds = L.latLngBounds(places.map(p => [p.lat, p.lng]))
-    map.fitBounds(bounds, { padding: [48, 48], maxZoom: 14 })
-  }, [places]) // eslint-disable-line react-hooks/exhaustive-deps
+    if (!center && focusPlaces.length === 0) return
+    let bounds
+    if (center) {
+      const centerLatLng = L.latLng(center.lat, center.lng)
+      bounds = centerLatLng.toBounds(radius * 2000)
+    }
+    if (focusPlaces.length > 0) {
+      const markerBounds = L.latLngBounds(focusPlaces.map(p => [p.lat, p.lng]))
+      bounds = bounds ? bounds.extend(markerBounds) : markerBounds
+    }
+    if (!bounds) return
+    map.fitBounds(bounds, { padding: [48, 48] })
+  }, [focusPlaces, center, radius, map]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // On new/edited place: fly to it
   useEffect(() => {
     if (!focusPlace) return
     map.flyTo([focusPlace.lat, focusPlace.lng], 14)
     onFocusDone()
-  }, [focusPlace]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [focusPlace, map, onFocusDone]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return null
 }
@@ -72,6 +80,38 @@ const newIcon = L.divIcon({
   popupAnchor: [0, -40],
 })
 
+const centerIcon = L.divIcon({
+  className: '',
+  html: `<div style="
+    width: 28px;
+    height: 28px;
+    position: relative;
+  ">
+    <div style="
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 20px; height: 20px;
+      margin: -10px 0 0 -10px;
+      border: 2.5px solid #4A90D9;
+      border-radius: 50%;
+      background: rgba(74,144,217,0.15);
+    "></div>
+    <div style="
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 8px; height: 8px;
+      margin: -4px 0 0 -4px;
+      background: #4A90D9;
+      border: 2px solid white;
+      border-radius: 50%;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    "></div>
+  </div>`,
+  iconSize: [28, 28],
+  iconAnchor: [14, 14],
+  popupAnchor: [0, -16],
+})
+
 // Auto-opens the popup for the newly added marker
 function AutoOpenPopup({ markerRef }) {
   useEffect(() => {
@@ -95,11 +135,40 @@ function PopupOpener({ markerRefs, popupPlaceId, onPopupDone }) {
   return null
 }
 
-export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone }) {
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone }) {
   const [confirmingId, setConfirmingId] = useState(null)
+  const [circleOpacity, setCircleOpacity] = useState(0)
+  const circleFadeRef = useRef(null)
   const markerRefs = useRef({})
   const defaultCenter = [-34.6037, -58.3816]
   const defaultZoom = 5
+
+  // Show circle at full opacity on city/radius change, then fade out
+  useEffect(() => {
+    if (!center) {
+      setCircleOpacity(0)
+      return
+    }
+    setCircleOpacity(1)
+
+    const fadeTimer = setTimeout(() => {
+      let opacity = 1
+      circleFadeRef.current = setInterval(() => {
+        opacity -= 0.05
+        if (opacity <= 0) {
+          setCircleOpacity(0)
+          clearInterval(circleFadeRef.current)
+        } else {
+          setCircleOpacity(opacity)
+        }
+      }, 50)
+    }, 2500)
+
+    return () => {
+      clearTimeout(fadeTimer)
+      if (circleFadeRef.current) clearInterval(circleFadeRef.current)
+    }
+  }, [center?.lat, center?.lng, radius])
 
   return (
     <MapContainer
@@ -109,7 +178,7 @@ export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone,
       zoomControl={true}
       className="main-map"
     >
-      <MapController places={places} focusPlace={focusPlace} onFocusDone={onFocusDone} />
+      <MapController focusPlaces={focusPlaces} center={center} radius={radius} focusPlace={focusPlace} onFocusDone={onFocusDone} />
       {popupPlaceId && (
         <PopupOpener
           markerRefs={markerRefs}
@@ -121,6 +190,34 @@ export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone,
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
+
+      {center && circleOpacity > 0 && (
+        <Circle
+          center={[center.lat, center.lng]}
+          radius={radius * 1000}
+          pathOptions={{
+            color: '#4A90D9',
+            fillColor: '#4A90D9',
+            fillOpacity: 0.12 * circleOpacity,
+            opacity: circleOpacity,
+            weight: 2,
+          }}
+        />
+      )}
+
+      {center && (
+        <Marker
+            position={[center.lat, center.lng]}
+            icon={centerIcon}
+          >
+            <Popup>
+              <div className="popup">
+                <p className="popup-name">Search center</p>
+                <p className="popup-address">{radius} km radius</p>
+              </div>
+            </Popup>
+          </Marker>
+      )}
 
       {places.map((place) => {
         const isNew = place.id === newPlaceId
@@ -144,6 +241,7 @@ export default function Map({ places, onDelete, onEdit, focusPlace, onFocusDone,
 
 function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete, onEdit, markerRefs }) {
   const markerRef = useRef(null)
+  const [navOpen, setNavOpen] = useState(false)
 
   useEffect(() => {
     markerRefs.current[place.id] = markerRef.current
@@ -183,6 +281,17 @@ function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete
                 <ExternalLink size={12} /> Source
               </a>
             )}
+            <div className="nav-wrapper">
+              <button className="popup-action-btn" onClick={() => setNavOpen(!navOpen)}>
+                <Navigation size={12} /> Directions
+              </button>
+              {navOpen && (
+                <div className="nav-menu">
+                  <a href={googleMapsUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="nav-menu-item" onClick={() => setNavOpen(false)}>Google Maps</a>
+                  <a href={wazeUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="nav-menu-item" onClick={() => setNavOpen(false)}>Waze</a>
+                </div>
+              )}
+            </div>
             <button className="popup-action-btn" onClick={() => onEdit(place)}>
               <Pencil size={12} /> Edit
             </button>

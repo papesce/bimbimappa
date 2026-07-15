@@ -4,9 +4,11 @@ import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
 import ExportButton from './components/ExportButton'
+import LocationControls from './components/LocationControls'
 import AccessDenied from './components/AccessDenied'
 import { usePlaces } from './hooks/usePlaces'
 import { useAuth } from './hooks/useAuth'
+import { useMapFocus } from './hooks/useMapFocus'
 import './index.css'
 
 function getFilterRange(filter) {
@@ -33,6 +35,7 @@ function getFilterRange(filter) {
 export default function App() {
   const { authed, login } = useAuth()
   const { places, loading, addPlace, deletePlace, updatePlace } = usePlaces()
+  const { center, radius, matchedPlaces, isGeolocating, setCenter, setRadius, clearCenter, resetToGeolocation } = useMapFocus(places)
   const [panel, setPanel] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
   const [filter, setFilter] = useState('all')
@@ -61,7 +64,7 @@ export default function App() {
 
   const filterRange = getFilterRange(filter)
   const filteredPlaces = filterRange
-    ? places.filter(p => {
+    ? matchedPlaces.filter(p => {
         if (!p.date_from) return false
         const [fy, fm, fd] = p.date_from.split('-').map(Number)
         const from = new Date(fy, fm - 1, fd)
@@ -69,7 +72,7 @@ export default function App() {
         const to = new Date(ty, tm - 1, td, 23, 59, 59, 999)
         return to >= filterRange.start && from <= filterRange.end
       })
-    : places
+    : matchedPlaces
 
   if (!authed) return <AccessDenied onLogin={login} />
 
@@ -84,6 +87,9 @@ export default function App() {
       <div className={`map-wrapper${loading ? ' map-loading' : ''}`}>
         <Map
           places={filteredPlaces}
+          focusPlaces={matchedPlaces}
+          center={center}
+          radius={radius}
           onDelete={deletePlace}
           onEdit={setEditingPlace}
           focusPlace={focusPlace}
@@ -104,7 +110,7 @@ export default function App() {
         </div>
         <div className="topbar-actions">
           <span className="pin-count">
-            {filteredPlaces.length} of {places.length} {places.length === 1 ? 'place' : 'places'}
+            {filteredPlaces.length} of {matchedPlaces.length} {matchedPlaces.length === 1 ? 'place' : 'places'}
           </span>
           <button
             className={`icon-btn${panel === 'list' ? ' active' : ''}`}
@@ -129,6 +135,16 @@ export default function App() {
           </button>
         ))}
       </div>
+
+      {/* Location controls — floats below the filter strip, left side */}
+      <LocationControls
+        radius={radius}
+        isGeolocating={isGeolocating}
+        onCitySelect={(lat, lng, name) => setCenter(lat, lng, name)}
+        onRadiusChange={setRadius}
+        onReset={resetToGeolocation}
+        onClear={clearCenter}
+      />
 
       {/* FAB — primary action, bottom-right; hidden while any panel is open */}
       {!panel && !editingPlace && (
