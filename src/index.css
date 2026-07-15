@@ -1019,6 +1019,33 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 .city-search-clear-all:hover { color: var(--coral-dk); }
 
+.city-search-confirm-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #e05555;
+}
+
+.city-search-confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  background: none;
+  border: 1px solid currentColor;
+  border-radius: 5px;
+  padding: 2px 7px;
+  font-size: 11px;
+  font-family: inherit;
+  cursor: pointer;
+  color: var(--sub);
+  transition: background 0.1s, color 0.1s;
+}
+
+.city-search-confirm-btn.danger { color: #e05555; }
+.city-search-confirm-btn:hover { background: var(--mist); }
+
 .city-search-option {
   display: flex;
   align-items: center;

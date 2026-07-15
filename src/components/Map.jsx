@@ -338,7 +338,7 @@ function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete
               <Pencil size={12} /> Edit
             </button>
             <button
-              className={`popup-action-btn${confirmingId === place.id ? ' danger' : ''}`}
+              className="popup-action-btn danger"
               onClick={() => setConfirmingId(confirmingId === place.id ? null : place.id)}
               style={{ marginLeft: 'auto' }}
               title="Remove"

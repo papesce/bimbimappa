@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
-import { Search, X, Clock, Trash2, MapPin, Map, ChevronDown } from 'lucide-react'
+import { Search, X, Clock, Trash2, Check, MapPin, Map, ChevronDown } from 'lucide-react'
 import RadiusSelector from './RadiusSelector'
 
 const RECENT_KEY = 'bimbimappa-recent-cities'
@@ -22,6 +22,7 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
   const [results, setResults] = useState([])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState(loadRecent)
+  const [confirmingClearAll, setConfirmingClearAll] = useState(false)
   const inputRef = useRef(null)
   const timerRef = useRef(null)
   const blurRef = useRef(null)
@@ -196,12 +197,30 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
                 <>
                   <div className="city-search-dropdown-header">
                     <span>Recent searches</span>
-                    <button
-                      className="city-search-clear-all"
-                      onMouseDown={clearAllRecent}
-                    >
-                      <Trash2 size={11} /> Clear all
-                    </button>
+                    {confirmingClearAll ? (
+                      <span className="city-search-confirm-inline">
+                        <span>Clear all?</span>
+                        <button
+                          className="city-search-confirm-btn danger"
+                          onMouseDown={(e) => { e.preventDefault(); clearAllRecent(e); setConfirmingClearAll(false) }}
+                        >
+                          <Check size={11} />Yes
+                        </button>
+                        <button
+                          className="city-search-confirm-btn"
+                          onMouseDown={(e) => { e.preventDefault(); setConfirmingClearAll(false) }}
+                        >
+                          <X size={11} />No
+                        </button>
+                      </span>
+                    ) : (
+                      <button
+                        className="city-search-clear-all"
+                        onMouseDown={(e) => { e.preventDefault(); setConfirmingClearAll(true) }}
+                      >
+                        <Trash2 size={11} /> Clear all
+                      </button>
+                    )}
                   </div>
                   {recent.map((entry) => (
                     <button
@@ -213,7 +232,7 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
                       <span className="city-search-option-text">{entry.name}</span>
                       <span
                         className="city-search-option-remove"
-                        onMouseDown={(e) => removeRecent(e, entry.name)}
+                        onMouseDown={(e) => { e.preventDefault(); removeRecent(e, entry.name) }}
                       >
                         <X size={12} />
                       </span>
