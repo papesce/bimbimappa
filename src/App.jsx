@@ -50,6 +50,7 @@ export default function App() {
   async function handleAdd(data) {
     const result = await addPlace(data)
     if (result) {
+      setViewportBounds(null)
       setFocusPlace({ lat: result.lat, lng: result.lng })
       setNewPlaceId(result.id)
       setPopupPlaceId(result.id)
@@ -82,6 +83,10 @@ export default function App() {
   }
   if (viewportBounds) {
     filteredPlaces = getPlacesWithinBounds(filteredPlaces, viewportBounds)
+  }
+  if (viewingPlace && !filteredPlaces.some(p => p.id === viewingPlace.id)) {
+    const target = places.find(p => p.id === viewingPlace.id)
+    if (target) filteredPlaces = [target, ...filteredPlaces]
   }
 
   function handleViewArea() {
