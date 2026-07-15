@@ -159,7 +159,7 @@ export default function App() {
       {/* Location controls — geolocation only, floats below the filter strip left side */}
       <LocationControls
         isGeolocating={isGeolocating}
-        onReset={() => { resetToGeolocation(); setViewingPlace(null) }}
+        onReset={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
       />
 
       {/* FAB — primary action, bottom-right; hidden while any panel is open */}
@@ -187,6 +187,9 @@ export default function App() {
             <div className="panel-header">
               <h2>Saved places</h2>
               <div className="panel-header-right">
+                <button className="icon-btn" onClick={() => setPanel('add')} title="Add place">
+                  <Plus size={18} />
+                </button>
                 <ExportButton />
                 <button className="icon-btn" onClick={() => setPanel(null)}>
                   <X size={18} />
@@ -207,9 +210,9 @@ export default function App() {
                 activeFilter={filter}
                 cityName={cityName}
                 radius={radius}
-                onRadiusChange={(r) => { setRadius(r); setViewingPlace(null) }}
-                onCitySelect={(lat, lng, name) => { setCenter(lat, lng, name); setViewingPlace(null) }}
-                onClear={() => { clearCenter(); setViewingPlace(null) }}
+                onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
+                onCitySelect={(lat, lng, name) => { setCenter(lat, lng, name); setViewportBounds(null); setViewingPlace(null) }}
+                onClear={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null) }}
                 viewingPlace={viewingPlace}
               />
             </div>

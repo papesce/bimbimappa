@@ -1,15 +1,18 @@
+const OPTIONS = [25, 50, 100, 200]
+
 export default function RadiusSelector({ value, onChange }) {
   return (
-    <select
-      className="radius-selector"
-      value={value}
-      onChange={(e) => onChange(Number(e.target.value))}
-    >
-      <option value={25}>25 km</option>
-      <option value={50}>50 km</option>
-      <option value={100}>100 km</option>
-      <option value={150}>150 km</option>
-      <option value={200}>200 km</option>
-    </select>
+    <div className="radius-pills">
+      {OPTIONS.map((km) => (
+        <button
+          key={km}
+          type="button"
+          className={`radius-pill${value === km ? ' radius-pill--active' : ''}`}
+          onMouseDown={(e) => { e.preventDefault(); onChange(km) }}
+        >
+          {km}
+        </button>
+      ))}
+    </div>
   )
 }

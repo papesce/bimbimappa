@@ -438,36 +438,64 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 /* ─── Area controls (city search + context label in places panel) ── */
 .area-controls {
   padding: 12px 16px 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
 }
 
-.area-context {
-  display: inline-flex;
+.city-search-pill {
+  display: flex;
   align-items: center;
   gap: 5px;
+  width: 100%;
   font-size: 11px;
   font-weight: 500;
   color: var(--sub);
   background: var(--mist);
   border: 1px solid var(--border);
   border-radius: 20px;
-  padding: 3px 10px 3px 8px;
-  align-self: flex-start;
+  padding: 5px 10px 5px 8px;
+  cursor: pointer;
+  font-family: inherit;
+  text-align: left;
+  transition: background 0.15s, border-color 0.15s;
 }
 
-.area-context strong {
+.city-search-pill:hover {
+  background: var(--border);
+  border-color: var(--sub);
+}
+
+.city-search-pill strong {
   color: var(--text);
   font-weight: 600;
 }
 
-.area-context-icon {
+.city-search-pill-icon {
   color: var(--sub);
   flex-shrink: 0;
 }
 
-.area-context-clear {
+.city-search-pill-label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.city-search-pill-chevron {
+  color: var(--sub);
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+
+.city-search-pill--static {
+  cursor: default;
+}
+
+.city-search-pill--static:hover {
+  background: var(--mist);
+  border-color: var(--border);
+}
+
+.city-search-pill-clear {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -480,7 +508,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   flex-shrink: 0;
 }
 
-.area-context-clear:hover {
+.city-search-pill-clear:hover {
   color: var(--text);
 }
 
@@ -1062,28 +1090,41 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   white-space: nowrap;
 }
 
-.radius-selector {
-  height: 28px;
-  padding: 0 22px 0 4px;
-  border: none;
+.radius-pills {
+  display: flex;
+  gap: 4px;
+}
+
+.radius-pill {
+  height: 26px;
+  min-width: 36px;
+  padding: 0 8px;
+  border: 1.5px solid var(--border);
   border-radius: 6px;
-  font-size: 13px;
+  background: transparent;
+  color: var(--sub);
+  font-size: 12px;
   font-weight: 600;
-  color: var(--text);
-  background-color: transparent;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888899' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 4px center;
-  appearance: none;
-  -webkit-appearance: none;
   font-family: inherit;
   cursor: pointer;
   outline: none;
-  transition: background-color 0.15s;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
 }
 
-.radius-selector:focus, .radius-selector:hover {
-  background-color: rgba(0, 0, 0, 0.05);
+.radius-pill:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.radius-pill--active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.radius-pill--active:hover {
+  background: var(--accent);
+  color: white;
 }
 
 /* ─── Back to area button (floating on map) ───────────────────── */

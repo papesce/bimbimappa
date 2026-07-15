@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from 'react'
-import { Search, X, Clock, Trash2 } from 'lucide-react'
+import { useState, useRef, useCallback, useEffect } from 'react'
+import { Search, X, Clock, Trash2, MapPin, Map, ChevronDown } from 'lucide-react'
 import RadiusSelector from './RadiusSelector'
 
 const RECENT_KEY = 'bimbimappa-recent-cities'
@@ -16,13 +16,21 @@ function saveRecent(list) {
   try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT))) } catch {}
 }
 
-export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radius, onRadiusChange }) {
+export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radius, onRadiusChange, cityName, viewingPlace }) {
+  const [editing, setEditing] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState(loadRecent)
+  const inputRef = useRef(null)
   const timerRef = useRef(null)
   const blurRef = useRef(null)
+
+  useEffect(() => {
+    if (editing && inputRef.current) {
+      inputRef.current.focus()
+    }
+  }, [editing])
 
   const search = useCallback(async (q) => {
     try {
@@ -54,7 +62,6 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
   function handleSelect(r) {
     clearTimeout(blurRef.current)
     const name = r.display_name.split(',')[0]
-    setQuery(name)
     setOpen(false)
 
     const entry = { name, lat: parseFloat(r.lat), lon: parseFloat(r.lon) }
@@ -63,19 +70,23 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
     saveRecent(next)
 
     onCitySelect(entry.lat, entry.lon, name)
+    setQuery('')
+    setEditing(false)
   }
 
   function handleRecentSelect(entry) {
     clearTimeout(blurRef.current)
-    setQuery(entry.name)
     setOpen(false)
     onCitySelect(entry.lat, entry.lon, entry.name)
+    setQuery('')
+    setEditing(false)
   }
 
   function handleClear() {
     setQuery('')
     setResults([])
     setOpen(false)
+    setEditing(false)
     onClear()
   }
 
@@ -84,7 +95,21 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
   }
 
   function handleBlur() {
-    blurRef.current = setTimeout(() => setOpen(false), 150)
+    blurRef.current = setTimeout(() => {
+      setOpen(false)
+      setEditing(false)
+      setQuery('')
+      setResults([])
+    }, 150)
+  }
+
+  function handleKeyDown(e) {
+    if (e.key === 'Escape') {
+      setQuery('')
+      setResults([])
+      setOpen(false)
+      setEditing(false)
+    }
   }
 
   function removeRecent(e, name) {
@@ -100,84 +125,124 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
     saveRecent([])
   }
 
+  function handleOpen() {
+    setEditing(true)
+  }
+
   const showRecent = query.trim().length === 0 && recent.length > 0
   const showNoRecent = query.trim().length === 0 && recent.length === 0 && open
   const showResults = query.trim().length >= 2 && open
   const showNoResults = query.trim().length >= 2 && open && results.length === 0
 
+  if (viewingPlace) {
+    return (
+      <div className="city-search">
+        <div className="city-search-pill city-search-pill--static">
+          <MapPin size={12} className="city-search-pill-icon" />
+          <span className="city-search-pill-label">Viewing <strong>{viewingPlace.name}</strong></span>
+          <button className="city-search-pill-clear" onClick={onClear} title="Clear filter">
+            <X size={12} />
+          </button>
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <div className="city-search">
-      <Search size={14} className="city-search-icon" />
-      <input
-        className="city-search-input"
-        type="text"
-        placeholder="Search city…"
-        value={query}
-        onChange={handleChange}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        autoFocus={autoFocus}
-      />
-      {query.length > 0 && (
-        <button
-          className="city-search-clear"
-          onMouseDown={(e) => { e.preventDefault(); handleClear() }}
-          title="Clear search"
-        >
-          <X size={14} />
+    <div className={`city-search${editing ? ' city-search--editing' : ''}`}>
+      {!editing ? (
+        <button className="city-search-pill" onClick={handleOpen} type="button">
+          {cityName
+            ? <MapPin size={12} className="city-search-pill-icon" />
+            : <Map size={12} className="city-search-pill-icon" />
+          }
+          <span className="city-search-pill-label">
+            {cityName
+              ? <>Showing in <strong>{cityName}</strong>{radius ? ` · ${radius} km` : ''}</>
+              : <>Showing in current map view</>
+            }
+          </span>
+          {cityName
+            ? <button className="city-search-pill-clear" onClick={(e) => { e.stopPropagation(); handleClear() }} title="Clear filter"><X size={12} /></button>
+            : <ChevronDown size={12} className="city-search-pill-chevron" />
+          }
         </button>
-      )}
-      {open && (showRecent || showNoRecent || showResults || showNoResults) && (
-        <div className="city-search-dropdown">
-          {showRecent && (
-            <>
-              <div className="city-search-dropdown-header">
-                <span>Recent searches</span>
+      ) : (
+        <>
+          <Search size={14} className="city-search-icon" />
+          <input
+            ref={inputRef}
+            className="city-search-input"
+            type="text"
+            placeholder="Search city…"
+            value={query}
+            onChange={handleChange}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
+            onKeyDown={handleKeyDown}
+          />
+          {query.length > 0 && (
+            <button
+              className="city-search-clear"
+              onMouseDown={(e) => { e.preventDefault(); handleClear() }}
+              title="Clear search"
+            >
+              <X size={14} />
+            </button>
+          )}
+          {open && (showRecent || showNoRecent || showResults || showNoResults) && (
+            <div className="city-search-dropdown">
+              {showRecent && (
+                <>
+                  <div className="city-search-dropdown-header">
+                    <span>Recent searches</span>
+                    <button
+                      className="city-search-clear-all"
+                      onMouseDown={clearAllRecent}
+                    >
+                      <Trash2 size={11} /> Clear all
+                    </button>
+                  </div>
+                  {recent.map((entry) => (
+                    <button
+                      key={entry.name}
+                      className="city-search-option city-search-recent"
+                      onMouseDown={() => handleRecentSelect(entry)}
+                    >
+                      <Clock size={12} className="city-search-option-icon" />
+                      <span className="city-search-option-text">{entry.name}</span>
+                      <span
+                        className="city-search-option-remove"
+                        onMouseDown={(e) => removeRecent(e, entry.name)}
+                      >
+                        <X size={12} />
+                      </span>
+                    </button>
+                  ))}
+                </>
+              )}
+              {showNoRecent && (
+                <div className="city-search-empty">No recent searches</div>
+              )}
+              {showResults && results.map((r) => (
                 <button
-                  className="city-search-clear-all"
-                  onMouseDown={clearAllRecent}
+                  key={r.place_id}
+                  className="city-search-option"
+                  onMouseDown={() => handleSelect(r)}
                 >
-                  <Trash2 size={11} /> Clear all
-                </button>
-              </div>
-              {recent.map((entry) => (
-                <button
-                  key={entry.name}
-                  className="city-search-option city-search-recent"
-                  onMouseDown={() => handleRecentSelect(entry)}
-                >
-                  <Clock size={12} className="city-search-option-icon" />
-                  <span className="city-search-option-text">{entry.name}</span>
-                  <span
-                    className="city-search-option-remove"
-                    onMouseDown={(e) => removeRecent(e, entry.name)}
-                  >
-                    <X size={12} />
-                  </span>
+                  {r.display_name}
                 </button>
               ))}
-            </>
+              {showNoResults && (
+                <div className="city-search-empty">No results found</div>
+              )}
+              <div className="city-search-radius-row">
+                <span className="city-search-radius-label">Radius</span>
+                <RadiusSelector value={radius} onChange={onRadiusChange} />
+              </div>
+            </div>
           )}
-          {showNoRecent && (
-            <div className="city-search-empty">No recent searches</div>
-          )}
-          {showResults && results.map((r) => (
-            <button
-              key={r.place_id}
-              className="city-search-option"
-              onMouseDown={() => handleSelect(r)}
-            >
-              {r.display_name}
-            </button>
-          ))}
-          {showNoResults && (
-            <div className="city-search-empty">No results found</div>
-          )}
-          <div className="city-search-radius-row">
-            <span className="city-search-radius-label">Radius</span>
-            <RadiusSelector value={radius} onChange={onRadiusChange} />
-          </div>
-        </div>
+        </>
       )}
     </div>
   )
