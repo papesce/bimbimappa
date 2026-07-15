@@ -3,6 +3,7 @@ import { MapPin, List, Plus, X } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
+import ExportButton from './components/ExportButton'
 import AccessDenied from './components/AccessDenied'
 import { usePlaces } from './hooks/usePlaces'
 import { useAuth } from './hooks/useAuth'
@@ -153,9 +154,12 @@ export default function App() {
           <div className="panel">
             <div className="panel-header">
               <h2>Saved places</h2>
-              <button className="icon-btn" onClick={() => setPanel(null)}>
-                <X size={18} />
-              </button>
+              <div className="panel-header-right">
+                <ExportButton />
+                <button className="icon-btn" onClick={() => setPanel(null)}>
+                  <X size={18} />
+                </button>
+              </div>
             </div>
             <div className="panel-body">
               <PlacesList
