@@ -467,6 +467,23 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   flex-shrink: 0;
 }
 
+.area-context-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  padding: 0 0 0 2px;
+  cursor: pointer;
+  color: var(--sub);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.area-context-clear:hover {
+  color: var(--text);
+}
+
 /* ─── Search bar ────────────────────────────────────────────────── */
 .search-bar {
   position: relative;
@@ -844,13 +861,15 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 /* ─── Location bar (unified search + radius + geo) ──────────────── */
-.location-bar {
+.location-bar-geo {
   position: absolute;
   top: 53px;
   left: 16px;
   z-index: 999;
   display: flex;
   align-items: center;
+  justify-content: center;
+  width: 44px;
   height: 44px;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(12px);
@@ -858,53 +877,15 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   border-radius: 22px;
   border: 1px solid var(--border);
   box-shadow: 0 2px 16px rgba(0, 0, 0, 0.10);
-  width: auto;
-  overflow: visible;
-}
-
-
-.location-bar-divider {
-  width: 1px;
-  height: 22px;
-  background: var(--border);
-  flex-shrink: 0;
-}
-
-.location-bar-radius {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  padding: 0 10px 0 10px;
-  flex-shrink: 0;
-}
-
-.location-bar-radius-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: var(--sub);
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  white-space: nowrap;
-}
-
-.location-bar-geo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: none;
-  border: none;
   cursor: pointer;
   color: var(--sub);
-  padding: 0 14px 0 10px;
-  height: 100%;
-  border-radius: 0 22px 22px 0;
+  padding: 0;
   transition: color 0.15s, background 0.15s;
-  flex-shrink: 0;
 }
 
 .location-bar-geo:hover {
   color: var(--accent);
-  background: rgba(61, 90, 138, 0.06);
+  background: rgba(61, 90, 138, 0.08);
 }
 
 .location-bar-geo.spinning {
@@ -912,7 +893,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   animation: spin 1s linear infinite;
 }
 
-/* ─── City search (inside location bar) ─────────────────────────── */
+/* ─── City search ──────────────────────────────────────────────── */
 .city-search {
   position: relative;
   width: 100%;
@@ -932,7 +913,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   height: 44px;
   padding: 0 32px 0 36px;
   border: none;
-  border-radius: 22px 0 0 22px;
+  border-radius: 22px;
   font-size: 12px;
   font-weight: 600;
   color: var(--text);
@@ -1064,6 +1045,23 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   text-align: center;
 }
 
+.city-search-radius-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-top: 1px solid var(--border);
+}
+
+.city-search-radius-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--sub);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
 .radius-selector {
   height: 28px;
   padding: 0 22px 0 4px;
@@ -1126,8 +1124,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   .side-panel { width: 100vw; }
   .pin-count { display: none; }
   .filter-strip { top: 49px; }
-  .location-bar { top: 49px; left: 12px; }
-  .location-bar-radius-label { display: none; }
+  .location-bar-geo { top: 49px; left: 12px; }
   .fab { bottom: 24px; right: 16px; }
   .map-reset-btn { bottom: 72px; left: 12px; font-size: 12px; padding: 6px 12px; }
 }

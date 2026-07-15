@@ -156,11 +156,9 @@ export default function App() {
         ))}
       </div>
 
-      {/* Location controls — radius + geolocation, floats below the filter strip left side */}
+      {/* Location controls — geolocation only, floats below the filter strip left side */}
       <LocationControls
-        radius={radius}
         isGeolocating={isGeolocating}
-        onRadiusChange={(r) => { setRadius(r); setViewingPlace(null) }}
         onReset={() => { resetToGeolocation(); setViewingPlace(null) }}
       />
 
@@ -209,6 +207,7 @@ export default function App() {
                 activeFilter={filter}
                 cityName={cityName}
                 radius={radius}
+                onRadiusChange={(r) => { setRadius(r); setViewingPlace(null) }}
                 onCitySelect={(lat, lng, name) => { setCenter(lat, lng, name); setViewingPlace(null) }}
                 onClear={() => { clearCenter(); setViewingPlace(null) }}
                 viewingPlace={viewingPlace}

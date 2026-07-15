@@ -11,7 +11,7 @@ function toTitleCase(str) {
   return str
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, cityName, radius, onCitySelect, onClear, viewingPlace }) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [query, setQuery] = useState('')
   const [menuOpenId, setMenuOpenId] = useState(null)
@@ -36,15 +36,17 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
     <div className="area-controls">
       <div className="area-context">
         {viewingPlace
-          ? <><MapPin size={12} className="area-context-icon" /><span>Viewing <strong>{viewingPlace.name}</strong></span></>
+          ? <><MapPin size={12} className="area-context-icon" /><span>Viewing <strong>{viewingPlace.name}</strong></span><button className="area-context-clear" onClick={onClear} title="Clear filter"><X size={12} /></button></>
           : cityName
-            ? <><MapPin size={12} className="area-context-icon" /><span>Showing in <strong>{cityName}</strong>{radius ? ` · ${radius} km` : ''}</span></>
+            ? <><MapPin size={12} className="area-context-icon" /><span>Showing in <strong>{cityName}</strong>{radius ? ` · ${radius} km` : ''}</span><button className="area-context-clear" onClick={onClear} title="Clear filter"><X size={12} /></button></>
             : <><Map size={12} className="area-context-icon" /><span>Showing in current map view</span></>
         }
       </div>
       <CitySearchInput
         onCitySelect={onCitySelect}
         onClear={onClear}
+        radius={radius}
+        onRadiusChange={onRadiusChange}
       />
     </div>
   )

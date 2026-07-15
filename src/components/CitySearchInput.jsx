@@ -1,5 +1,6 @@
 import { useState, useRef, useCallback } from 'react'
 import { Search, X, Clock, Trash2 } from 'lucide-react'
+import RadiusSelector from './RadiusSelector'
 
 const RECENT_KEY = 'bimbimappa-recent-cities'
 const MAX_RECENT = 10
@@ -15,7 +16,7 @@ function saveRecent(list) {
   try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT))) } catch {}
 }
 
-export default function CitySearchInput({ onCitySelect, onClear, autoFocus }) {
+export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radius, onRadiusChange }) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
   const [open, setOpen] = useState(false)
@@ -172,6 +173,10 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus }) {
           {showNoResults && (
             <div className="city-search-empty">No results found</div>
           )}
+          <div className="city-search-radius-row">
+            <span className="city-search-radius-label">Radius</span>
+            <RadiusSelector value={radius} onChange={onRadiusChange} />
+          </div>
         </div>
       )}
     </div>
