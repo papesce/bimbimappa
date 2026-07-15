@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from 'react'
-import { MapContainer, TileLayer, Marker, Popup, Circle, useMap } from 'react-leaflet'
+import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Trash2, ExternalLink, Pencil, Check, X, Navigation } from 'lucide-react'
+import { Trash2, ExternalLink, Pencil, Check, X, Navigation, ChevronLeft } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 
-function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone }) {
+function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, fitBoundsTrigger }) {
   const map = useMap()
 
   // Fit the camera to the full radius circle + any matched markers
@@ -24,6 +24,21 @@ function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone })
     map.fitBounds(bounds, { padding: [48, 48] })
   }, [focusPlaces, center, radius, map]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Explicit refit triggered by "Back to area" button
+  useEffect(() => {
+    if (fitBoundsTrigger === 0) return
+    let bounds
+    if (center) {
+      const centerLatLng = L.latLng(center.lat, center.lng)
+      bounds = centerLatLng.toBounds(radius * 2000)
+    }
+    if (focusPlaces.length > 0) {
+      const markerBounds = L.latLngBounds(focusPlaces.map(p => [p.lat, p.lng]))
+      bounds = bounds ? bounds.extend(markerBounds) : markerBounds
+    }
+    if (bounds) map.fitBounds(bounds, { padding: [48, 48] })
+  }, [fitBoundsTrigger]) // eslint-disable-line react-hooks/exhaustive-deps
+
   // On new/edited place: fly to it
   useEffect(() => {
     if (!focusPlace) return
@@ -31,6 +46,31 @@ function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone })
     onFocusDone()
   }, [focusPlace, map, onFocusDone]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  return null
+}
+
+function BackToAreaButton({ viewingPlace, onViewArea }) {
+  if (!viewingPlace) return null
+  return (
+    <button className="map-reset-btn" onClick={onViewArea} title="Back to area view">
+      <ChevronLeft size={16} /> Back to area
+    </button>
+  )
+}
+
+function BoundsTracker({ onViewportChange }) {
+  const map = useMap()
+  useMapEvents({
+    moveend() {
+      const b = map.getBounds()
+      onViewportChange({
+        north: b.getNorth(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        west: b.getWest(),
+      })
+    },
+  })
   return null
 }
 
@@ -135,7 +175,7 @@ function PopupOpener({ markerRefs, popupPlaceId, onPopupDone }) {
   return null
 }
 
-export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone }) {
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, fitBoundsTrigger }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [circleOpacity, setCircleOpacity] = useState(0)
   const circleFadeRef = useRef(null)
@@ -178,7 +218,8 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
       zoomControl={true}
       className="main-map"
     >
-      <MapController focusPlaces={focusPlaces} center={center} radius={radius} focusPlace={focusPlace} onFocusDone={onFocusDone} />
+      <MapController focusPlaces={focusPlaces} center={center} radius={radius} focusPlace={focusPlace} onFocusDone={onFocusDone} fitBoundsTrigger={fitBoundsTrigger} />
+      <BoundsTracker onViewportChange={onViewportChange} />
       {popupPlaceId && (
         <PopupOpener
           markerRefs={markerRefs}
@@ -235,6 +276,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
         />
         )
       })}
+      <BackToAreaButton viewingPlace={viewingPlace} onViewArea={onViewArea} />
     </MapContainer>
   )
 }

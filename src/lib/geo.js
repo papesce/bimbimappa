@@ -23,6 +23,17 @@ export function getPlacesWithinRadius(places, center, radiusKm) {
 }
 
 /**
+ * Return places that fall within the given map bounds.
+ * bounds = { north, south, east, west }
+ */
+export function getPlacesWithinBounds(places, bounds) {
+  return places.filter(
+    (p) => p.lat >= bounds.south && p.lat <= bounds.north &&
+           p.lng >= bounds.west  && p.lng <= bounds.east
+  )
+}
+
+/**
  * Walk the radii array (smallest → largest) and return the first bucket
  * that contains at least `minResults` places. If none do, return the
  * largest radius with whatever it catches — never expand past the last entry.

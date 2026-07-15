@@ -9,6 +9,7 @@ import AccessDenied from './components/AccessDenied'
 import { usePlaces } from './hooks/usePlaces'
 import { useAuth } from './hooks/useAuth'
 import { useMapFocus } from './hooks/useMapFocus'
+import { getPlacesWithinBounds } from './lib/geo'
 import './index.css'
 
 function getFilterRange(filter) {
@@ -35,13 +36,16 @@ function getFilterRange(filter) {
 export default function App() {
   const { authed, login } = useAuth()
   const { places, loading, addPlace, deletePlace, updatePlace } = usePlaces()
-  const { center, radius, matchedPlaces, isGeolocating, setCenter, setRadius, clearCenter, resetToGeolocation } = useMapFocus(places)
+  const { center, radius, cityName, matchedPlaces, isGeolocating, setCenter, setRadius, clearCenter, resetToGeolocation } = useMapFocus(places)
   const [panel, setPanel] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
   const [filter, setFilter] = useState('all')
   const [focusPlace, setFocusPlace] = useState(null)
   const [newPlaceId, setNewPlaceId] = useState(null)
   const [popupPlaceId, setPopupPlaceId] = useState(null)
+  const [viewportBounds, setViewportBounds] = useState(null)
+  const [viewingPlace, setViewingPlace] = useState(null)
+  const [fitBoundsTrigger, setFitBoundsTrigger] = useState(0)
 
   async function handleAdd(data) {
     const result = await addPlace(data)
@@ -49,6 +53,7 @@ export default function App() {
       setFocusPlace({ lat: result.lat, lng: result.lng })
       setNewPlaceId(result.id)
       setPopupPlaceId(result.id)
+      setViewingPlace({ id: result.id, name: result.name })
       setTimeout(() => setNewPlaceId(null), 4000)
       setPanel(null)
     }
@@ -59,20 +64,31 @@ export default function App() {
     if (result) {
       setFocusPlace({ lat: result.lat, lng: result.lng })
       setPopupPlaceId(result.id)
+      setViewingPlace({ id: result.id, name: result.name })
     }
   }
 
   const filterRange = getFilterRange(filter)
-  const filteredPlaces = filterRange
-    ? matchedPlaces.filter(p => {
-        if (!p.date_from) return false
-        const [fy, fm, fd] = p.date_from.split('-').map(Number)
-        const from = new Date(fy, fm - 1, fd)
-        const [ty, tm, td] = (p.date_to || p.date_from).split('-').map(Number)
-        const to = new Date(ty, tm - 1, td, 23, 59, 59, 999)
-        return to >= filterRange.start && from <= filterRange.end
-      })
-    : matchedPlaces
+  let filteredPlaces = matchedPlaces
+  if (filterRange) {
+    filteredPlaces = filteredPlaces.filter(p => {
+      if (!p.date_from) return false
+      const [fy, fm, fd] = p.date_from.split('-').map(Number)
+      const from = new Date(fy, fm - 1, fd)
+      const [ty, tm, td] = (p.date_to || p.date_from).split('-').map(Number)
+      const to = new Date(ty, tm - 1, td, 23, 59, 59, 999)
+      return to >= filterRange.start && from <= filterRange.end
+    })
+  }
+  if (viewportBounds) {
+    filteredPlaces = getPlacesWithinBounds(filteredPlaces, viewportBounds)
+  }
+
+  function handleViewArea() {
+    setViewingPlace(null)
+    setFitBoundsTrigger(n => n + 1)
+    setPanel('list')
+  }
 
   if (!authed) return <AccessDenied onLogin={login} />
 
@@ -97,6 +113,10 @@ export default function App() {
           newPlaceId={newPlaceId}
           popupPlaceId={popupPlaceId}
           onPopupDone={() => setPopupPlaceId(null)}
+          onViewportChange={setViewportBounds}
+          viewingPlace={viewingPlace}
+          onViewArea={handleViewArea}
+          fitBoundsTrigger={fitBoundsTrigger}
         />
       </div>
 
@@ -136,14 +156,12 @@ export default function App() {
         ))}
       </div>
 
-      {/* Location controls — floats below the filter strip, left side */}
+      {/* Location controls — radius + geolocation, floats below the filter strip left side */}
       <LocationControls
         radius={radius}
         isGeolocating={isGeolocating}
-        onCitySelect={(lat, lng, name) => setCenter(lat, lng, name)}
-        onRadiusChange={setRadius}
-        onReset={resetToGeolocation}
-        onClear={clearCenter}
+        onRadiusChange={(r) => { setRadius(r); setViewingPlace(null) }}
+        onReset={() => { resetToGeolocation(); setViewingPlace(null) }}
       />
 
       {/* FAB — primary action, bottom-right; hidden while any panel is open */}
@@ -185,9 +203,15 @@ export default function App() {
                 onLocate={(place) => {
                   setFocusPlace({ lat: place.lat, lng: place.lng })
                   setPopupPlaceId(place.id)
+                  setViewingPlace({ id: place.id, name: place.name })
                   setPanel(null)
                 }}
                 activeFilter={filter}
+                cityName={cityName}
+                radius={radius}
+                onCitySelect={(lat, lng, name) => { setCenter(lat, lng, name); setViewingPlace(null) }}
+                onClear={() => { clearCenter(); setViewingPlace(null) }}
+                viewingPlace={viewingPlace}
               />
             </div>
           </div>
