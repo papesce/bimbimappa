@@ -28,7 +28,7 @@ jobs:
         run: |
           LATEST_TAG=$(git tag --list 'v*' --sort=-version:refname | head -n1)
           if [ -z "$LATEST_TAG" ]; then
-            NEW_TAG="v0.0.1"
+            NEW_TAG="v0.1.0"
           else
             MAJOR=$(echo "$LATEST_TAG" | cut -d. -f1 | tr -d 'v')
             MINOR=$(echo "$LATEST_TAG" | cut -d. -f2)
