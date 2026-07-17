@@ -222,6 +222,10 @@ export default function App() {
                 onCitySelect={(lat, lng, name) => { setCenter(lat, lng, name); setViewportBounds(null); setViewingPlace(null) }}
                 onClear={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null) }}
                 viewingPlace={viewingPlace}
+                filter={filter}
+                onFilterChange={setFilter}
+                viewportBounds={viewportBounds}
+                onClearBounds={() => setViewportBounds(null)}
               />
             </div>
           </div>

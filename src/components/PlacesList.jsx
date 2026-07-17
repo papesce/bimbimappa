@@ -11,7 +11,7 @@ function toTitleCase(str) {
   return str
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace }) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, filter, onFilterChange, viewportBounds, onClearBounds }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [query, setQuery] = useState('')
   const [menuOpenId, setMenuOpenId] = useState(null)
@@ -46,6 +46,29 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
     </div>
   )
 
+  const activeFilters = []
+  if (filter && filter !== 'all') {
+    activeFilters.push({
+      type: 'date',
+      label: filter === 'week' ? 'This Week' : filter === 'month' ? 'This Month' : filter,
+      onClear: () => onFilterChange?.('all')
+    })
+  }
+  if (cityName) {
+    activeFilters.push({
+      type: 'city',
+      label: `📍 ${cityName}${radius ? ` · ${radius} km` : ''}`,
+      onClear: onClear
+    })
+  }
+  if (viewportBounds) {
+    activeFilters.push({
+      type: 'bounds',
+      label: 'Current map view',
+      onClear: onClearBounds
+    })
+  }
+
   if (places.length === 0) {
     const messages = {
       week: 'No places added this week.',
@@ -70,6 +93,22 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
   return (
     <>
       {areaHeader}
+      {activeFilters.length > 0 && (
+        <div className="filter-chips">
+          {activeFilters.map((f, i) => (
+            <div key={i} className="filter-chip">
+              <span className="filter-chip-label">{f.label}</span>
+              <button
+                className="filter-chip-clear"
+                onClick={f.onClear}
+                title={`Clear ${f.type} filter`}
+              >
+                <X size={12} />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
       <div className="search-bar">
         <Search size={14} className="search-icon" />
         <input
