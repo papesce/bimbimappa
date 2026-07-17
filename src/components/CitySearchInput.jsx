@@ -16,7 +16,7 @@ function saveRecent(list) {
   try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT))) } catch {}
 }
 
-export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radius, onRadiusChange, cityName, viewingPlace }) {
+export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radius, onRadiusChange, cityName, viewingPlace, activeFilter }) {
   const [editing, setEditing] = useState(false)
   const [query, setQuery] = useState('')
   const [results, setResults] = useState([])
@@ -160,7 +160,11 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
           <span className="city-search-pill-label">
             {cityName
               ? <>Showing in <strong>{cityName}</strong>{radius ? ` · ${radius} km` : ''}</>
-              : <>Showing in current map view</>
+              : activeFilter === 'week'
+                ? <>Showing this week</>
+                : activeFilter === 'month'
+                  ? <>Showing this month</>
+                  : <>Showing in current map view</>
             }
           </span>
           {cityName

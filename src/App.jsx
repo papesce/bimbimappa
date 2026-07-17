@@ -135,7 +135,10 @@ export default function App() {
         </div>
         <div className="topbar-actions">
           <span className="pin-count">
-            {filteredPlaces.length} of {matchedPlaces.length} {matchedPlaces.length === 1 ? 'place' : 'places'}
+            {filteredPlaces.length === places.length
+              ? <>{places.length} {places.length === 1 ? 'place' : 'places'}</>
+              : <>{filteredPlaces.length} of {places.length} places{filter !== 'all' && ` · ${FILTERS.find(f => f.key === filter)?.label}`}{cityName && ` · ${cityName}`}</>
+            }
           </span>
           <button
             className={`icon-btn${panel === 'list' ? ' active' : ''}`}
