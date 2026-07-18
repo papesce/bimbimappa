@@ -9,7 +9,7 @@ import AccessDenied from './components/AccessDenied'
 import { usePlaces } from './hooks/usePlaces'
 import { useAuth } from './hooks/useAuth'
 import { useMapFocus } from './hooks/useMapFocus'
-import { getPlacesWithinBounds } from './lib/geo'
+import { getPlacesWithinBounds, getPlacesWithinRadius } from './lib/geo'
 import './index.css'
 
 function getFilterRange(filter) {
@@ -47,6 +47,7 @@ export default function App() {
   const [viewingPlace, setViewingPlace] = useState(null)
   const [fitBoundsTrigger, setFitBoundsTrigger] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
+  const [previewArea, setPreviewArea] = useState(null)
 
   async function handleAdd(data) {
     const result = await addPlace(data)
@@ -82,13 +83,15 @@ export default function App() {
       return to >= filterRange.start && from <= filterRange.end
     })
   }
-  if (viewportBounds) {
+  if (viewportBounds && !cityName) {
     filteredPlaces = getPlacesWithinBounds(filteredPlaces, viewportBounds)
   }
   if (viewingPlace && !filteredPlaces.some(p => p.id === viewingPlace.id)) {
     const target = places.find(p => p.id === viewingPlace.id)
     if (target) filteredPlaces = [target, ...filteredPlaces]
   }
+
+  const previewPlaces = previewArea ? getPlacesWithinRadius(places, previewArea, radius) : null
 
   function handleViewArea() {
     setViewingPlace(null)
@@ -112,7 +115,7 @@ export default function App() {
     <div className="app">
       <div className={`map-wrapper${loading ? ' map-loading' : ''}`}>
         <Map
-          places={filteredPlaces}
+          places={previewArea ? previewPlaces : filteredPlaces}
           focusPlaces={matchedPlaces}
           center={center}
           radius={radius}
@@ -128,6 +131,8 @@ export default function App() {
           onViewArea={handleViewArea}
           onDismissViewing={handleDismissViewing}
           fitBoundsTrigger={fitBoundsTrigger}
+          previewArea={previewArea}
+          onPreviewAreaDone={() => setPreviewArea(null)}
         />
       </div>
 
@@ -194,11 +199,12 @@ export default function App() {
           <AddPlacePanel
             key="add"
             onAdd={handleAdd}
-            onClose={() => setPanel(null)}
+            onClose={() => { setPanel(null); setPreviewArea(null) }}
             cityName={cityName}
             stateName={stateName}
             countryCode={countryCode}
             initialQuery={searchQuery}
+            onShowInMap={(coords) => setPreviewArea(coords)}
           />
         )}
         {panel === 'list' && !editingPlace && (
@@ -232,8 +238,8 @@ export default function App() {
                 cityName={cityName}
                 radius={radius}
                 onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
-                onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewportBounds(null); setViewingPlace(null) }}
-                onClear={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null) }}
+                onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
+                onClear={() => { clearCenter(); setViewingPlace(null) }}
                 viewingPlace={viewingPlace}
                 onClearViewing={() => { setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
                 filter={filter}
@@ -251,11 +257,12 @@ export default function App() {
             key={editingPlace.id}
             editPlace={editingPlace}
             onUpdate={handleUpdate}
-            onClose={() => { setEditingPlace(null); setPanel(null) }}
+            onClose={() => { setEditingPlace(null); setPanel(null); setPreviewArea(null) }}
             cityName={cityName}
             stateName={stateName}
             countryCode={countryCode}
             initialQuery={searchQuery}
+            onShowInMap={(coords) => setPreviewArea(coords)}
           />
         )}
       </aside>

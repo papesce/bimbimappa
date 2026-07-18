@@ -5,11 +5,12 @@ import 'leaflet/dist/leaflet.css'
 import { Trash2, ExternalLink, Pencil, Check, X, Navigation, ChevronLeft } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 
-function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, fitBoundsTrigger }) {
+function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, fitBoundsTrigger, previewArea, onPreviewAreaDone }) {
   const map = useMap()
 
   // Fit the camera to the full radius circle + any matched markers
   useEffect(() => {
+    if (previewArea) return
     if (!center && focusPlaces.length === 0) return
     let bounds
     if (center) {
@@ -45,6 +46,13 @@ function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, f
     map.flyTo([focusPlace.lat, focusPlace.lng], 14)
     onFocusDone()
   }, [focusPlace, map, onFocusDone]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show area in map: fly to preview location
+  useEffect(() => {
+    if (!previewArea) return
+    map.flyTo([previewArea.lat, previewArea.lng], 14)
+    onPreviewAreaDone()
+  }, [previewArea, map, onPreviewAreaDone]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return null
 }
@@ -181,7 +189,7 @@ function PopupOpener({ markerRefs, popupPlaceId, onPopupDone }) {
   return null
 }
 
-export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger }) {
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [circleOpacity, setCircleOpacity] = useState(0)
   const circleFadeRef = useRef(null)
@@ -224,7 +232,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
       zoomControl={true}
       className="main-map"
     >
-      <MapController focusPlaces={focusPlaces} center={center} radius={radius} focusPlace={focusPlace} onFocusDone={onFocusDone} fitBoundsTrigger={fitBoundsTrigger} />
+      <MapController focusPlaces={focusPlaces} center={center} radius={radius} focusPlace={focusPlace} onFocusDone={onFocusDone} fitBoundsTrigger={fitBoundsTrigger} previewArea={previewArea} onPreviewAreaDone={onPreviewAreaDone} />
       <BoundsTracker onViewportChange={onViewportChange} />
       {popupPlaceId && (
         <PopupOpener

@@ -26,7 +26,7 @@ function MiniMapController({ lat, lng }) {
   return null
 }
 
-function LocationPreview({ resolved, onReset }) {
+function LocationPreview({ resolved, onReset, onShowInMap }) {
   const { lat, lng, formattedAddress } = resolved
 
   return (
@@ -51,15 +51,22 @@ function LocationPreview({ resolved, onReset }) {
           <span>Location found</span>
         </div>
         <p className="location-preview-address">{formattedAddress}</p>
-        <button type="button" className="location-preview-reset" onClick={onReset}>
-          <RotateCcw size={11} /> Not right? Search again
-        </button>
+        <div className="location-preview-actions">
+          {onShowInMap && (
+            <button type="button" className="location-preview-show" onClick={() => onShowInMap({ lat, lng })}>
+              <MapPin size={11} /> Show area in map
+            </button>
+          )}
+          <button type="button" className="location-preview-reset" onClick={onReset}>
+            <RotateCcw size={11} /> Not right? Search again
+          </button>
+        </div>
       </div>
     </div>
   )
 }
 
-export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cityName, stateName, countryCode, initialQuery }) {
+export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cityName, stateName, countryCode, initialQuery, onShowInMap }) {
   const isEditing = !!editPlace
   const [name, setName] = useState(editPlace?.name || '')
   const [searchQuery, setSearchQuery] = useState(editPlace?.address || initialQuery || '')
@@ -152,12 +159,19 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
             <Search size={14} /> {isEditing ? 'Change address or location' : 'Search address or place name'}
           </label>
           <div className="input-row">
-            <input
-              className="input"
-              placeholder="e.g. Temaiken Zoo, Buenos Aires"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+            <div className="input-wrapper">
+              <input
+                className="input"
+                placeholder="e.g. Temaiken Zoo, Buenos Aires"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button type="button" className="input-clear" onClick={() => setSearchQuery('')} aria-label="Clear">
+                  <X size={14} />
+                </button>
+              )}
+            </div>
             <button className="btn-secondary" type="submit" disabled={status === 'searching'}>
               {status === 'searching' ? <Loader size={14} className="spin" /> : 'Find'}
             </button>
@@ -172,6 +186,7 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
           <LocationPreview
             resolved={resolved}
             onReset={() => { setResolved(null); setSearchQuery('') }}
+            onShowInMap={onShowInMap}
           />
         )}
 

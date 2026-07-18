@@ -311,6 +311,37 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 .input-row .input { flex: 1; }
 
+.input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.input-wrapper .input {
+  width: 100%;
+  padding-right: 32px;
+}
+
+.input-clear {
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--sub);
+  padding: 4px;
+  border-radius: 50%;
+  transition: color 0.15s;
+}
+
+.input-clear:hover {
+  color: var(--text);
+}
+
 .date-field {
   flex: 1;
   display: flex;
@@ -383,6 +414,28 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .location-preview-reset:hover { color: var(--accent); }
+
+.location-preview-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;
+}
+
+.location-preview-show {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  color: var(--accent);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+}
+
+.location-preview-show:hover { text-decoration: underline; }
 
 /* ─── Buttons ───────────────────────────────────────────────────── */
 .btn-primary {
@@ -538,6 +591,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 /* ─── Filter chips (in list panel) ──────────────────────────────── */
 .filter-chips {
+  margin-top: 8px;
   padding: 4px 16px 8px;
   display: grid;
   grid-template-columns: auto 1fr;

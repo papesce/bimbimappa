@@ -37,7 +37,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
       onClear: () => onFilterChange?.('all')
     })
   }
-  if (viewportBounds) {
+  if (viewportBounds && !cityName) {
     activeFilters.push({
       type: 'bounds',
       label: 'Current map view',
