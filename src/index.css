@@ -961,12 +961,18 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   border-color: var(--accent);
 }
 
-/* ─── Location bar (unified search + radius + geo) ──────────────── */
-.location-bar-geo {
+/* ─── Location controls (geo + show-all buttons) ─────────────── */
+.location-controls {
   position: absolute;
   top: 105px;
   right: 16px;
   z-index: 999;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.location-bar-geo {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1199,29 +1205,57 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   z-index: 1000;
   display: inline-flex;
   align-items: center;
-  gap: 2px;
-  padding: 8px 14px;
-  font-size: 13px;
-  font-weight: 600;
-  font-family: inherit;
-  color: var(--accent);
   background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: 22px;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+}
+
+.map-reset-main {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 12px 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  color: var(--accent);
+  background: none;
+  border: none;
+  border-radius: 22px 0 0 22px;
   cursor: pointer;
-  transition: background 0.15s, box-shadow 0.15s;
+  transition: background 0.15s;
 }
 
-.map-reset-btn:hover {
-  background: white;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.14);
+.map-reset-main:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
-.map-reset-btn:active {
-  transform: translateX(-50%) scale(0.97);
+.map-reset-divider {
+  width: 1px;
+  height: 18px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.map-reset-dismiss {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px 12px 8px 10px;
+  background: none;
+  border: none;
+  border-radius: 0 22px 22px 0;
+  cursor: pointer;
+  color: var(--sub);
+  transition: color 0.15s, background 0.15s;
+}
+
+.map-reset-dismiss:hover {
+  color: #e05555;
+  background: rgba(0, 0, 0, 0.04);
 }
 
 /* ─── Mobile ────────────────────────────────────────────────────── */
@@ -1229,7 +1263,9 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   .side-panel { width: 100vw; }
   .pin-count { display: none; }
   .filter-strip { top: 49px; }
-  .location-bar-geo { top: 100px; right: 12px; }
+  .location-controls { top: 100px; right: 12px; }
   .fab { bottom: 24px; right: 16px; }
-  .map-reset-btn { bottom: 72px; left: 50%; transform: translateX(-50%); font-size: 12px; padding: 6px 12px; }
+  .map-reset-btn { bottom: 72px; left: 50%; transform: translateX(-50%); }
+  .map-reset-main { font-size: 12px; padding: 6px 10px 6px 12px; }
+  .map-reset-dismiss { font-size: 12px; padding: 6px 10px 6px 8px; }
 }

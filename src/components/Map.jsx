@@ -49,12 +49,18 @@ function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, f
   return null
 }
 
-function BackToAreaButton({ viewingPlace, onViewArea }) {
+function BackToAreaButton({ viewingPlace, onViewArea, onDismissViewing }) {
   if (!viewingPlace) return null
   return (
-    <button className="map-reset-btn" onClick={onViewArea} title="Back to area view">
-      <ChevronLeft size={16} /> Back to area
-    </button>
+    <div className="map-reset-btn">
+      <button className="map-reset-main" onClick={onViewArea} title="Back to area view">
+        <ChevronLeft size={16} /> Back to area
+      </button>
+      <span className="map-reset-divider" />
+      <button className="map-reset-dismiss" onClick={onDismissViewing} title="Dismiss">
+        <X size={14} />
+      </button>
+    </div>
   )
 }
 
@@ -175,7 +181,7 @@ function PopupOpener({ markerRefs, popupPlaceId, onPopupDone }) {
   return null
 }
 
-export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, fitBoundsTrigger }) {
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [circleOpacity, setCircleOpacity] = useState(0)
   const circleFadeRef = useRef(null)
@@ -276,7 +282,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
         />
         )
       })}
-      <BackToAreaButton viewingPlace={viewingPlace} onViewArea={onViewArea} />
+      <BackToAreaButton viewingPlace={viewingPlace} onViewArea={onViewArea} onDismissViewing={onDismissViewing} />
     </MapContainer>
   )
 }

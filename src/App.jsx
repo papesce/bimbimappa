@@ -96,6 +96,10 @@ export default function App() {
     setPanel('list')
   }
 
+  function handleDismissViewing() {
+    setViewingPlace(null)
+  }
+
   if (!authed) return <AccessDenied onLogin={login} />
 
   const FILTERS = [
@@ -122,6 +126,7 @@ export default function App() {
           onViewportChange={setViewportBounds}
           viewingPlace={viewingPlace}
           onViewArea={handleViewArea}
+          onDismissViewing={handleDismissViewing}
           fitBoundsTrigger={fitBoundsTrigger}
         />
       </div>
@@ -169,6 +174,7 @@ export default function App() {
       <LocationControls
         isGeolocating={isGeolocating}
         onReset={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
+        onShowAll={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
       />
 
       {/* FAB — primary action, bottom-right; hidden while any panel is open */}

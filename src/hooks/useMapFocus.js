@@ -31,9 +31,9 @@ export function useMapFocus(places) {
   const [isGeolocating, setIsGeolocating] = useState(!stored)
   const [autoMode, setAutoMode] = useState(!stored)
 
-  // Request browser geolocation on first visit (no stored preference)
+  // Request browser geolocation when autoMode is active (first visit or after resetToGeolocation)
   useEffect(() => {
-    if (stored) return
+    if (!autoMode) return
     if (!navigator.geolocation) {
       setCenterState(DEFAULT_CENTER)
       setIsGeolocating(false)
@@ -53,8 +53,7 @@ export function useMapFocus(places) {
       },
       { timeout: GEOLOCATION_TIMEOUT, maximumAge: GEOLOCATION_MAX_AGE }
     )
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [autoMode])
 
   // Resolve countryCode from center via reverse geocode when missing (geolocation or old stored data)
   useEffect(() => {
