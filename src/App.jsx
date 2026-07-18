@@ -314,7 +314,13 @@ export default function App() {
           filter={filter}
           onFilterChange={setFilter}
           FILTERS={FILTERS}
-          onEdit={(place) => { setEditingPlace(place); setPanel('add') }}
+          onEdit={(place) => {
+            setEditingPlace(place)
+            setPanel('add')
+            setSelectedPlace(null)
+            setSheetState('hidden')
+            setConfirmingId(null)
+          }}
           onDelete={deletePlace}
           confirmingId={confirmingId}
           onConfirmingChange={setConfirmingId}
