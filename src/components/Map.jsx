@@ -168,20 +168,28 @@ const centerIcon = L.divIcon({
 })
 
 // Auto-opens the popup for the newly added marker
-function AutoOpenPopup({ markerRef }) {
+function AutoOpenPopup({ markerRef, isMobile, placeId, onMobilePopup }) {
   useEffect(() => {
-    if (markerRef.current) markerRef.current.openPopup()
-  }, [markerRef])
+    if (isMobile) {
+      onMobilePopup(placeId)
+    } else {
+      if (markerRef.current) markerRef.current.openPopup()
+    }
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   return null
 }
 
 // Opens the popup for a place selected from the list, after fly-to completes
-function PopupOpener({ markerRefs, popupPlaceId, onPopupDone }) {
+function PopupOpener({ markerRefs, popupPlaceId, onPopupDone, isMobile, onMobilePopup }) {
   const map = useMap()
   useEffect(() => {
     const handler = () => {
-      const ref = markerRefs.current[popupPlaceId]
-      if (ref) ref.openPopup()
+      if (isMobile) {
+        onMobilePopup(popupPlaceId)
+      } else {
+        const ref = markerRefs.current[popupPlaceId]
+        if (ref) ref.openPopup()
+      }
       onPopupDone()
     }
     map.once('moveend', handler)
@@ -190,8 +198,12 @@ function PopupOpener({ markerRefs, popupPlaceId, onPopupDone }) {
   return null
 }
 
-export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadius, onHoverRadius }) {
-  const [confirmingId, setConfirmingId] = useState(null)
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadius, onHoverRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup }) {
+  // confirmingId is lifted to App when mobile so BottomSheet can share it;
+  // on desktop it arrives as null/undefined and we alias local names for clarity.
+  const [localConfirmingId, setLocalConfirmingId] = useState(null)
+  const activeConfirmingId = isMobile ? confirmingId : localConfirmingId
+  const setActiveConfirmingId = isMobile ? setConfirmingId : setLocalConfirmingId
   const [circleOpacity, setCircleOpacity] = useState(0)
   const circleFadeRef = useRef(null)
   const markerRefs = useRef({})
@@ -240,6 +252,8 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
           markerRefs={markerRefs}
           popupPlaceId={popupPlaceId}
           onPopupDone={onPopupDone}
+          isMobile={isMobile}
+          onMobilePopup={onMobilePopup}
         />
       )}
       <TileLayer
@@ -283,11 +297,13 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
           place={place}
           icon={isNew ? newIcon : customIcon}
           isNew={isNew}
-          confirmingId={confirmingId}
-          setConfirmingId={setConfirmingId}
+          confirmingId={activeConfirmingId}
+          setConfirmingId={setActiveConfirmingId}
           onDelete={onDelete}
           onEdit={onEdit}
           markerRefs={markerRefs}
+          isMobile={isMobile}
+          onMobilePopup={onMobilePopup}
         />
         )
       })}
@@ -296,7 +312,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
   )
 }
 
-function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete, onEdit, markerRefs }) {
+function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete, onEdit, markerRefs, isMobile, onMobilePopup }) {
   const markerRef = useRef(null)
   const [navOpen, setNavOpen] = useState(false)
 
@@ -310,9 +326,17 @@ function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete
       ref={markerRef}
       position={[place.lat, place.lng]}
       icon={icon}
+      eventHandlers={isMobile ? { click: () => onMobilePopup(place.id) } : undefined}
     >
-      {isNew && <AutoOpenPopup markerRef={markerRef} />}
-      <Popup minWidth={220}>
+      {isNew && (
+        <AutoOpenPopup
+          markerRef={markerRef}
+          isMobile={isMobile}
+          placeId={place.id}
+          onMobilePopup={onMobilePopup}
+        />
+      )}
+      {!isMobile && <Popup minWidth={220}>
         <div className="popup">
           <p className="popup-name">{place.name}</p>
           <p className="popup-address">{place.address}</p>
@@ -381,7 +405,7 @@ function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete
             </div>
           )}
         </div>
-      </Popup>
+      </Popup>}
     </Marker>
   )
 }

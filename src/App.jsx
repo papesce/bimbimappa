@@ -3,12 +3,14 @@ import { MapPin, List, Plus, X } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
+import BottomSheet from './components/BottomSheet'
 import ExportButton from './components/ExportButton'
 import LocationControls from './components/LocationControls'
 import AccessDenied from './components/AccessDenied'
 import { usePlaces } from './hooks/usePlaces'
 import { useAuth } from './hooks/useAuth'
 import { useMapFocus } from './hooks/useMapFocus'
+import { useIsMobile } from './hooks/useIsMobile'
 import { getPlacesWithinBounds, getPlacesWithinRadius } from './lib/geo'
 import './index.css'
 
@@ -33,10 +35,17 @@ function getFilterRange(filter) {
   return { start: monday, end: sunday }
 }
 
+const FILTERS = [
+  { key: 'all', label: 'All' },
+  { key: 'week', label: 'This Week' },
+  { key: 'month', label: 'This Month' },
+]
+
 export default function App() {
   const { authed, login } = useAuth()
   const { places, loading, addPlace, deletePlace, updatePlace } = usePlaces()
   const { center, radius, cityName, stateName, countryCode, matchedPlaces, isGeolocating, setCenter, setRadius, clearCenter, resetToGeolocation } = useMapFocus(places)
+  const isMobile = useIsMobile()
   const [panel, setPanel] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
   const [filter, setFilter] = useState('all')
@@ -50,6 +59,9 @@ export default function App() {
   const [previewArea, setPreviewArea] = useState(null)
   const [suppressFit, setSuppressFit] = useState(0)
   const [hoverRadius, setHoverRadius] = useState(false)
+  const [selectedPlace, setSelectedPlace] = useState(null)
+  const [sheetState, setSheetState] = useState('hidden')
+  const [confirmingId, setConfirmingId] = useState(null)
 
   async function handleAdd(data) {
     const result = await addPlace(data)
@@ -71,6 +83,17 @@ export default function App() {
       setPopupPlaceId(result.id)
       setViewingPlace({ id: result.id, name: result.name })
     }
+  }
+
+  function handleSelectPlace(place) {
+    setSelectedPlace(place)
+    setSheetState('peek')
+    setPanel(null)
+  }
+
+  function handleMobilePopup(placeId) {
+    const place = places.find(p => p.id === placeId)
+    if (place) handleSelectPlace(place)
   }
 
   const filterRange = getFilterRange(filter)
@@ -107,12 +130,6 @@ export default function App() {
 
   if (!authed) return <AccessDenied onLogin={login} />
 
-  const FILTERS = [
-    { key: 'all', label: 'All' },
-    { key: 'week', label: 'This Week' },
-    { key: 'month', label: 'This Month' },
-  ]
-
   return (
     <div className="app">
       <div className={`map-wrapper${loading ? ' map-loading' : ''}`}>
@@ -138,6 +155,10 @@ export default function App() {
           suppressFit={suppressFit}
           hoverRadius={hoverRadius}
           onHoverRadius={setHoverRadius}
+          isMobile={isMobile}
+          confirmingId={confirmingId}
+          setConfirmingId={setConfirmingId}
+          onMobilePopup={handleMobilePopup}
         />
       </div>
 
@@ -158,7 +179,14 @@ export default function App() {
           </span>
           <button
             className={`icon-btn${panel === 'list' ? ' active' : ''}`}
-            onClick={() => setPanel(panel === 'list' ? null : 'list')}
+            onClick={() => {
+              if (panel === 'list') {
+                setPanel(null)
+              } else {
+                setPanel('list')
+                setSheetState('hidden')
+              }
+            }}
             aria-label="Saved places"
             title="Saved places"
           >
@@ -233,9 +261,13 @@ export default function App() {
                 onEdit={setEditingPlace}
                 onLocate={(place) => {
                   setFocusPlace({ lat: place.lat, lng: place.lng })
-                  setPopupPlaceId(place.id)
                   setViewingPlace({ id: place.id, name: place.name })
                   setPanel(null)
+                  if (isMobile) {
+                    handleSelectPlace(place)
+                  } else {
+                    setPopupPlaceId(place.id)
+                  }
                 }}
                 activeFilter={filter}
                 center={center}
@@ -273,6 +305,26 @@ export default function App() {
           />
         )}
       </aside>
+
+      {isMobile && (
+        <BottomSheet
+          place={selectedPlace}
+          sheetState={sheetState}
+          onSheetChange={setSheetState}
+          filter={filter}
+          onFilterChange={setFilter}
+          FILTERS={FILTERS}
+          onEdit={(place) => { setEditingPlace(place); setPanel('add') }}
+          onDelete={deletePlace}
+          confirmingId={confirmingId}
+          onConfirmingChange={setConfirmingId}
+          onClose={() => {
+            setSelectedPlace(null)
+            setSheetState('hidden')
+            setConfirmingId(null)
+          }}
+        />
+      )}
     </div>
   )
 }

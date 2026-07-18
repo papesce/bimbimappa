@@ -1,0 +1,198 @@
+import { useRef } from 'react'
+import { ExternalLink, Navigation, Pencil, Trash2, Check, X } from 'lucide-react'
+import { googleMapsUrl, wazeUrl } from '../lib/navigation'
+
+export default function BottomSheet({
+  place,
+  sheetState,
+  onSheetChange,
+  filter,
+  onFilterChange,
+  FILTERS,
+  onEdit,
+  onDelete,
+  confirmingId,
+  onConfirmingChange,
+  onClose,
+}) {
+  const sheetRef = useRef(null)
+  const dragRef = useRef({ startY: 0, startVisiblePx: 0, dragging: false })
+
+  const HIDDEN_PX = 60
+  const PEEK_PX = 120
+
+  function getVisiblePx() {
+    const maxVisible = window.innerHeight * 0.5
+    if (sheetState === 'hidden') return HIDDEN_PX
+    if (sheetState === 'peek') return PEEK_PX
+    return maxVisible
+  }
+
+  function handleTouchStart(e) {
+    dragRef.current = {
+      startY: e.touches[0].clientY,
+      startVisiblePx: getVisiblePx(),
+      dragging: true,
+    }
+  }
+
+  function handleTouchMove(e) {
+    if (!dragRef.current.dragging) return
+    const delta = dragRef.current.startY - e.touches[0].clientY
+    const maxVisible = window.innerHeight * 0.5
+    const newVisible = dragRef.current.startVisiblePx + delta
+    const clamped = Math.max(HIDDEN_PX, Math.min(maxVisible, newVisible))
+    const translatePx = maxVisible - clamped
+    if (sheetRef.current) {
+      sheetRef.current.style.transition = 'none'
+      sheetRef.current.style.transform = `translateY(${translatePx}px)`
+    }
+  }
+
+  function handleTouchEnd(e) {
+    if (!dragRef.current.dragging) return
+    dragRef.current.dragging = false
+    const delta = dragRef.current.startY - e.changedTouches[0].clientY
+    const finalVisible = dragRef.current.startVisiblePx + delta
+    const maxVisible = window.innerHeight * 0.5
+    let newState
+    if (finalVisible < 90) {
+      newState = 'hidden'
+    } else if (finalVisible < maxVisible * 0.6) {
+      newState = 'peek'
+    } else {
+      newState = place ? 'expanded' : 'peek'
+    }
+    if (sheetRef.current) {
+      sheetRef.current.style.transform = ''
+      sheetRef.current.style.transition = ''
+    }
+    onSheetChange(newState)
+    if (newState === 'hidden') onClose()
+  }
+
+  function handleHandleTap() {
+    if (sheetState === 'hidden') onSheetChange(place ? 'peek' : 'peek')
+    else if (sheetState === 'peek') onSheetChange(place ? 'expanded' : 'hidden')
+    else onSheetChange('peek')
+  }
+
+  function formatDate(place) {
+    const from = new Date(place.date_from + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    if (!place.date_to || place.date_to === place.date_from) return from
+    const to = new Date(place.date_to + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+    return `${from}–${to}`
+  }
+
+  return (
+    <div
+      ref={sheetRef}
+      className={`bottom-sheet bottom-sheet--${sheetState}`}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* Always-visible: drag handle + filter chips */}
+      <div className="sheet-filter-bar">
+        <div className="sheet-drag-handle-wrap" onClick={handleHandleTap}>
+          <div className="sheet-drag-handle" />
+        </div>
+        <div className="sheet-filters">
+          {FILTERS.map(f => (
+            <button
+              key={f.key}
+              className={`filter-pill${filter === f.key ? ' active' : ''}`}
+              onClick={() => onFilterChange(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Peek row */}
+      {place && sheetState !== 'hidden' && (
+        <div className="sheet-peek-content" onClick={() => onSheetChange('expanded')}>
+          <p className="sheet-place-name">{place.name}</p>
+          <p className="sheet-place-address">{place.address}</p>
+        </div>
+      )}
+
+      {/* Expanded content */}
+      {place && sheetState === 'expanded' && (
+        <div className="sheet-expanded-content">
+          <button className="sheet-close-btn" onClick={onClose} aria-label="Close">
+            <X size={16} />
+          </button>
+
+          {place.date_from && (
+            <p className="popup-date">{formatDate(place)}</p>
+          )}
+          {place.notes && (
+            <p className="popup-notes">"{place.notes}"</p>
+          )}
+
+          <div className="sheet-actions">
+            {place.source_url && (
+              <a
+                href={place.source_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="sheet-action-link"
+              >
+                <ExternalLink size={14} /> Source
+              </a>
+            )}
+            <a
+              href={googleMapsUrl(place.lat, place.lng)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sheet-action-link"
+            >
+              <Navigation size={14} /> Google Maps
+            </a>
+            <a
+              href={wazeUrl(place.lat, place.lng)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sheet-action-link"
+            >
+              <Navigation size={14} /> Waze
+            </a>
+            <button className="sheet-action-btn" onClick={() => onEdit(place)}>
+              <Pencil size={14} /> Edit
+            </button>
+            <button
+              className="sheet-action-btn danger"
+              onClick={() => onConfirmingChange(confirmingId === place.id ? null : place.id)}
+              style={{ marginLeft: 'auto' }}
+              title="Remove"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+
+          {confirmingId === place.id && (
+            <div className="popup-confirm-row">
+              <span>Remove?</span>
+              <button
+                className="popup-action-btn danger"
+                onClick={() => { onDelete(place.id); onConfirmingChange(null); onClose() }}
+                title="Yes, remove"
+              >
+                <Check size={14} />
+              </button>
+              <button
+                className="popup-action-btn"
+                onClick={() => onConfirmingChange(null)}
+                title="Cancel"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  )
+}
