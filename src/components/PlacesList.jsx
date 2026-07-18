@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
-import { MapPin, ExternalLink, Trash2, Pencil, Check, X, Navigation, Search, MoreVertical } from 'lucide-react'
+import { MapPin, ExternalLink, Trash2, Pencil, Check, X, Navigation, MoreVertical } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
-import CitySearchInput from './CitySearchInput'
+import UnifiedSearchInput from './UnifiedSearchInput'
 
 function toTitleCase(str) {
   if (!str) return str
@@ -11,9 +11,8 @@ function toTitleCase(str) {
   return str
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, filter, onFilterChange, viewportBounds, onClearBounds }) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, filter, onFilterChange, viewportBounds, onClearBounds }) {
   const [confirmingId, setConfirmingId] = useState(null)
-  const [query, setQuery] = useState('')
   const [menuOpenId, setMenuOpenId] = useState(null)
 
   useEffect(() => {
@@ -23,42 +22,19 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
     return () => document.removeEventListener('click', close)
   }, [menuOpenId])
 
-  const q = query.trim().toLowerCase()
-  const visible = q
-    ? places.filter(p =>
-        p.name?.toLowerCase().includes(q) ||
-        p.address?.toLowerCase().includes(q) ||
-        p.notes?.toLowerCase().includes(q)
-      )
-    : places
-
-  const areaHeader = (
-    <div className="area-controls">
-      <CitySearchInput
-        onCitySelect={onCitySelect}
-        onClear={onClear}
-        radius={radius}
-        onRadiusChange={onRadiusChange}
-        cityName={cityName}
-        viewingPlace={viewingPlace}
-        activeFilter={activeFilter}
-      />
-    </div>
-  )
-
   const activeFilters = []
-  if (filter && filter !== 'all') {
-    activeFilters.push({
-      type: 'date',
-      label: filter === 'week' ? 'This Week' : filter === 'month' ? 'This Month' : filter,
-      onClear: () => onFilterChange?.('all')
-    })
-  }
   if (cityName) {
     activeFilters.push({
       type: 'city',
       label: `📍 ${cityName}${radius ? ` · ${radius} km` : ''}`,
       onClear: onClear
+    })
+  }
+  if (filter && filter !== 'all') {
+    activeFilters.push({
+      type: 'date',
+      label: filter === 'week' ? 'This Week' : filter === 'month' ? 'This Month' : filter,
+      onClear: () => onFilterChange?.('all')
     })
   }
   if (viewportBounds) {
@@ -76,7 +52,31 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
     }
     return (
       <>
-        {areaHeader}
+        <UnifiedSearchInput
+          onCitySelect={onCitySelect}
+          onClear={onClear}
+          center={center}
+          stateName={stateName}
+          radius={radius}
+          onRadiusChange={onRadiusChange}
+          cityName={cityName}
+          viewingPlace={viewingPlace}
+          activeFilter={activeFilter}
+          places={places}
+          onLocate={onLocate}
+        />
+        {activeFilters.length > 0 && (
+          <div className="filter-chips">
+            {activeFilters.map((f, i) => (
+              <div key={i} className="filter-chip">
+                <span className="filter-chip-label">{f.label}</span>
+                <button className="filter-chip-clear" onClick={f.onClear} title={`Clear ${f.type} filter`}>
+                  <X size={12} />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
         <div className="empty-state">
           <MapPin size={32} strokeWidth={1.5} />
           <p>{messages[activeFilter] || 'No places saved yet.'}</p>
@@ -92,7 +92,19 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
 
   return (
     <>
-      {areaHeader}
+      <UnifiedSearchInput
+        onCitySelect={onCitySelect}
+        onClear={onClear}
+        center={center}
+        stateName={stateName}
+        radius={radius}
+        onRadiusChange={onRadiusChange}
+        cityName={cityName}
+        viewingPlace={viewingPlace}
+        activeFilter={activeFilter}
+        places={places}
+        onLocate={onLocate}
+      />
       {activeFilters.length > 0 && (
         <div className="filter-chips">
           {activeFilters.map((f, i) => (
@@ -109,24 +121,8 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
           ))}
         </div>
       )}
-      <div className="search-bar">
-        <Search size={14} className="search-icon" />
-        <input
-          className="search-input"
-          type="search"
-          placeholder="Search places…"
-          value={query}
-          onChange={e => setQuery(e.target.value)}
-        />
-      </div>
-      {visible.length === 0 && q && (
-        <div className="empty-state">
-          <Search size={28} strokeWidth={1.5} />
-          <p>No results for "{query}"</p>
-        </div>
-      )}
     <ul className="places-list">
-      {visible.map((place) => (
+      {places.map((place) => (
         <li key={place.id} className="place-card">
           <button
             className="place-card-body"

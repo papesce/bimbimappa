@@ -59,7 +59,7 @@ function LocationPreview({ resolved, onReset }) {
   )
 }
 
-export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
+export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cityName, stateName, countryCode }) {
   const isEditing = !!editPlace
   const [name, setName] = useState(editPlace?.name || '')
   const [searchQuery, setSearchQuery] = useState(editPlace?.address || '')
@@ -82,7 +82,8 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace }) {
     setResolved(null)
 
     try {
-      const geo = await geocodePlace(searchQuery)
+      const geo = await geocodePlace(searchQuery, { region: countryCode })
+      console.log('[Add] geocode:', searchQuery, '→', { city: cityName, state: stateName, countryCode, ...geo })
       setResolved(geo)
       if (!name) setName(searchQuery)
       setStatus('idle')

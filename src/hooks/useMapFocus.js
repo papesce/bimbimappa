@@ -14,9 +14,9 @@ function loadStored() {
   return null
 }
 
-function persist(center, radius, cityName) {
+function persist(center, radius, cityName, stateName, countryCode) {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ center, radius, cityName }))
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ center, radius, cityName, stateName, countryCode }))
   } catch { /* storage full — ignore */ }
 }
 
@@ -26,6 +26,8 @@ export function useMapFocus(places) {
   const [center, setCenterState] = useState(stored?.center || null)
   const [radius, setRadiusState] = useState(stored?.radius || 50)
   const [cityName, setCityName] = useState(stored?.cityName || '')
+  const [stateName, setStateName] = useState(stored?.stateName || '')
+  const [countryCode, setCountryCode] = useState(stored?.countryCode || '')
   const [isGeolocating, setIsGeolocating] = useState(!stored)
   const [autoMode, setAutoMode] = useState(!stored)
 
@@ -54,22 +56,43 @@ export function useMapFocus(places) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Resolve countryCode from center via reverse geocode when missing (geolocation or old stored data)
+  useEffect(() => {
+    if (!center || countryCode) return
+    fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${center.lat}&lon=${center.lng}&format=json`,
+      { headers: { Accept: 'application/json', 'Accept-Language': 'en' } }
+    )
+      .then(r => r.json())
+      .then(data => {
+        const cc = data.address?.country_code || ''
+        if (cc) {
+          setCountryCode(cc)
+          persist(center, radius, cityName, stateName, cc)
+        }
+      })
+      .catch(() => {})
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [center])
+
   // Auto-compute optimal radius once places load (geolocation first-visit flow)
   useEffect(() => {
     if (!autoMode || !center || places.length === 0) return
     const { radius: optimal } = findOptimalRadius(places, center)
     setRadiusState(optimal)
-    persist(center, optimal, '')
+    persist(center, optimal, '', '', '')
     setAutoMode(false)
   }, [autoMode, center, places])
 
   const setCenter = useCallback(
-    (lat, lng, name) => {
+    (lat, lng, name, state, cc) => {
       const c = { lat, lng }
       setCenterState(c)
       setCityName(name || '')
+      setStateName(state || '')
+      setCountryCode(cc || '')
       setAutoMode(false)
-      persist(c, radius, name)
+      persist(c, radius, name, state, cc)
     },
     [radius]
   )
@@ -78,15 +101,17 @@ export function useMapFocus(places) {
     (r) => {
       setRadiusState(r)
       setAutoMode(false)
-      if (center) persist(center, r, cityName)
+      if (center) persist(center, r, cityName, stateName, countryCode)
     },
-    [center, cityName]
+    [center, cityName, stateName, countryCode]
   )
 
   const clearCenter = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY)
     setCenterState(null)
     setCityName('')
+    setStateName('')
+    setCountryCode('')
     setAutoMode(false)
   }, [])
 
@@ -94,6 +119,8 @@ export function useMapFocus(places) {
     localStorage.removeItem(STORAGE_KEY)
     setCenterState(null)
     setCityName('')
+    setStateName('')
+    setCountryCode('')
     setAutoMode(true)
     setIsGeolocating(true)
   }, [])
@@ -107,6 +134,8 @@ export function useMapFocus(places) {
     center,
     radius,
     cityName,
+    stateName,
+    countryCode,
     matchedPlaces,
     isGeolocating,
     setCenter,

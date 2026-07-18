@@ -36,7 +36,7 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
   const search = useCallback(async (q) => {
     try {
       const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`,
         { headers: { Accept: 'application/json', 'Accept-Language': 'en' } }
       )
       const data = await res.json()
@@ -65,12 +65,14 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
     const name = r.display_name.split(',')[0]
     setOpen(false)
 
-    const entry = { name, lat: parseFloat(r.lat), lon: parseFloat(r.lon) }
+    const state = r.address?.state || r.address?.region || r.address?.county || ''
+    const countryCode = r.address?.country_code || ''
+    const entry = { name, lat: parseFloat(r.lat), lon: parseFloat(r.lon), state, countryCode }
     const next = [entry, ...recent.filter(e => e.name !== name)].slice(0, MAX_RECENT)
     setRecent(next)
     saveRecent(next)
 
-    onCitySelect(entry.lat, entry.lon, name)
+    onCitySelect(entry.lat, entry.lon, name, state, countryCode)
     setQuery('')
     setEditing(false)
   }
@@ -78,7 +80,7 @@ export default function CitySearchInput({ onCitySelect, onClear, autoFocus, radi
   function handleRecentSelect(entry) {
     clearTimeout(blurRef.current)
     setOpen(false)
-    onCitySelect(entry.lat, entry.lon, entry.name)
+    onCitySelect(entry.lat, entry.lon, entry.name, entry.state || '', entry.countryCode || '')
     setQuery('')
     setEditing(false)
   }

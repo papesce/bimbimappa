@@ -36,7 +36,7 @@ function getFilterRange(filter) {
 export default function App() {
   const { authed, login } = useAuth()
   const { places, loading, addPlace, deletePlace, updatePlace } = usePlaces()
-  const { center, radius, cityName, matchedPlaces, isGeolocating, setCenter, setRadius, clearCenter, resetToGeolocation } = useMapFocus(places)
+  const { center, radius, cityName, stateName, countryCode, matchedPlaces, isGeolocating, setCenter, setRadius, clearCenter, resetToGeolocation } = useMapFocus(places)
   const [panel, setPanel] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
   const [filter, setFilter] = useState('all')
@@ -188,6 +188,9 @@ export default function App() {
             key="add"
             onAdd={handleAdd}
             onClose={() => setPanel(null)}
+            cityName={cityName}
+            stateName={stateName}
+            countryCode={countryCode}
           />
         )}
         {panel === 'list' && !editingPlace && (
@@ -216,10 +219,12 @@ export default function App() {
                   setPanel(null)
                 }}
                 activeFilter={filter}
+                center={center}
+                stateName={stateName}
                 cityName={cityName}
                 radius={radius}
                 onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
-                onCitySelect={(lat, lng, name) => { setCenter(lat, lng, name); setViewportBounds(null); setViewingPlace(null) }}
+                onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewportBounds(null); setViewingPlace(null) }}
                 onClear={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null) }}
                 viewingPlace={viewingPlace}
                 filter={filter}
@@ -236,6 +241,9 @@ export default function App() {
             editPlace={editingPlace}
             onUpdate={handleUpdate}
             onClose={() => { setEditingPlace(null); setPanel(null) }}
+            cityName={cityName}
+            stateName={stateName}
+            countryCode={countryCode}
           />
         )}
       </aside>
