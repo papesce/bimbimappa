@@ -68,7 +68,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
         {activeFilters.length > 0 && (
           <div className="filter-chips">
             {activeFilters.map((f, i) => (
-              <div key={i} className="filter-chip">
+              <div key={i} className={`filter-chip filter-chip--${f.type}`}>
                 <span className="filter-chip-label">{f.label}</span>
                 <button className="filter-chip-clear" onClick={f.onClear} title={`Clear ${f.type} filter`}>
                   <X size={12} />
@@ -108,7 +108,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
       {activeFilters.length > 0 && (
         <div className="filter-chips">
           {activeFilters.map((f, i) => (
-            <div key={i} className="filter-chip">
+            <div key={i} className={`filter-chip filter-chip--${f.type}`}>
               <span className="filter-chip-label">{f.label}</span>
               <button
                 className="filter-chip-clear"

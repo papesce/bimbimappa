@@ -570,7 +570,15 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 0 4px;
+  padding: 12px 0 12px;
+}
+
+.unified-search-radius-label {
+  font-size: 9px;
+  letter-spacing: 0;
+  color: var(--sub);
+  font-weight: 600;
+  letter-spacing: 0.3px;
 }
 
 /* ─── Filter chips (in list panel) ──────────────────────────────── */
@@ -601,12 +609,27 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  padding: 5px 9px;
+  padding: 5px 6px 5px 10px;
   background: var(--mist);
   border: 1px solid var(--border);
   border-radius: 16px;
   white-space: nowrap;
   flex-shrink: 0;
+}
+
+.filter-chip--city {
+  background: rgba(255, 107, 107, 0.06);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+
+.filter-chip--bounds {
+  background: rgba(61, 90, 138, 0.06);
+  border-color: rgba(61, 90, 138, 0.2);
+}
+
+.filter-chip--date {
+  background: rgba(107, 114, 128, 0.06);
+  border-color: rgba(107, 114, 128, 0.15);
 }
 
 .filter-chip-label {
@@ -623,7 +646,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   border: none;
   cursor: pointer;
   color: var(--sub);
-  padding: 0;
+  padding: 2px;
   border-radius: 50%;
   flex-shrink: 0;
   transition: color 0.15s;
