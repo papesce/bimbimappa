@@ -584,12 +584,23 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 /* ─── Filter chips (in list panel) ──────────────────────────────── */
 .filter-chips {
   padding: 4px 16px 8px;
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: auto 1fr;
   gap: 6px;
+  align-items: start;
+}
+
+.filter-chips-label {
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: var(--sub);
+  margin-right: 2px;
 }
 
 .filter-chip {
+  grid-column: 2;
+  justify-self: start;
   display: inline-flex;
   align-items: center;
   gap: 5px;
