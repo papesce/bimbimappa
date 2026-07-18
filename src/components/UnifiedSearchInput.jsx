@@ -16,7 +16,7 @@ function saveRecent(list) {
   try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT))) } catch {}
 }
 
-export default function UnifiedSearchInput({ onCitySelect, onClear, center, stateName, radius, onRadiusChange, cityName, viewingPlace, activeFilter, places, onLocate }) {
+export default function UnifiedSearchInput({ onCitySelect, onClear, center, stateName, radius, onRadiusChange, cityName, activeFilter, places, onLocate }) {
   const [query, setQuery] = useState('')
   const [cityResults, setCityResults] = useState([])
   const [open, setOpen] = useState(false)
@@ -167,22 +167,6 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
     ((showCitySection && cityResults.length === 0 && matchedPlaces.length === 0) ||
      (!showCitySection && matchedPlaces.length === 0))
 
-  if (viewingPlace) {
-    return (
-      <div className="unified-search">
-        <div className="unified-search-row">
-          <div className="unified-search-token unified-search-token--viewing">
-            <MapPin size={12} className="unified-search-token-icon" />
-            <span className="unified-search-token-label">Viewing <strong>{viewingPlace.name}</strong></span>
-            <button className="unified-search-token-clear" onClick={onClear} title="Clear">
-              <X size={12} />
-            </button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
   return (
     <div className="unified-search">
       <div className="unified-search-row">
@@ -210,7 +194,9 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
       </div>
       {hasCity && (
         <div className="unified-search-radius-inline">
+          <span className="unified-search-radius-label">Radius</span>
           <RadiusSelector value={radius} onChange={onRadiusChange} />
+           <span className="unified-search-radius-label">Km</span>
         </div>
       )}
       {showDropdown && (

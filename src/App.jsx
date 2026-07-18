@@ -227,6 +227,7 @@ export default function App() {
                 onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewportBounds(null); setViewingPlace(null) }}
                 onClear={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null) }}
                 viewingPlace={viewingPlace}
+                onClearViewing={() => { setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
                 filter={filter}
                 onFilterChange={setFilter}
                 viewportBounds={viewportBounds}

@@ -11,7 +11,7 @@ function toTitleCase(str) {
   return str
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, filter, onFilterChange, viewportBounds, onClearBounds }) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [menuOpenId, setMenuOpenId] = useState(null)
 
@@ -45,6 +45,12 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
     })
   }
 
+  const viewingFilter = viewingPlace ? {
+    type: 'viewing',
+    label: viewingPlace.name,
+    onClear: onClearViewing
+  } : null
+
   if (places.length === 0) {
     const messages = {
       week: 'No places added this week.',
@@ -60,11 +66,21 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
           radius={radius}
           onRadiusChange={onRadiusChange}
           cityName={cityName}
-          viewingPlace={viewingPlace}
           activeFilter={activeFilter}
           places={places}
           onLocate={onLocate}
         />
+        {viewingFilter && (
+          <div className="filter-chips">
+            <span className="filter-chips-label">Viewing</span>
+            <div className={`filter-chip filter-chip--${viewingFilter.type}`}>
+              <span className="filter-chip-label">{viewingFilter.label}</span>
+              <button className="filter-chip-clear" onClick={viewingFilter.onClear} title="Back to area">
+                <X size={12} />
+              </button>
+            </div>
+          </div>
+        )}
         {activeFilters.length > 0 && (
           <div className="filter-chips">
             <span className="filter-chips-label">Filters</span>
@@ -93,19 +109,29 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
 
   return (
     <>
-      <UnifiedSearchInput
-        onCitySelect={onCitySelect}
-        onClear={onClear}
-        center={center}
-        stateName={stateName}
-        radius={radius}
-        onRadiusChange={onRadiusChange}
-        cityName={cityName}
-        viewingPlace={viewingPlace}
-        activeFilter={activeFilter}
-        places={places}
-        onLocate={onLocate}
-      />
+        <UnifiedSearchInput
+          onCitySelect={onCitySelect}
+          onClear={onClear}
+          center={center}
+          stateName={stateName}
+          radius={radius}
+          onRadiusChange={onRadiusChange}
+          cityName={cityName}
+          activeFilter={activeFilter}
+          places={places}
+          onLocate={onLocate}
+        />
+      {viewingFilter && (
+        <div className="filter-chips">
+          <span className="filter-chips-label">Viewing</span>
+          <div className={`filter-chip filter-chip--${viewingFilter.type}`}>
+            <span className="filter-chip-label">{viewingFilter.label}</span>
+            <button className="filter-chip-clear" onClick={viewingFilter.onClear} title="Back to area">
+              <X size={12} />
+            </button>
+          </div>
+        </div>
+      )}
       {activeFilters.length > 0 && (
         <div className="filter-chips">
           <span className="filter-chips-label">Filters</span>
