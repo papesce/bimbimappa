@@ -233,7 +233,7 @@ export default function App() {
                 filter={filter}
                 onFilterChange={setFilter}
                 viewportBounds={viewportBounds}
-                onClearBounds={() => setViewportBounds(null)}
+                onClearBounds={() => { setViewportBounds(null); setFitBoundsTrigger(n => n + 1) }}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
               />
