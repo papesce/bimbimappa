@@ -11,7 +11,7 @@ function toTitleCase(str) {
   return str
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, searchQuery, onSearchChange }) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, searchQuery, onSearchChange, hoverRadius, onHoverRadius }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [menuOpenId, setMenuOpenId] = useState(null)
 
@@ -23,11 +23,14 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
   }, [menuOpenId])
 
   const activeFilters = []
-  if (cityName) {
+  if (center) {
     activeFilters.push({
       type: 'city',
-      label: `📍 ${cityName}${radius ? ` · ${radius} km` : ''}`,
-      onClear: onClear
+      label: cityName
+        ? `📍 ${cityName}${radius ? ` · ${radius} km` : ''}`
+        : `📍 ${radius ? `${radius} km radius` : 'Nearby'}`,
+      onClear: onClear,
+      onHover: onHoverRadius,
     })
   }
   if (filter && filter !== 'all') {
@@ -37,7 +40,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
       onClear: () => onFilterChange?.('all')
     })
   }
-  if (viewportBounds && !cityName) {
+  if (viewportBounds && !center) {
     activeFilters.push({
       type: 'bounds',
       label: 'Current map view',
@@ -88,7 +91,12 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             <div className="filter-chips">
               <span className="filter-chips-label">Filters</span>
               {activeFilters.map((f, i) => (
-                <div key={i} className={`filter-chip filter-chip--${f.type}`}>
+                <div
+                  key={i}
+                  className={`filter-chip filter-chip--${f.type}`}
+                  onMouseEnter={f.onHover ? () => f.onHover(true) : undefined}
+                  onMouseLeave={f.onHover ? () => f.onHover(false) : undefined}
+                >
                   <span className="filter-chip-label">{f.label}</span>
                   <button className="filter-chip-clear" onClick={f.onClear} title={`Clear ${f.type} filter`}>
                     <X size={12} />
@@ -145,7 +153,12 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
           <div className="filter-chips">
             <span className="filter-chips-label">Filters</span>
             {activeFilters.map((f, i) => (
-              <div key={i} className={`filter-chip filter-chip--${f.type}`}>
+              <div
+                key={i}
+                className={`filter-chip filter-chip--${f.type}`}
+                onMouseEnter={f.onHover ? () => f.onHover(true) : undefined}
+                onMouseLeave={f.onHover ? () => f.onHover(false) : undefined}
+              >
                 <span className="filter-chip-label">{f.label}</span>
                 <button
                   className="filter-chip-clear"

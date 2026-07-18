@@ -5,12 +5,13 @@ import 'leaflet/dist/leaflet.css'
 import { Trash2, ExternalLink, Pencil, Check, X, Navigation, ChevronLeft } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 
-function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, fitBoundsTrigger, previewArea, onPreviewAreaDone }) {
+function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit }) {
   const map = useMap()
 
   // Fit the camera to the full radius circle + any matched markers
   useEffect(() => {
     if (previewArea) return
+    if (suppressFit > 0) return
     if (!center && focusPlaces.length === 0) return
     let bounds
     if (center) {
@@ -23,7 +24,7 @@ function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, f
     }
     if (!bounds) return
     map.fitBounds(bounds, { padding: [48, 48] })
-  }, [focusPlaces, center, radius, map]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [focusPlaces, center, radius, map, suppressFit]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Explicit refit triggered by "Back to area" button
   useEffect(() => {
@@ -189,7 +190,7 @@ function PopupOpener({ markerRefs, popupPlaceId, onPopupDone }) {
   return null
 }
 
-export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone }) {
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadius, onHoverRadius }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [circleOpacity, setCircleOpacity] = useState(0)
   const circleFadeRef = useRef(null)
@@ -232,7 +233,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
       zoomControl={true}
       className="main-map"
     >
-      <MapController focusPlaces={focusPlaces} center={center} radius={radius} focusPlace={focusPlace} onFocusDone={onFocusDone} fitBoundsTrigger={fitBoundsTrigger} previewArea={previewArea} onPreviewAreaDone={onPreviewAreaDone} />
+      <MapController focusPlaces={focusPlaces} center={center} radius={radius} focusPlace={focusPlace} onFocusDone={onFocusDone} fitBoundsTrigger={fitBoundsTrigger} previewArea={previewArea} onPreviewAreaDone={onPreviewAreaDone} suppressFit={suppressFit} />
       <BoundsTracker onViewportChange={onViewportChange} />
       {popupPlaceId && (
         <PopupOpener
@@ -246,15 +247,15 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {center && circleOpacity > 0 && (
+      {center && (hoverRadius || circleOpacity > 0) && (
         <Circle
           center={[center.lat, center.lng]}
           radius={radius * 1000}
           pathOptions={{
             color: '#4A90D9',
             fillColor: '#4A90D9',
-            fillOpacity: 0.12 * circleOpacity,
-            opacity: circleOpacity,
+            fillOpacity: hoverRadius ? 0.15 : 0.12 * circleOpacity,
+            opacity: hoverRadius ? 0.8 : circleOpacity,
             weight: 2,
           }}
         />

@@ -48,6 +48,8 @@ export default function App() {
   const [fitBoundsTrigger, setFitBoundsTrigger] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
   const [previewArea, setPreviewArea] = useState(null)
+  const [suppressFit, setSuppressFit] = useState(0)
+  const [hoverRadius, setHoverRadius] = useState(false)
 
   async function handleAdd(data) {
     const result = await addPlace(data)
@@ -83,7 +85,7 @@ export default function App() {
       return to >= filterRange.start && from <= filterRange.end
     })
   }
-  if (viewportBounds && !cityName) {
+  if (viewportBounds && !center) {
     filteredPlaces = getPlacesWithinBounds(filteredPlaces, viewportBounds)
   }
   if (viewingPlace && !filteredPlaces.some(p => p.id === viewingPlace.id)) {
@@ -133,6 +135,9 @@ export default function App() {
           fitBoundsTrigger={fitBoundsTrigger}
           previewArea={previewArea}
           onPreviewAreaDone={() => setPreviewArea(null)}
+          suppressFit={suppressFit}
+          hoverRadius={hoverRadius}
+          onHoverRadius={setHoverRadius}
         />
       </div>
 
@@ -239,7 +244,7 @@ export default function App() {
                 radius={radius}
                 onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
                 onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
-                onClear={() => { clearCenter(); setViewingPlace(null) }}
+                onClear={() => { clearCenter(); setViewingPlace(null); setSuppressFit(n => n + 1) }}
                 viewingPlace={viewingPlace}
                 onClearViewing={() => { setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
                 filter={filter}
@@ -248,6 +253,8 @@ export default function App() {
                 onClearBounds={() => { setViewportBounds(null); setFitBoundsTrigger(n => n + 1) }}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
+                hoverRadius={hoverRadius}
+                onHoverRadius={setHoverRadius}
               />
             </div>
           </div>
