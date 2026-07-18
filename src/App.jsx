@@ -198,7 +198,7 @@ export default function App() {
             <div className="panel-header">
               <h2>Saved places</h2>
               <div className="panel-header-right">
-                <button className="icon-btn" onClick={() => setPanel('add')} title="Add place">
+                <button className="icon-btn panel-add-btn" onClick={() => setPanel('add')} title="Add place">
                   <Plus size={18} />
                 </button>
                 <ExportButton />

@@ -58,10 +58,12 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   animation: spin 0.7s linear infinite;
 }
 
-/* ─── Leaflet zoom controls — pinned bottom-left ────────────────── */
+/* ─── Leaflet zoom controls — pinned bottom-right ───────────────── */
 .main-map .leaflet-top.leaflet-left {
   top: auto;
-  bottom: 28px;
+  bottom: 92px;
+  left: auto;
+  right: 30px;
 }
 
 /* ─── Top bar ───────────────────────────────────────────────────── */
@@ -120,8 +122,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 .filter-strip {
   position: absolute;
   top: 53px; /* sits flush below the topbar */
-  left: 50%;
-  transform: translateX(-50%);
+  right: 16px;
   z-index: 999;
   display: flex;
   gap: 6px;
@@ -210,7 +211,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 56px 20px 16px;
+  padding: 64px 20px 16px;
   border-bottom: 1px solid var(--border);
 }
 
@@ -427,6 +428,15 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   transition: color 0.15s;
 }
 .icon-btn:hover { color: var(--text); }
+
+.panel-add-btn {
+  color: var(--coral);
+  background: rgba(255, 107, 107, 0.10);
+}
+.panel-add-btn:hover {
+  color: var(--coral-dk);
+  background: rgba(255, 107, 107, 0.18);
+}
 
 /* ─── Error ─────────────────────────────────────────────────────── */
 .error-msg {
@@ -971,8 +981,8 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 /* ─── Location bar (unified search + radius + geo) ──────────────── */
 .location-bar-geo {
   position: absolute;
-  top: 53px;
-  left: 16px;
+  top: 105px;
+  right: 16px;
   z-index: 999;
   display: flex;
   align-items: center;
@@ -1188,7 +1198,8 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 .map-reset-btn {
   position: absolute;
   bottom: 80px;
-  left: 12px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 1000;
   display: inline-flex;
   align-items: center;
@@ -1214,7 +1225,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .map-reset-btn:active {
-  transform: scale(0.97);
+  transform: translateX(-50%) scale(0.97);
 }
 
 /* ─── Mobile ────────────────────────────────────────────────────── */
@@ -1222,7 +1233,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   .side-panel { width: 100vw; }
   .pin-count { display: none; }
   .filter-strip { top: 49px; }
-  .location-bar-geo { top: 49px; left: 12px; }
+  .location-bar-geo { top: 100px; right: 12px; }
   .fab { bottom: 24px; right: 16px; }
-  .map-reset-btn { bottom: 72px; left: 12px; font-size: 12px; padding: 6px 12px; }
+  .map-reset-btn { bottom: 72px; left: 50%; transform: translateX(-50%); font-size: 12px; padding: 6px 12px; }
 }
