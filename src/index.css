@@ -585,24 +585,8 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 .filter-chips {
   padding: 4px 16px 8px;
   display: flex;
+  flex-wrap: wrap;
   gap: 6px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: thin;
-  scrollbar-color: var(--border) transparent;
-}
-
-.filter-chips::-webkit-scrollbar {
-  height: 4px;
-}
-
-.filter-chips::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.filter-chips::-webkit-scrollbar-thumb {
-  background: var(--border);
-  border-radius: 2px;
 }
 
 .filter-chip {
