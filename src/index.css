@@ -771,7 +771,6 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 .action-link:hover { color: var(--accent); }
 .action-btn.danger:hover { color: #e05555; }
-.action-btn.locate:hover { color: var(--accent); }
 
 
 /* ─── New marker pulse ring ─────────────────────────────────────── */
@@ -1316,7 +1315,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 @media (max-width: 480px) {
   .side-panel { width: 100vw; }
   .pin-count { display: none; }
-  .filter-strip { top: 49px; }
+  .filter-strip { top: 49px; left: 50%; right: auto; transform: translateX(-50%); }
   .location-controls { top: 100px; right: 12px; }
   .fab { bottom: 24px; right: 16px; }
   .map-reset-btn { bottom: 72px; left: 50%; transform: translateX(-50%); }

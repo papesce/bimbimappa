@@ -194,13 +194,6 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
               {place.notes && <p className="place-notes">"{place.notes}"</p>}
             </button>
             <div className="place-card-actions">
-              <button
-                className="action-btn locate"
-                onClick={() => onLocate(place)}
-                title="Show on map"
-              >
-                <Navigation size={14} />
-              </button>
               <div className="card-menu-wrapper">
                 <button
                   className="action-btn"
