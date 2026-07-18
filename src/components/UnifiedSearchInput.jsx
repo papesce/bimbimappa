@@ -24,7 +24,9 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
   const inputRef = useRef(null)
   const timerRef = useRef(null)
   const blurRef = useRef(null)
+  const dropdownRef = useRef(null)
   const shouldRefocus = useRef(false)
+  const [isScrollable, setIsScrollable] = useState(false)
 
   const q = query.trim().toLowerCase()
   const hasCity = !!cityName
@@ -61,6 +63,13 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
     if (shouldRefocus.current && inputRef.current) {
       inputRef.current.focus()
       shouldRefocus.current = false
+    }
+  })
+
+  useEffect(() => {
+    if (showDropdown && dropdownRef.current) {
+      const el = dropdownRef.current
+      setIsScrollable(el.scrollHeight > el.clientHeight)
     }
   })
 
@@ -199,7 +208,7 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
         </div>
       )}
       {showDropdown && (
-        <div className="unified-search-dropdown">
+        <div ref={dropdownRef} className={`unified-search-dropdown${isScrollable ? ' unified-search-dropdown--scrollable' : ''}`}>
           {showRecent && (
             <>
               <div className="unified-search-dropdown-header">
@@ -272,7 +281,7 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
               <div className="unified-search-dropdown-header">
                 <span>⭐ Your places</span>
               </div>
-              {matchedPlaces.slice(0, 10).map((place) => (
+              {matchedPlaces.slice(0, 15).map((place) => (
                 <button
                   key={place.id}
                   className="unified-search-option"

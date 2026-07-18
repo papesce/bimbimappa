@@ -196,6 +196,19 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 .panel-body {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.panel-search-area {
+  flex-shrink: 0;
+  position: relative;
+}
+
+.panel-scroll-area {
+  flex: 1;
   overflow-y: auto;
   padding-bottom: 8px;
 }
@@ -991,9 +1004,22 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   border: 1px solid var(--border);
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  max-height: 320px;
+  max-height: 440px;
   overflow-y: auto;
+  overscroll-behavior: contain;
   z-index: 100;
+}
+
+.unified-search-dropdown--scrollable::after {
+  content: '';
+  position: sticky;
+  bottom: 0;
+  display: block;
+  height: 40px;
+  margin-top: -40px;
+  background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,1));
+  pointer-events: none;
+  border-radius: 0 0 16px 16px;
 }
 
 .unified-search-dropdown-header {
