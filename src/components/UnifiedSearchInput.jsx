@@ -47,17 +47,19 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
         : cityName
           ? `${searchQuery}, ${cityName}`
           : searchQuery
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`,
-        { headers: { Accept: 'application/json', 'Accept-Language': 'en' } }
-      )
+      let url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5&addressdetails=1`
+      if (center) {
+        const d = 1
+        url += `&viewbox=${center.lng - d},${center.lat - d},${center.lng + d},${center.lat + d}`
+      }
+      const res = await fetch(url, { headers: { Accept: 'application/json', 'Accept-Language': 'en' } })
       const data = await res.json()
       console.log('[Search] Nominatim query:', q, '→', data.length, 'results')
       setCityResults(data)
     } catch {
       setCityResults([])
     }
-  }, [cityName, stateName])
+  }, [cityName, stateName, center])
 
   useEffect(() => {
     if (shouldRefocus.current && inputRef.current) {
