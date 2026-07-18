@@ -46,6 +46,7 @@ export default function App() {
   const [viewportBounds, setViewportBounds] = useState(null)
   const [viewingPlace, setViewingPlace] = useState(null)
   const [fitBoundsTrigger, setFitBoundsTrigger] = useState(0)
+  const [searchQuery, setSearchQuery] = useState('')
 
   async function handleAdd(data) {
     const result = await addPlace(data)
@@ -191,6 +192,7 @@ export default function App() {
             cityName={cityName}
             stateName={stateName}
             countryCode={countryCode}
+            initialQuery={searchQuery}
           />
         )}
         {panel === 'list' && !editingPlace && (
@@ -232,6 +234,8 @@ export default function App() {
                 onFilterChange={setFilter}
                 viewportBounds={viewportBounds}
                 onClearBounds={() => setViewportBounds(null)}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
               />
             </div>
           </div>
@@ -245,6 +249,7 @@ export default function App() {
             cityName={cityName}
             stateName={stateName}
             countryCode={countryCode}
+            initialQuery={searchQuery}
           />
         )}
       </aside>

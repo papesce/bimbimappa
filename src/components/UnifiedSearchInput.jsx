@@ -16,8 +16,7 @@ function saveRecent(list) {
   try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT))) } catch {}
 }
 
-export default function UnifiedSearchInput({ onCitySelect, onClear, center, stateName, radius, onRadiusChange, cityName, activeFilter, places, onLocate }) {
-  const [query, setQuery] = useState('')
+export default function UnifiedSearchInput({ onCitySelect, onClear, center, stateName, radius, onRadiusChange, cityName, activeFilter, places, onLocate, query, onQueryChange }) {
   const [cityResults, setCityResults] = useState([])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState(loadRecent)
@@ -67,7 +66,7 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
 
   function handleChange(e) {
     const val = e.target.value
-    setQuery(val)
+    onQueryChange(val)
     clearTimeout(timerRef.current)
     if (val.trim().length < 2) {
       setCityResults([])
@@ -93,7 +92,7 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
     saveRecent(next)
 
     onCitySelect(entry.lat, entry.lon, name, state, countryCode)
-    setQuery('')
+    onQueryChange('')
     setCityResults([])
   }
 
@@ -102,14 +101,14 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
     shouldRefocus.current = true
     setOpen(false)
     onCitySelect(entry.lat, entry.lon, entry.name, entry.state || '', entry.countryCode || '')
-    setQuery('')
+    onQueryChange('')
     setCityResults([])
   }
 
   function handleSelectPlace(place) {
     clearTimeout(blurRef.current)
     setOpen(false)
-    setQuery('')
+    onQueryChange('')
     onLocate(place)
   }
 
@@ -118,7 +117,7 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
   }
 
   function handleClearInput() {
-    setQuery('')
+    onQueryChange('')
     setCityResults([])
   }
 
@@ -135,7 +134,7 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
 
   function handleKeyDown(e) {
     if (e.key === 'Escape') {
-      setQuery('')
+      onQueryChange('')
       setCityResults([])
       setOpen(false)
     }

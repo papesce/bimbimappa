@@ -59,10 +59,10 @@ function LocationPreview({ resolved, onReset }) {
   )
 }
 
-export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cityName, stateName, countryCode }) {
+export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cityName, stateName, countryCode, initialQuery }) {
   const isEditing = !!editPlace
   const [name, setName] = useState(editPlace?.name || '')
-  const [searchQuery, setSearchQuery] = useState(editPlace?.address || '')
+  const [searchQuery, setSearchQuery] = useState(editPlace?.address || initialQuery || '')
   const [notes, setNotes] = useState(editPlace?.notes || '')
   const [sourceUrl, setSourceUrl] = useState(editPlace?.source_url || '')
   const [dateFrom, setDateFrom] = useState(editPlace?.date_from || '')

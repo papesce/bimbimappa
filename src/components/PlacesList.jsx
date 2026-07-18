@@ -11,7 +11,7 @@ function toTitleCase(str) {
   return str
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds }) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, searchQuery, onSearchChange }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [menuOpenId, setMenuOpenId] = useState(null)
 
@@ -69,6 +69,8 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
           activeFilter={activeFilter}
           places={places}
           onLocate={onLocate}
+          query={searchQuery}
+          onQueryChange={onSearchChange}
         />
         {viewingFilter && (
           <div className="filter-chips">
@@ -120,6 +122,8 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
           activeFilter={activeFilter}
           places={places}
           onLocate={onLocate}
+          query={searchQuery}
+          onQueryChange={onSearchChange}
         />
       {viewingFilter && (
         <div className="filter-chips">
