@@ -166,8 +166,8 @@ export default function App() {
         <div className="topbar-brand">
           <MapPin size={18} strokeWidth={2.5} />
           <span>Family Fun Map</span>
-          {import.meta.env.VITE_APP_VERSION && (
-            <span className="version-badge">{import.meta.env.VITE_APP_VERSION}</span>
+          {typeof __APP_VERSION__ !== 'undefined' && (
+            <span className="version-badge">{__APP_VERSION__}</span>
           )}
         </div>
         <div className="topbar-actions">
