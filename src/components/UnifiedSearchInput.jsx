@@ -202,7 +202,7 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
           </button>
         )}
       </div>
-      {hasCity && (
+      {center && (
         <div className="unified-search-radius-inline">
           <span className="unified-search-radius-label">Radius</span>
           <RadiusSelector value={radius} onChange={onRadiusChange} />
