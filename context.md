@@ -76,7 +76,8 @@ Single table: `places`
 | `lat` | double precision | Latitude |
 | `lng` | double precision | Longitude |
 | `notes` | text | Optional user notes |
-| `source_url` | text | Optional Instagram / TikTok link |
+| `source_url` | text | Legacy single link, migrated into `links` |
+| `links` | jsonb | `[{ id, url, label, is_primary }]` — multiple source links |
 | `date_from` | date | Optional start date |
 | `date_to` | date | Optional end date |
 | `created_at` | timestamptz | Defaults to `now()` |
@@ -112,12 +113,12 @@ All policies are permissive (any request with the anon key can read, insert, upd
 - OpenStreetMap tiles via react-leaflet
 - Custom coral teardrop markers
 - Default center: Buenos Aires (-34.6037, -58.3816), zoom 5 (no places) / 10 (places loaded)
-- Popup actions: edit, delete, open source link
+- Popup actions: edit, delete, open primary source link + secondary links via the "More" menu
 - Leaflet icon CDN URL fix required for Vite
 
 ### 5. Add / Edit Panel — `AddPlacePanel.jsx`
 - **Step 1:** Enter place name → geocode → confirm coordinates
-- **Step 2:** Fill optional fields — notes, source URL, date range
+- **Step 2:** Fill optional fields — multiple links (one primary), notes, date range
 - State machine: `idle | searching | saving | error`
 - Edit mode pre-populates all fields
 

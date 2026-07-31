@@ -367,6 +367,54 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 .date-field .input { width: 100%; }
 
+/* ─── Link editor (add / edit form) ─────────────────────────────── */
+.link-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.link-primary-radio {
+  margin-top: 12px;
+  accent-color: var(--coral);
+  cursor: pointer;
+}
+
+.link-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.link-label-input {
+  font-size: 13px;
+  padding: 7px 10px;
+}
+
+.btn-link-add {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  padding: 7px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.btn-link-add:hover {
+  border-color: var(--accent);
+  color: var(--coral);
+}
+
 /* ─── Location preview card ─────────────────────────────────────── */
 .location-preview {
   margin: 10px 20px 0;
@@ -1353,7 +1401,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .bottom-sheet--peek {
-  transform: translateY(calc(50dvh - 120px));
+  transform: translateY(calc(50dvh - 175px));
 }
 
 .bottom-sheet--expanded {
@@ -1417,6 +1465,74 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.sheet-icon-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.sheet-icon-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--mist);
+  color: var(--text);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.sheet-icon-action:hover {
+  border-color: var(--accent);
+  color: var(--coral);
+  background: white;
+}
+
+.sheet-links {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sheet-link-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  border-radius: var(--radius);
+  color: var(--text);
+  text-decoration: none;
+  transition: background 0.12s;
+}
+
+.sheet-link-row:hover { background: var(--mist); }
+
+.sheet-link-icon {
+  display: flex;
+  color: var(--coral);
+}
+
+.sheet-link-label {
+  flex: 1;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.sheet-link-primary {
+  margin-left: 8px;
+  padding: 1px 7px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--coral);
+  background: rgba(255,107,107,0.12);
+  border-radius: 20px;
 }
 
 .sheet-expanded-content {
@@ -1494,7 +1610,9 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .nav-menu-item {
-  display: block;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   padding: 8px 14px;
   font-size: 13px;
   color: var(--text);
@@ -1503,3 +1621,9 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .nav-menu-item:hover { background: var(--mist); }
+
+.nav-menu-divider {
+  height: 1px;
+  background: var(--border);
+  margin: 4px 0;
+}

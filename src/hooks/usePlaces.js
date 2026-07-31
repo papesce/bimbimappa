@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 /**
  * All DB operations for places.
  * Table shape (see schema.sql):
- *   id, name, address, lat, lng, notes, source_url, created_at
+ *   id, name, address, lat, lng, notes, source_url, links, created_at
  */
 export function usePlaces() {
   const [places, setPlaces] = useState([])
@@ -35,10 +35,10 @@ export function usePlaces() {
     return () => supabase.removeChannel(channel)
   }, [fetchPlaces])
 
-  async function addPlace({ name, address, lat, lng, notes, sourceUrl }) {
+  async function addPlace({ name, address, lat, lng, notes, links }) {
     const { data, error } = await supabase
       .from('places')
-      .insert([{ name, address, lat, lng, notes, source_url: sourceUrl }])
+      .insert([{ name, address, lat, lng, notes, links }])
       .select()
       .single()
 

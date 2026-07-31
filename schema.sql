@@ -8,7 +8,8 @@ create table if not exists places (
   lat         double precision not null,
   lng         double precision not null,
   notes       text,
-  source_url  text,
+  source_url  text,           -- legacy single link, migrated into `links`
+  links       jsonb default '[]',  -- [{ id, url, label, is_primary }]
   date_from   date,
   date_to     date,
   created_at  timestamptz default now()

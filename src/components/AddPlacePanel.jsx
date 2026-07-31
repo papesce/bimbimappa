@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { useState } from 'react'
-import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar, CheckCircle2, RotateCcw } from 'lucide-react'
+import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar, CheckCircle2, RotateCcw, Plus } from 'lucide-react'
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { geocodePlace } from '../lib/geocode'
+import { getLinks, inferLinkLabel } from '../lib/links.jsx'
 import SafariGestureGuard from './SafariGestureGuard'
 
 // Coral marker — matches the main map style, slightly smaller
@@ -73,7 +74,17 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
   const [name, setName] = useState(editPlace?.name || '')
   const [searchQuery, setSearchQuery] = useState(editPlace?.address || initialQuery || '')
   const [notes, setNotes] = useState(editPlace?.notes || '')
-  const [sourceUrl, setSourceUrl] = useState(editPlace?.source_url || '')
+  const [links, setLinks] = useState(() => {
+    const existing = getLinks(editPlace)
+    return existing.length > 0
+      ? existing.map(l => ({
+          id: l.id || crypto.randomUUID(),
+          url: l.url,
+          label: l.label || '',
+          is_primary: !!l.is_primary,
+        }))
+      : []
+  })
   const [dateFrom, setDateFrom] = useState(editPlace?.date_from || '')
   const [dateTo, setDateTo] = useState(editPlace?.date_to || '')
   const [status, setStatus] = useState('idle') // idle | searching | saving | error
@@ -102,19 +113,62 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
     }
   }
 
+  function updateLink(id, patch) {
+    setLinks(prev => prev.map(l => l.id === id ? { ...l, ...patch } : l))
+  }
+
+  function handleUrlChange(id, url) {
+    setLinks(prev => prev.map(l => {
+      if (l.id !== id) return l
+      const wasAuto = !l.label || l.label === inferLinkLabel(l.url)
+      return { ...l, url, label: wasAuto ? inferLinkLabel(url) : l.label }
+    }))
+  }
+
+  function setPrimary(id) {
+    setLinks(prev => prev.map(l => ({ ...l, is_primary: l.id === id })))
+  }
+
+  function addLink() {
+    setLinks(prev => [...prev, { id: crypto.randomUUID(), url: '', label: '', is_primary: prev.length === 0 }])
+  }
+
+  function removeLink(id) {
+    setLinks(prev => {
+      const next = prev.filter(l => l.id !== id)
+      if (next.length > 0 && !next.some(l => l.is_primary)) {
+        next[0] = { ...next[0], is_primary: true }
+      }
+      return next
+    })
+  }
+
   async function handleSave(e) {
     e.preventDefault()
     if (!resolved || !name.trim()) return
 
     setStatus('saving')
     try {
+      const savedLinks = links
+        .filter(l => l.url.trim())
+        .map(l => ({
+          id: l.id,
+          url: l.url.trim(),
+          label: l.label.trim() || inferLinkLabel(l.url.trim()),
+          is_primary: l.is_primary,
+        }))
+      const hasPrimary = savedLinks.some(l => l.is_primary)
+      const finalLinks = savedLinks.length > 0 && !hasPrimary
+        ? savedLinks.map((l, i) => ({ ...l, is_primary: i === 0 }))
+        : savedLinks
+
       const data = {
         name: name.trim(),
         address: resolved.formattedAddress,
         lat: resolved.lat,
         lng: resolved.lng,
         notes: notes.trim(),
-        source_url: sourceUrl.trim(),
+        links: finalLinks,
         date_from: dateFrom || null,
         date_to: dateTo || null,
       }
@@ -122,13 +176,13 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
       if (isEditing) {
         await onUpdate(editPlace.id, data)
       } else {
-        await onAdd({ ...data, sourceUrl: sourceUrl.trim() })
+        await onAdd(data)
       }
 
       setName('')
       setSearchQuery('')
       setNotes('')
-      setSourceUrl('')
+      setLinks([])
       setResolved(null)
       setStatus('idle')
       onClose()
@@ -210,15 +264,48 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
           />
 
           <label className="field-label" style={{ marginTop: '12px' }}>
-            <Link size={14} /> Paste the Instagram / TikTok link <span className="optional">(optional)</span>
+            <Link size={14} /> Links <span className="optional">(optional — pick one as primary)</span>
           </label>
-          <input
-            className="input"
-            placeholder="https://www.instagram.com/p/..."
-            value={sourceUrl}
-            onChange={(e) => setSourceUrl(e.target.value)}
-            type="url"
-          />
+          {links.map((link) => (
+            <div key={link.id} className="link-row">
+              <input
+                type="radio"
+                name="primary-link"
+                className="link-primary-radio"
+                checked={!!link.is_primary}
+                onChange={() => setPrimary(link.id)}
+                title="Primary link"
+                aria-label="Mark as primary link"
+              />
+              <div className="link-fields">
+                <input
+                  className="input"
+                  placeholder="https://www.instagram.com/p/..."
+                  value={link.url}
+                  onChange={(e) => handleUrlChange(link.id, e.target.value)}
+                  type="url"
+                />
+                <input
+                  className="input link-label-input"
+                  placeholder="Label (auto)"
+                  value={link.label}
+                  onChange={(e) => updateLink(link.id, { label: e.target.value })}
+                />
+              </div>
+              <button
+                className="action-btn"
+                type="button"
+                onClick={() => removeLink(link.id)}
+                title="Remove link"
+                aria-label="Remove link"
+              >
+                <X size={14} />
+              </button>
+            </div>
+          ))}
+          <button className="btn-link-add" type="button" onClick={addLink}>
+            <Plus size={14} /> Add another link
+          </button>
 
           <label className="field-label" style={{ marginTop: '12px' }}>
             <Calendar size={14} /> Date <span className="optional">(optional — single day or range)</span>

@@ -2,8 +2,9 @@ import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Trash2, ExternalLink, Pencil, Check, X, Navigation, ChevronLeft } from 'lucide-react'
+import { Trash2, Pencil, Check, X, Navigation, ChevronLeft } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
+import { getLinks, getPrimaryLink, BrandIcon } from '../lib/links.jsx'
 import SafariGestureGuard from './SafariGestureGuard'
 
 function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit }) {
@@ -344,6 +345,9 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
 function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete, onEdit, markerRefs, isMobile, onMobilePopup }) {
   const markerRef = useRef(null)
   const [navOpen, setNavOpen] = useState(false)
+  const links = getLinks(place)
+  const primaryLink = getPrimaryLink(place)
+  const secondaryLinks = links.filter(l => l !== primaryLink)
 
   useEffect(() => {
     markerRefs.current[place.id] = markerRef.current
@@ -381,22 +385,29 @@ function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete
             <p className="popup-notes">"{place.notes}"</p>
           )}
           <div className="popup-actions">
-            {place.source_url && (
+            {primaryLink && (
               <a
-                href={place.source_url}
+                href={primaryLink.url}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="popup-action-link"
+                title={primaryLink.label || 'Source'}
               >
-                <ExternalLink size={12} /> Source
+                <BrandIcon url={primaryLink.url} size={12} /> {primaryLink.label || 'Source'}
               </a>
             )}
             <div className="nav-wrapper">
               <button className="popup-action-btn" onClick={() => setNavOpen(!navOpen)}>
-                <Navigation size={12} /> Directions
+                <Navigation size={12} /> More
               </button>
               {navOpen && (
                 <div className="nav-menu">
+                  {secondaryLinks.map(l => (
+                    <a key={l.id || l.url} href={l.url} target="_blank" rel="noopener noreferrer" className="nav-menu-item" onClick={() => setNavOpen(false)}>
+                      <BrandIcon url={l.url} size={13} /> {l.label || 'Link'}
+                    </a>
+                  ))}
+                  {secondaryLinks.length > 0 && <div className="nav-menu-divider" />}
                   <a href={googleMapsUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="nav-menu-item" onClick={() => setNavOpen(false)}>Google Maps</a>
                   <a href={wazeUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="nav-menu-item" onClick={() => setNavOpen(false)}>Waze</a>
                 </div>

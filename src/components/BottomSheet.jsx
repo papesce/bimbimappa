@@ -1,6 +1,7 @@
 import { useRef } from 'react'
-import { ExternalLink, Navigation, Pencil, Trash2, Check, X } from 'lucide-react'
+import { ExternalLink, Navigation, Car, Pencil, Trash2, Check, X } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
+import { getLinks, getPrimaryLink, BrandIcon } from '../lib/links.jsx'
 
 export default function BottomSheet({
   place,
@@ -19,7 +20,7 @@ export default function BottomSheet({
   const dragRef = useRef({ startY: 0, startVisiblePx: 0, dragging: false })
 
   const HIDDEN_PX = 60
-  const PEEK_PX = 120
+  const PEEK_PX = 175
 
   function getVisiblePx() {
     const maxVisible = window.innerHeight * 0.5
@@ -84,6 +85,9 @@ export default function BottomSheet({
     return `${from}–${to}`
   }
 
+  const links = place ? getLinks(place) : []
+  const primaryLink = place ? getPrimaryLink(place) : null
+
   return (
     <div
       ref={sheetRef}
@@ -110,11 +114,45 @@ export default function BottomSheet({
         </div>
       </div>
 
-      {/* Peek row */}
+      {/* Peek row — name, address, one-tap action icons */}
       {place && sheetState !== 'hidden' && (
         <div className="sheet-peek-content" onClick={() => onSheetChange('expanded')}>
           <p className="sheet-place-name">{place.name}</p>
           <p className="sheet-place-address">{place.address}</p>
+          <div className="sheet-icon-actions">
+            {primaryLink && (
+              <a
+                href={primaryLink.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="sheet-icon-action"
+                title={primaryLink.label || 'Source'}
+                onClick={e => e.stopPropagation()}
+              >
+                <BrandIcon url={primaryLink.url} size={18} />
+              </a>
+            )}
+            <a
+              href={googleMapsUrl(place.lat, place.lng)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sheet-icon-action"
+              title="Google Maps"
+              onClick={e => e.stopPropagation()}
+            >
+              <Navigation size={18} />
+            </a>
+            <a
+              href={wazeUrl(place.lat, place.lng)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="sheet-icon-action"
+              title="Waze"
+              onClick={e => e.stopPropagation()}
+            >
+              <Car size={18} />
+            </a>
+          </div>
         </div>
       )}
 
@@ -132,17 +170,30 @@ export default function BottomSheet({
             <p className="popup-notes">"{place.notes}"</p>
           )}
 
+          {links.length > 0 && (
+            <div className="sheet-links">
+              {links.map(link => (
+                <a
+                  key={link.id || link.url}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="sheet-link-row"
+                >
+                  <span className="sheet-link-icon">
+                    <BrandIcon url={link.url} size={16} />
+                  </span>
+                  <span className="sheet-link-label">
+                    {link.label || 'Link'}
+                    {link.is_primary && <span className="sheet-link-primary">primary</span>}
+                  </span>
+                  <ExternalLink size={13} />
+                </a>
+              ))}
+            </div>
+          )}
+
           <div className="sheet-actions">
-            {place.source_url && (
-              <a
-                href={place.source_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="sheet-action-link"
-              >
-                <ExternalLink size={14} /> Source
-              </a>
-            )}
             <a
               href={googleMapsUrl(place.lat, place.lng)}
               target="_blank"
@@ -157,7 +208,7 @@ export default function BottomSheet({
               rel="noopener noreferrer"
               className="sheet-action-link"
             >
-              <Navigation size={14} /> Waze
+              <Car size={14} /> Waze
             </a>
             <button className="sheet-action-btn" onClick={() => onEdit(place)}>
               <Pencil size={14} /> Edit

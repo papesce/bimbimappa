@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
-import { MapPin, ExternalLink, Trash2, Pencil, Check, X, Navigation, MoreVertical } from 'lucide-react'
+import { MapPin, Trash2, Pencil, Check, X, Navigation, MoreVertical } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
+import { getLinks, BrandIcon } from '../lib/links.jsx'
 import UnifiedSearchInput from './UnifiedSearchInput'
 
 function toTitleCase(str) {
@@ -217,11 +218,11 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
                     <a href={wazeUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="card-menu-item" onClick={() => setMenuOpenId(null)}>
                       <Navigation size={13} />Waze
                     </a>
-                    {place.source_url && (
-                      <a href={place.source_url} target="_blank" rel="noopener noreferrer" className="card-menu-item" onClick={() => setMenuOpenId(null)}>
-                        <ExternalLink size={13} />View source
+                    {getLinks(place).map(link => (
+                      <a key={link.id || link.url} href={link.url} target="_blank" rel="noopener noreferrer" className="card-menu-item" onClick={() => setMenuOpenId(null)}>
+                        <BrandIcon url={link.url} size={13} />{link.label || 'Link'}{link.is_primary ? ' ★' : ''}
                       </a>
-                    )}
+                    ))}
                     <button className="card-menu-item" onClick={() => { onEdit(place); setMenuOpenId(null) }}>
                       <Pencil size={13} />Edit
                     </button>
