@@ -241,8 +241,8 @@ export default function App() {
         onFocusHere={handleFocusHere}
       />
 
-      {/* FAB — primary action, bottom-right; hidden while any panel is open */}
-      {!panel && !editingPlace && (
+      {/* FAB — primary action, bottom-right; desktop only (mobile adds via list panel header) */}
+      {!isMobile && !panel && !editingPlace && (
         <button
           className="fab"
           onClick={() => setPanel('add')}
