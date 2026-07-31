@@ -123,8 +123,7 @@ export default function BottomSheet({
             {primaryLink && (
               <a
                 href={primaryLink.url}
-                target="_blank"
-                rel="noopener noreferrer"
+                                rel="noopener noreferrer"
                 className="sheet-icon-action"
                 title={primaryLink.label || 'Source'}
                 onClick={e => e.stopPropagation()}
@@ -134,8 +133,7 @@ export default function BottomSheet({
             )}
             <a
               href={googleMapsUrl(place.lat, place.lng)}
-              target="_blank"
-              rel="noopener noreferrer"
+                            rel="noopener noreferrer"
               className="sheet-icon-action"
               title="Google Maps"
               onClick={e => e.stopPropagation()}
@@ -144,8 +142,7 @@ export default function BottomSheet({
             </a>
             <a
               href={wazeUrl(place.lat, place.lng)}
-              target="_blank"
-              rel="noopener noreferrer"
+                            rel="noopener noreferrer"
               className="sheet-icon-action"
               title="Waze"
               onClick={e => e.stopPropagation()}
@@ -176,8 +173,7 @@ export default function BottomSheet({
                 <a
                   key={link.id || link.url}
                   href={link.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
+                                    rel="noopener noreferrer"
                   className="sheet-link-row"
                 >
                   <span className="sheet-link-icon">
@@ -196,16 +192,14 @@ export default function BottomSheet({
           <div className="sheet-actions">
             <a
               href={googleMapsUrl(place.lat, place.lng)}
-              target="_blank"
-              rel="noopener noreferrer"
+                            rel="noopener noreferrer"
               className="sheet-action-link"
             >
               <Navigation size={14} /> Google Maps
             </a>
             <a
               href={wazeUrl(place.lat, place.lng)}
-              target="_blank"
-              rel="noopener noreferrer"
+                            rel="noopener noreferrer"
               className="sheet-action-link"
             >
               <Car size={14} /> Waze

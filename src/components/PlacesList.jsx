@@ -212,14 +212,14 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
                 </button>
                 {menuOpenId === place.id && (
                   <div className="card-menu" onClick={e => e.stopPropagation()}>
-                    <a href={googleMapsUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="card-menu-item" onClick={() => setMenuOpenId(null)}>
+                    <a href={googleMapsUrl(place.lat, place.lng)} rel="noopener noreferrer" className="card-menu-item" onClick={() => setMenuOpenId(null)}>
                       <MapPin size={13} />Google Maps
                     </a>
-                    <a href={wazeUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="card-menu-item" onClick={() => setMenuOpenId(null)}>
+                    <a href={wazeUrl(place.lat, place.lng)} rel="noopener noreferrer" className="card-menu-item" onClick={() => setMenuOpenId(null)}>
                       <Navigation size={13} />Waze
                     </a>
                     {getLinks(place).map(link => (
-                      <a key={link.id || link.url} href={link.url} target="_blank" rel="noopener noreferrer" className="card-menu-item" onClick={() => setMenuOpenId(null)}>
+                      <a key={link.id || link.url} href={link.url} rel="noopener noreferrer" className="card-menu-item" onClick={() => setMenuOpenId(null)}>
                         <BrandIcon url={link.url} size={13} />{link.label || 'Link'}{link.is_primary ? ' ★' : ''}
                       </a>
                     ))}
