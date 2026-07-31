@@ -105,6 +105,19 @@ export function useMapFocus(places) {
     [center, cityName, stateName, countryCode]
   )
 
+  // Set center + radius atomically (e.g. "focus here" from the map viewport)
+  const setFocusCenter = useCallback((lat, lng, r) => {
+    const c = { lat, lng }
+    setCenterState(c)
+    setRadiusState(r)
+    setCityName('')
+    setStateName('')
+    setCountryCode('')
+    setAutoMode(false)
+    setIsGeolocating(false)
+    persist(c, r, '', '', '')
+  }, [])
+
   const clearCenter = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY)
     setCenterState(null)
@@ -139,6 +152,7 @@ export function useMapFocus(places) {
     isGeolocating,
     setCenter,
     setRadius,
+    setFocusCenter,
     clearCenter,
     resetToGeolocation,
   }

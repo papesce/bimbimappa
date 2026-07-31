@@ -11,7 +11,7 @@ import { usePlaces } from './hooks/usePlaces'
 import { useAuth } from './hooks/useAuth'
 import { useMapFocus } from './hooks/useMapFocus'
 import { useIsMobile } from './hooks/useIsMobile'
-import { getPlacesWithinBounds, getPlacesWithinRadius } from './lib/geo'
+import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm } from './lib/geo'
 import './index.css'
 
 function getFilterRange(filter) {
@@ -44,7 +44,7 @@ const FILTERS = [
 export default function App() {
   const { authed, login } = useAuth()
   const { places, loading, addPlace, deletePlace, updatePlace } = usePlaces()
-  const { center, radius, cityName, stateName, countryCode, matchedPlaces, isGeolocating, setCenter, setRadius, clearCenter, resetToGeolocation } = useMapFocus(places)
+  const { center, radius, cityName, stateName, countryCode, matchedPlaces, isGeolocating, setCenter, setRadius, setFocusCenter, clearCenter, resetToGeolocation } = useMapFocus(places)
   const isMobile = useIsMobile()
   const [panel, setPanel] = useState(null)
   const [editingPlace, setEditingPlace] = useState(null)
@@ -53,6 +53,7 @@ export default function App() {
   const [newPlaceId, setNewPlaceId] = useState(null)
   const [popupPlaceId, setPopupPlaceId] = useState(null)
   const [viewportBounds, setViewportBounds] = useState(null)
+  const [boundsRadius, setBoundsRadius] = useState(null)
   const [viewingPlace, setViewingPlace] = useState(null)
   const [fitBoundsTrigger, setFitBoundsTrigger] = useState(0)
   const [searchQuery, setSearchQuery] = useState('')
@@ -108,8 +109,18 @@ export default function App() {
       return to >= filterRange.start && from <= filterRange.end
     })
   }
+  const boundsCenter = viewportBounds && !center
+    ? {
+        lat: (viewportBounds.north + viewportBounds.south) / 2,
+        lng: (viewportBounds.east + viewportBounds.west) / 2,
+      }
+    : null
   if (viewportBounds && !center) {
-    filteredPlaces = getPlacesWithinBounds(filteredPlaces, viewportBounds)
+    if (boundsRadius) {
+      filteredPlaces = getPlacesWithinRadius(filteredPlaces, boundsCenter, boundsRadius)
+    } else {
+      filteredPlaces = getPlacesWithinBounds(filteredPlaces, viewportBounds)
+    }
   }
   if (viewingPlace && !filteredPlaces.some(p => p.id === viewingPlace.id)) {
     const target = places.find(p => p.id === viewingPlace.id)
@@ -126,6 +137,18 @@ export default function App() {
 
   function handleDismissViewing() {
     setViewingPlace(null)
+  }
+
+  function handleFocusHere() {
+    if (!viewportBounds) return
+    const lat = (viewportBounds.north + viewportBounds.south) / 2
+    const lng = (viewportBounds.east + viewportBounds.west) / 2
+    const cornerDist = getDistanceKm(lat, lng, viewportBounds.north, viewportBounds.east)
+    const radiusKm = Math.max(1, Math.ceil(cornerDist / 5) * 5)
+    setViewingPlace(null)
+    setBoundsRadius(null)
+    setSuppressFit(n => n + 1)
+    setFocusCenter(lat, lng, radiusKm)
   }
 
   if (!authed) return <AccessDenied onLogin={login} />
@@ -155,6 +178,8 @@ export default function App() {
           suppressFit={suppressFit}
           hoverRadius={hoverRadius}
           onHoverRadius={setHoverRadius}
+          boundsCenter={boundsCenter}
+          boundsRadius={boundsRadius}
           isMobile={isMobile}
           confirmingId={confirmingId}
           setConfirmingId={setConfirmingId}
@@ -213,6 +238,7 @@ export default function App() {
         isGeolocating={isGeolocating}
         onReset={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
         onShowAll={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
+        onFocusHere={handleFocusHere}
       />
 
       {/* FAB — primary action, bottom-right; hidden while any panel is open */}
@@ -283,6 +309,9 @@ export default function App() {
                 onFilterChange={setFilter}
                 viewportBounds={viewportBounds}
                 onClearBounds={() => { setViewportBounds(null); setFitBoundsTrigger(n => n + 1) }}
+                boundsRadius={boundsRadius}
+                onBoundsRadiusChange={(r) => { setBoundsRadius(r); setViewingPlace(null) }}
+                onClearBoundsRadius={() => setBoundsRadius(null)}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 hoverRadius={hoverRadius}

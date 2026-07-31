@@ -1,6 +1,6 @@
-import { Crosshair, Globe } from 'lucide-react'
+import { Crosshair, Globe, LocateFixed } from 'lucide-react'
 
-export default function LocationControls({ isGeolocating, onReset, onShowAll }) {
+export default function LocationControls({ isGeolocating, onReset, onShowAll, onFocusHere }) {
   return (
     <div className="location-controls">
       <button
@@ -18,6 +18,14 @@ export default function LocationControls({ isGeolocating, onReset, onShowAll }) 
         aria-label="Show all places"
       >
         <Globe size={16} />
+      </button>
+      <button
+        className="location-bar-geo"
+        onClick={onFocusHere}
+        title="Focus on current view"
+        aria-label="Focus on current view"
+      >
+        <LocateFixed size={16} />
       </button>
     </div>
   )

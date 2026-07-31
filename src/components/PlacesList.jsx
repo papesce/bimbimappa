@@ -11,7 +11,7 @@ function toTitleCase(str) {
   return str
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, searchQuery, onSearchChange, hoverRadius, onHoverRadius }) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, hoverRadius, onHoverRadius }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [menuOpenId, setMenuOpenId] = useState(null)
 
@@ -43,8 +43,9 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
   if (viewportBounds && !center) {
     activeFilters.push({
       type: 'bounds',
-      label: 'Current map view',
-      onClear: onClearBounds
+      label: boundsRadius ? `Within ${boundsRadius} km` : 'Current map view',
+      onClear: boundsRadius ? onClearBoundsRadius : onClearBounds,
+      onHover: boundsRadius ? onHoverRadius : undefined,
     })
   }
 
@@ -69,6 +70,9 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             stateName={stateName}
             radius={radius}
             onRadiusChange={onRadiusChange}
+            viewportBounds={viewportBounds}
+            boundsRadius={boundsRadius}
+            onBoundsRadiusChange={onBoundsRadiusChange}
             cityName={cityName}
             activeFilter={activeFilter}
             places={places}
@@ -131,6 +135,9 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
           stateName={stateName}
           radius={radius}
           onRadiusChange={onRadiusChange}
+          viewportBounds={viewportBounds}
+          boundsRadius={boundsRadius}
+          onBoundsRadiusChange={onBoundsRadiusChange}
           cityName={cityName}
           activeFilter={activeFilter}
           places={places}

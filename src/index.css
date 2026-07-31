@@ -58,6 +58,13 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   animation: spin 0.7s linear infinite;
 }
 
+/* ─── Leaflet map container — keep pinch gestures on the map ────── */
+.leaflet-container {
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 /* ─── Leaflet zoom controls — pinned bottom-right ───────────────── */
 .main-map .leaflet-top.leaflet-left {
   top: auto;
@@ -794,6 +801,8 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 /* ─── Map popup ─────────────────────────────────────────────────── */
 .popup {
+  position: relative;
+  padding-right: 18px;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 

@@ -4,6 +4,7 @@ import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar, CheckCir
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { geocodePlace } from '../lib/geocode'
+import SafariGestureGuard from './SafariGestureGuard'
 
 // Coral marker — matches the main map style, slightly smaller
 const previewIcon = L.divIcon({
@@ -41,6 +42,7 @@ function LocationPreview({ resolved, onReset, onShowInMap }) {
           attributionControl={false}
         >
           <MiniMapController lat={lat} lng={lng} />
+          <SafariGestureGuard />
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <Marker position={[lat, lng]} icon={previewIcon} />
         </MapContainer>

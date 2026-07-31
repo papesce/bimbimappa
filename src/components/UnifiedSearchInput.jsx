@@ -16,7 +16,7 @@ function saveRecent(list) {
   try { localStorage.setItem(RECENT_KEY, JSON.stringify(list.slice(0, MAX_RECENT))) } catch {}
 }
 
-export default function UnifiedSearchInput({ onCitySelect, onClear, center, stateName, radius, onRadiusChange, cityName, activeFilter, places, onLocate, query, onQueryChange }) {
+export default function UnifiedSearchInput({ onCitySelect, onClear, center, stateName, radius, onRadiusChange, cityName, activeFilter, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange }) {
   const [cityResults, setCityResults] = useState([])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState(loadRecent)
@@ -202,10 +202,10 @@ export default function UnifiedSearchInput({ onCitySelect, onClear, center, stat
           </button>
         )}
       </div>
-      {center && (
+      {(center || (viewportBounds && !center)) && (
         <div className="unified-search-radius-inline">
           <span className="unified-search-radius-label">Radius</span>
-          <RadiusSelector value={radius} onChange={onRadiusChange} />
+          <RadiusSelector value={center ? radius : boundsRadius} onChange={center ? onRadiusChange : onBoundsRadiusChange} />
            <span className="unified-search-radius-label">Km</span>
         </div>
       )}

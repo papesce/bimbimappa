@@ -4,6 +4,7 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { Trash2, ExternalLink, Pencil, Check, X, Navigation, ChevronLeft } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
+import SafariGestureGuard from './SafariGestureGuard'
 
 function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit }) {
   const map = useMap()
@@ -86,6 +87,18 @@ function BoundsTracker({ onViewportChange }) {
       })
     },
   })
+  return null
+}
+
+// Closing any open popup on drag keeps the map freely pannable and avoids
+// popups getting stuck at the screen edge (e.g. under the topbar).
+function ClosePopupOnDrag() {
+  const map = useMap()
+  useEffect(() => {
+    const close = () => map.closePopup()
+    map.on('dragstart', close)
+    return () => map.off('dragstart', close)
+  }, [map])
   return null
 }
 
@@ -198,7 +211,7 @@ function PopupOpener({ markerRefs, popupPlaceId, onPopupDone, isMobile, onMobile
   return null
 }
 
-export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadius, onHoverRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup }) {
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadius, onHoverRadius, boundsCenter, boundsRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup }) {
   // confirmingId is lifted to App when mobile so BottomSheet can share it;
   // on desktop it arrives as null/undefined and we alias local names for clarity.
   const [localConfirmingId, setLocalConfirmingId] = useState(null)
@@ -247,6 +260,8 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
     >
       <MapController focusPlaces={focusPlaces} center={center} radius={radius} focusPlace={focusPlace} onFocusDone={onFocusDone} fitBoundsTrigger={fitBoundsTrigger} previewArea={previewArea} onPreviewAreaDone={onPreviewAreaDone} suppressFit={suppressFit} />
       <BoundsTracker onViewportChange={onViewportChange} />
+      <ClosePopupOnDrag />
+      <SafariGestureGuard />
       {popupPlaceId && (
         <PopupOpener
           markerRefs={markerRefs}
@@ -275,12 +290,26 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
         />
       )}
 
+      {!center && boundsRadius && boundsCenter && hoverRadius && (
+        <Circle
+          center={[boundsCenter.lat, boundsCenter.lng]}
+          radius={boundsRadius * 1000}
+          pathOptions={{
+            color: '#4A90D9',
+            fillColor: '#4A90D9',
+            fillOpacity: 0.15,
+            opacity: 0.8,
+            weight: 2,
+          }}
+        />
+      )}
+
       {center && (
         <Marker
             position={[center.lat, center.lng]}
             icon={centerIcon}
           >
-            <Popup>
+            <Popup autoPanPaddingTopLeft={L.point(24, 96)} autoPanPaddingBottomRight={L.point(24, 24)}>
               <div className="popup">
                 <p className="popup-name">Search center</p>
                 <p className="popup-address">{radius} km radius</p>
@@ -336,7 +365,7 @@ function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete
           onMobilePopup={onMobilePopup}
         />
       )}
-      {!isMobile && <Popup minWidth={220}>
+      {!isMobile && <Popup minWidth={220} closeButton={true} autoPanPaddingTopLeft={L.point(24, 96)} autoPanPaddingBottomRight={L.point(24, 24)}>
         <div className="popup">
           <p className="popup-name">{place.name}</p>
           <p className="popup-address">{place.address}</p>
