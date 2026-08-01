@@ -74,16 +74,12 @@ export default function PlaceActions({
 
       {moreOpen && (
         <div className="place-actions-more">
-          {!isMobile && (
-            <a href={googleMapsUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-actions-row-link">
+          <a href={googleMapsUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-actions-row-link">
             <MapPin size={14} /> <span className="place-actions-link-label">Google Maps</span>
           </a>
-          )}
-          {!isMobile && (
-            <a href={wazeUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-actions-row-link">
+          <a href={wazeUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-actions-row-link">
             <Navigation size={14} /> <span className="place-actions-link-label">Waze</span>
           </a>
-          )}
           {links.length > 0 && (
             <>
               <div className="place-actions-divider" />

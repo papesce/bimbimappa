@@ -176,7 +176,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
         />
         )
       })}
-      <BackToAreaButton viewingPlace={viewingPlace} onViewArea={onViewArea} onDismissViewing={onDismissViewing} />
+      {!isMobile && <BackToAreaButton viewingPlace={viewingPlace} onViewArea={onViewArea} onDismissViewing={onDismissViewing} />}
     </MapContainer>
   )
 }

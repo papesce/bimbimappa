@@ -4,12 +4,14 @@ import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
 import BottomSheet from './components/BottomSheet'
+import BackToAreaButton from './components/BackToAreaButton'
 import UnifiedSearchInput from './components/UnifiedSearchInput'
 import ExportButton from './components/ExportButton'
 import LocationControls from './components/LocationControls'
 import MobileExplorer from './components/MobileExplorer'
 import MobileFilterSheet from './components/MobileFilterSheet'
 import FilterChip from './components/FilterChip'
+import RadiusSelector from './components/RadiusSelector'
 import AccessDenied from './components/AccessDenied'
 import Toast from './components/Toast'
 import { usePlaces } from './hooks/usePlaces'
@@ -55,6 +57,7 @@ export default function App() {
   const [mobileCategory, setMobileCategory] = useState<PlaceCategory | null>(null)
   const [browseQuery, setBrowseQuery] = useState('')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [radiusMenuOpen, setRadiusMenuOpen] = useState(false)
   const [previousMobileArea, setPreviousMobileArea] = useState<{
     center: GeoPoint | null
     radius: number
@@ -65,6 +68,12 @@ export default function App() {
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
+
+  useEffect(() => {
+    if (!radiusMenuOpen) return
+    const timeout = window.setTimeout(() => setRadiusMenuOpen(false), 10000)
+    return () => window.clearTimeout(timeout)
+  }, [radiusMenuOpen])
 
   // Hover highlight on the "Viewing" chip is ephemeral — reset whenever the viewed place changes
   useEffect(() => {
@@ -350,7 +359,30 @@ export default function App() {
               : <>{filteredPlaces.length} of {places.length} places{filter !== 'all' && ` · ${FILTERS.find(f => f.key === filter)?.label}`}{cityName && ` · ${cityName}`}</>
             }
           </span>
-          {areaFilter && <FilterChip f={areaFilter} />}
+          {areaFilter && (
+            <div className="header-radius-menu">
+              <FilterChip f={{ ...areaFilter, onRecenter: () => setRadiusMenuOpen(open => !open) }} />
+              {radiusMenuOpen && (
+                <div className="header-radius-popover">
+                  <span>Radius</span>
+                  <RadiusSelector
+                    value={center ? radius : boundsRadius ?? radius}
+                    onChange={(value) => {
+                      if (center) {
+                        setRadius(value)
+                        setViewportBounds(null)
+                        setViewingPlace(null)
+                      } else {
+                        setBoundsRadius(value)
+                      }
+                      setRadiusMenuOpen(false)
+                    }}
+                    onHover={setHoverRadiusKm}
+                  />
+                </div>
+              )}
+            </div>
+          )}
           {hasActiveFilters && (
             <button className="topbar-context" onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')} title="Show active filters">
               <SlidersHorizontal size={14} />
@@ -533,9 +565,16 @@ export default function App() {
             setSheetState('hidden')
             setConfirmingId(null)
           }}
-          onBackToArea={handleBackToArea}
-          canGoBackToArea={previousMobileArea !== null}
           onExplore={handleExplorePlace}
+        />
+      )}
+
+      {isMobile && selectedPlace && viewingPlace && previousMobileArea && (
+        <BackToAreaButton
+          viewingPlace={viewingPlace}
+          onViewArea={handleBackToArea}
+          onDismissViewing={handleDismissViewing}
+          className={`mobile-map-reset mobile-map-reset--${sheetState}`}
         />
       )}
 
