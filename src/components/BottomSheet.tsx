@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { ExternalLink, Navigation, Car, Pencil, Trash2, X } from 'lucide-react'
+import { ExternalLink, Navigation, Car, Pencil, Trash2, X, Radar } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { getLinks, getPrimaryLink } from '../lib/links'
 import { formatDateRange } from '../lib/date'
@@ -26,6 +26,7 @@ export interface BottomSheetProps {
   confirmingId: string | null
   onConfirmingChange: (id: string | null) => void
   onClose: () => void
+  onExplore: (place: Place) => void
 }
 
 export default function BottomSheet({
@@ -40,6 +41,7 @@ export default function BottomSheet({
   confirmingId,
   onConfirmingChange,
   onClose,
+  onExplore,
 }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState>({ startY: 0, startVisiblePx: 0, dragging: false, interactive: false })
@@ -180,6 +182,13 @@ export default function BottomSheet({
               onClick={(e) => { e.stopPropagation(); onEdit(place) }}
             >
               <Pencil size={14} /> Edit
+            </button>
+            <button
+              className="sheet-action-btn explore"
+              onClick={(e) => { e.stopPropagation(); onExplore(place) }}
+              title="Explore nearby"
+            >
+              <Radar size={14} /> Nearby
             </button>
             <button
               className="sheet-action-btn danger"

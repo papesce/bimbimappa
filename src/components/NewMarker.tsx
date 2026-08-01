@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import type { MutableRefObject } from 'react'
 import { Marker, Popup } from 'react-leaflet'
 import L from 'leaflet'
-import { Trash2, Pencil, Navigation, Car, ExternalLink } from 'lucide-react'
+import { Trash2, Pencil, Navigation, Car, ExternalLink, Radar } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { getLinks } from '../lib/links'
 import { formatDateRange } from '../lib/date'
@@ -22,9 +22,10 @@ export interface NewMarkerProps {
   markerRefs: MutableRefObject<Record<string, L.Marker | null>>
   isMobile: boolean
   onMobilePopup: (placeId: string) => void
+  onExplorePlace: (place: Place) => void
 }
 
-export default function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete, onEdit, markerRefs, isMobile, onMobilePopup }: NewMarkerProps) {
+export default function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete, onEdit, markerRefs, isMobile, onMobilePopup, onExplorePlace }: NewMarkerProps) {
   const markerRef = useRef<L.Marker | null>(null)
   const links = getLinks(place)
 
@@ -98,6 +99,9 @@ export default function NewMarker({ place, icon, isNew, confirmingId, setConfirm
             </div>
           )}
           <div className="popup-actions">
+            <button className="popup-action-btn explore" onClick={() => onExplorePlace(place)}>
+              <Radar size={12} /> Explore nearby
+            </button>
             <button className="popup-action-btn" onClick={() => onEdit(place)}>
               <Pencil size={12} /> Edit
             </button>

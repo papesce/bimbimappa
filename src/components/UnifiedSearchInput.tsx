@@ -21,8 +21,10 @@ export interface UnifiedSearchInputProps {
   viewportBounds: MapBounds | null
   boundsRadius: number | null
   onBoundsRadiusChange: (radius: number) => void
+  onHoverRadius?: (km: number | null) => void
 }
-export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange }: UnifiedSearchInputProps) {
+
+export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange, onHoverRadius }: UnifiedSearchInputProps) {
   const [cityResults, setCityResults] = useState<NominatimResult[]>([])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState<RecentCity[]>(loadRecent)
@@ -195,7 +197,7 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
       {(center || (viewportBounds && !center)) && (
         <div className="unified-search-radius-inline">
           <span className="unified-search-radius-label">Radius</span>
-          <RadiusSelector value={center ? radius : boundsRadius ?? 0} onChange={center ? onRadiusChange : onBoundsRadiusChange} />
+          <RadiusSelector value={center ? radius : boundsRadius ?? 0} onChange={center ? onRadiusChange : onBoundsRadiusChange} onHover={onHoverRadius} />
            <span className="unified-search-radius-label">Km</span>
         </div>
       )}

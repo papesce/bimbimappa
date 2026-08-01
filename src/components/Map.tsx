@@ -32,8 +32,7 @@ export interface MapProps {
   previewArea: GeoPoint | null
   onPreviewAreaDone: () => void
   suppressFit: number
-  hoverRadius: boolean
-  onHoverRadius: (hover: boolean) => void
+  hoverRadiusKm: number | null
   boundsCenter: GeoPoint | null
   boundsRadius: number | null
   isMobile: boolean
@@ -41,9 +40,11 @@ export interface MapProps {
   setConfirmingId: (id: string | null) => void
   onMobilePopup: (placeId: string) => void
   hoverPlaceId: string | null
+  onExplorePlace: (place: Place) => void
 }
 
-export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadius, boundsCenter, boundsRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup, hoverPlaceId }: MapProps) {
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadiusKm, boundsCenter, boundsRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup, hoverPlaceId, onExplorePlace }: MapProps) {
+  const hovering = hoverRadiusKm !== null
   // confirmingId is lifted to App when mobile so BottomSheet can share it;
   // on desktop it arrives as null/undefined and we alias local names for clarity.
   const [localConfirmingId, setLocalConfirmingId] = useState<string | null>(null)
@@ -108,24 +109,24 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       />
 
-      {center && (hoverRadius || circleOpacity > 0) && (
+      {center && (hovering || circleOpacity > 0) && (
         <Circle
           center={[center.lat, center.lng]}
-          radius={radius * 1000}
+          radius={(hoverRadiusKm ?? radius) * 1000}
           pathOptions={{
             color: '#4A90D9',
             fillColor: '#4A90D9',
-            fillOpacity: hoverRadius ? 0.15 : 0.12 * circleOpacity,
-            opacity: hoverRadius ? 0.8 : circleOpacity,
+            fillOpacity: hovering ? 0.15 : 0.12 * circleOpacity,
+            opacity: hovering ? 0.8 : circleOpacity,
             weight: 2,
           }}
         />
       )}
 
-      {!center && boundsRadius && boundsCenter && hoverRadius && (
+      {!center && boundsCenter && hovering && (hoverRadiusKm != null || boundsRadius != null) && (
         <Circle
           center={[boundsCenter.lat, boundsCenter.lng]}
-          radius={boundsRadius * 1000}
+          radius={(hoverRadiusKm ?? boundsRadius ?? 0) * 1000}
           pathOptions={{
             color: '#4A90D9',
             fillColor: '#4A90D9',
@@ -165,6 +166,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
           markerRefs={markerRefs}
           isMobile={isMobile}
           onMobilePopup={onMobilePopup}
+          onExplorePlace={onExplorePlace}
         />
         )
       })}

@@ -17,6 +17,8 @@ import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm } from './l
 import './index.css'
 import type { FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceInput, SheetState, ViewingPlace } from './types'
 
+const EXPLORE_RADIUS_KM = 5
+
 export default function App() {
   const { authed, login } = useAuth()
   const { places, loading, addPlace, deletePlace, restorePlace, updatePlace } = usePlaces()
@@ -35,7 +37,7 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('')
   const [previewArea, setPreviewArea] = useState<GeoPoint | null>(null)
   const [suppressFit, setSuppressFit] = useState(0)
-  const [hoverRadius, setHoverRadius] = useState(false)
+  const [hoverRadiusKm, setHoverRadiusKm] = useState<number | null>(null)
   const [selectedPlace, setSelectedPlace] = useState<Place | null>(null)
   const [sheetState, setSheetState] = useState<SheetState>('hidden')
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
@@ -107,6 +109,17 @@ export default function App() {
   function handleMobilePopup(placeId: string) {
     const place = places.find(p => p.id === placeId)
     if (place) handleSelectPlace(place)
+  }
+
+  function handleExplorePlace(place: Place) {
+    setFocusPlace({ lat: place.lat, lng: place.lng })
+    setCenter(place.lat, place.lng, place.name, '', '', EXPLORE_RADIUS_KM)
+    setViewingPlace(null)
+    if (!isMobile) {
+      setPanel('list')
+    } else {
+      setSheetState('hidden')
+    }
   }
 
   const filterRange = getFilterRange(filter)
@@ -191,8 +204,7 @@ export default function App() {
           previewArea={previewArea}
           onPreviewAreaDone={() => setPreviewArea(null)}
           suppressFit={suppressFit}
-          hoverRadius={hoverRadius}
-          onHoverRadius={setHoverRadius}
+          hoverRadiusKm={hoverRadiusKm}
           boundsCenter={boundsCenter}
           boundsRadius={boundsRadius}
           isMobile={isMobile}
@@ -200,6 +212,7 @@ export default function App() {
           setConfirmingId={setConfirmingId}
           onMobilePopup={handleMobilePopup}
           hoverPlaceId={hoverPlaceId}
+          onExplorePlace={handleExplorePlace}
         />
       </div>
 
@@ -331,7 +344,7 @@ export default function App() {
                 onClearBoundsRadius={() => setBoundsRadius(null)}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
-                onHoverRadius={setHoverRadius}
+                onHoverRadius={setHoverRadiusKm}
                 onHoverPlace={setHoverPlaceId}
               />
             </div>
@@ -375,6 +388,7 @@ export default function App() {
             setSheetState('hidden')
             setConfirmingId(null)
           }}
+          onExplore={handleExplorePlace}
         />
       )}
 

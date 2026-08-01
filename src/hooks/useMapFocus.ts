@@ -81,14 +81,16 @@ export function useMapFocus(places: Place[]) {
   }, [autoMode, center, places])
 
   const setCenter = useCallback(
-    (lat: number, lng: number, name: string, state: string, cc = ''): void => {
+    (lat: number, lng: number, name: string, state: string, cc = '', r?: number): void => {
       const c: GeoPoint = { lat, lng }
+      const nextRadius = r ?? radius
       setCenterState(c)
+      setRadiusState(nextRadius)
       setCityName(name || '')
       setStateName(state || '')
       setCountryCode(cc || '')
       setAutoMode(false)
-      persist(c, radius, name, state, cc)
+      persist(c, nextRadius, name, state, cc)
     },
     [radius]
   )

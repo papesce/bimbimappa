@@ -30,7 +30,7 @@ export interface PlacesListProps {
   onClearBoundsRadius: () => void
   searchQuery: string
   onSearchChange: (query: string) => void
-  onHoverRadius: (hover: boolean) => void
+  onHoverRadius: (km: number | null) => void
   onHoverPlace?: (id: string | null) => void
 }
 
@@ -53,7 +53,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
         ? `📍 ${cityName}${radius ? ` · ${radius} km` : ''}`
         : `📍 ${radius ? `${radius} km radius` : 'Nearby'}`,
       onClear: onClear,
-      onHover: onHoverRadius,
+      onHover: (hover) => onHoverRadius(hover ? radius : null),
       onRecenter: onRecenter,
     })
   }
@@ -69,7 +69,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
       type: 'bounds',
       label: boundsRadius ? `Within ${boundsRadius} km` : 'Current map view',
       onClear: boundsRadius ? onClearBoundsRadius : onClearBounds,
-      onHover: boundsRadius ? onHoverRadius : undefined,
+      onHover: boundsRadius ? (hover) => onHoverRadius(hover ? boundsRadius : null) : undefined,
     })
   }
 
@@ -108,6 +108,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             onLocate={onLocate}
             query={searchQuery}
             onQueryChange={onSearchChange}
+            onHoverRadius={onHoverRadius}
           />
           {viewingFilter && (
             <div className="filter-chips">
@@ -142,37 +143,38 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
   return (
     <>
       <div className="panel-search-area">
-        <UnifiedSearchInput
-          onCitySelect={onCitySelect}
-          onClear={onClear}
-          center={center}
-          stateName={stateName}
-          radius={radius}
-          onRadiusChange={onRadiusChange}
-          viewportBounds={viewportBounds}
-          boundsRadius={boundsRadius}
-          onBoundsRadiusChange={onBoundsRadiusChange}
-          cityName={cityName}
-          activeFilter={activeFilter}
-          places={places}
-          onLocate={onLocate}
-          query={searchQuery}
-          onQueryChange={onSearchChange}
-        />
-        {viewingFilter && (
-          <div className="filter-chips">
-            <span className="filter-chips-label">Viewing</span>
-            <FilterChip f={viewingFilter} />
-          </div>
-        )}
-        {activeFilters.length > 0 && (
-          <div className="filter-chips">
-            <span className="filter-chips-label">Filters</span>
-            {activeFilters.map((f, i) => (
-              <FilterChip key={i} f={f} />
-            ))}
-          </div>
-        )}
+          <UnifiedSearchInput
+            onCitySelect={onCitySelect}
+            onClear={onClear}
+            center={center}
+            stateName={stateName}
+            radius={radius}
+            onRadiusChange={onRadiusChange}
+            viewportBounds={viewportBounds}
+            boundsRadius={boundsRadius}
+            onBoundsRadiusChange={onBoundsRadiusChange}
+            cityName={cityName}
+            activeFilter={activeFilter}
+            places={places}
+            onLocate={onLocate}
+            query={searchQuery}
+            onQueryChange={onSearchChange}
+            onHoverRadius={onHoverRadius}
+          />
+          {viewingFilter && (
+            <div className="filter-chips">
+              <span className="filter-chips-label">Viewing</span>
+              <FilterChip f={viewingFilter} />
+            </div>
+          )}
+          {activeFilters.length > 0 && (
+            <div className="filter-chips">
+              <span className="filter-chips-label">Filters</span>
+              {activeFilters.map((f, i) => (
+                <FilterChip key={i} f={f} />
+              ))}
+            </div>
+          )}
       </div>
       <div className="panel-scroll-area">
       <ul className="places-list">
