@@ -5,12 +5,13 @@ export interface BackToAreaButtonProps {
   viewingPlace: ViewingPlace | null
   onViewArea: () => void
   onDismissViewing: () => void
+  className?: string
 }
 
-export default function BackToAreaButton({ viewingPlace, onViewArea, onDismissViewing }: BackToAreaButtonProps) {
+export default function BackToAreaButton({ viewingPlace, onViewArea, onDismissViewing, className }: BackToAreaButtonProps) {
   if (!viewingPlace) return null
   return (
-    <div className="map-reset-btn">
+    <div className={`map-reset-btn${className ? ` ${className}` : ''}`}>
       <button className="map-reset-main" onClick={onViewArea} title="Back to area view">
         <ChevronLeft size={16} /> Back to area
       </button>

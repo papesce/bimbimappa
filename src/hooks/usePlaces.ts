@@ -49,10 +49,10 @@ export function usePlaces() {
     return data
   }
 
-  async function deletePlace(id: string): Promise<void> {
+  const deletePlace = useCallback(async (id: string): Promise<void> => {
     await softDeletePlace(id)
     setPlaces((prev) => prev.filter((p) => p.id !== id))
-  }
+  }, [])
 
   async function restorePlace(id: string): Promise<Place> {
     const data = await restorePlaceService(id)

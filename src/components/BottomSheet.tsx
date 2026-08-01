@@ -1,11 +1,13 @@
 import { useRef } from 'react'
-import { ExternalLink, Navigation, Car, Pencil, Trash2, X, Radar } from 'lucide-react'
+import { Compass, MapPin, Navigation, Pencil, Trash2, X } from 'lucide-react'
+import { getPrimaryLink } from '../lib/links'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
-import { getLinks, getPrimaryLink } from '../lib/links'
 import { formatDateRange } from '../lib/date'
+import { toTitleCase } from '../lib/text'
+import { formatAmenity, formatPriceTier, formatPriority, formatRating } from '../lib/placeAttributes'
 import BrandIcon from './BrandIcon'
 import ConfirmRow from './ConfirmRow'
-import type { FilterKey, FilterOption, Place, SheetState } from '../types'
+import type { Place, SheetState } from '../types'
 
 interface DragState {
   startY: number
@@ -18,9 +20,6 @@ export interface BottomSheetProps {
   place: Place | null
   sheetState: SheetState
   onSheetChange: (state: SheetState) => void
-  filter: FilterKey
-  onFilterChange: (filter: FilterKey) => void
-  FILTERS: FilterOption[]
   onEdit: (place: Place) => void
   onDelete: (id: string) => void
   confirmingId: string | null
@@ -33,9 +32,6 @@ export default function BottomSheet({
   place,
   sheetState,
   onSheetChange,
-  filter,
-  onFilterChange,
-  FILTERS,
   onEdit,
   onDelete,
   confirmingId,
@@ -45,9 +41,8 @@ export default function BottomSheet({
 }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState>({ startY: 0, startVisiblePx: 0, dragging: false, interactive: false })
-
-  const HIDDEN_PX = 60
-  const PEEK_PX = 230
+  const HIDDEN_PX = 48
+  const PEEK_PX = 210
 
   function getVisiblePx() {
     const maxVisible = window.innerHeight * 0.5
@@ -113,9 +108,7 @@ export default function BottomSheet({
     }
   }
 
-  const links = place ? getLinks(place) : []
   const primaryLink = place ? getPrimaryLink(place) : null
-
   return (
     <div
       ref={sheetRef}
@@ -124,127 +117,95 @@ export default function BottomSheet({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Always-visible: drag handle + filter chips */}
-      <div className="sheet-filter-bar">
+      {/* Always-visible: drag handle */}
+      <div className="sheet-grab-bar">
         <div className="sheet-drag-handle-wrap" onClick={handleHandleTap}>
           <div className="sheet-drag-handle" />
         </div>
-        <div className="sheet-filters">
-          {FILTERS.map(f => (
-            <button
-              key={f.key}
-              className={`filter-pill${filter === f.key ? ' active' : ''}`}
-              onClick={() => onFilterChange(f.key)}
-            >
-              {f.label}
-            </button>
-          ))}
-        </div>
+        {place && (
+          <button className="sheet-close-btn sheet-header-close-btn" onClick={onClose} aria-label="Close">
+            <X size={16} />
+          </button>
+        )}
       </div>
 
-      {/* Peek row — name, address, one-tap action icons */}
+      {/* Peek row — name, address, primary link, Edit */}
       {place && sheetState !== 'hidden' && (
         <div className="sheet-peek-content" onClick={() => onSheetChange('expanded')}>
-          <p className="sheet-place-name">{place.name}</p>
+          <p className="sheet-place-name">{toTitleCase(place.name)}</p>
           <p className="sheet-place-address">{place.address}</p>
-          <div className="sheet-icon-actions">
-            {primaryLink && (
+          <div className="sheet-peek-actions">
+            {primaryLink ? (
               <a
                 href={primaryLink.url}
                 rel="noopener noreferrer"
-                className="sheet-icon-action"
+                className="sheet-icon-action mobile-sheet-action"
                 title={primaryLink.label || 'Source'}
                 onClick={e => e.stopPropagation()}
               >
                 <BrandIcon url={primaryLink.url} size={18} />
+                <span>Source</span>
               </a>
+            ) : (
+              <button className="sheet-icon-action mobile-sheet-action sheet-source-unavailable" disabled title="No source available">
+                <span>Source</span>
+              </button>
             )}
-            <a
-              href={googleMapsUrl(place.lat, place.lng)}
-              rel="noopener noreferrer"
-              className="sheet-icon-action"
-              title="Google Maps"
-              onClick={e => e.stopPropagation()}
-            >
-              <Navigation size={18} />
-            </a>
-            <a
-              href={wazeUrl(place.lat, place.lng)}
-              rel="noopener noreferrer"
-              className="sheet-icon-action"
-              title="Waze"
-              onClick={e => e.stopPropagation()}
-            >
-              <Car size={18} />
-            </a>
             <button
-              className="sheet-action-btn"
+              className="place-action-btn explore mobile-sheet-action"
+              onClick={(e) => { e.stopPropagation(); onExplore(place) }}
+            >
+              <Compass size={14} /> Nearby
+            </button>
+            <button
+              className="place-action-btn mobile-sheet-action sheet-edit-btn"
               onClick={(e) => { e.stopPropagation(); onEdit(place) }}
             >
               <Pencil size={14} /> Edit
             </button>
-            <button
-              className="sheet-action-btn explore"
-              onClick={(e) => { e.stopPropagation(); onExplore(place) }}
-              title="Explore nearby"
-            >
-              <Radar size={14} /> Nearby
-            </button>
-            <button
-              className="sheet-action-btn danger"
-              onClick={(e) => { e.stopPropagation(); onConfirmingChange(confirmingId === place.id ? null : place.id) }}
-              title="Remove"
-            >
-              <Trash2 size={14} /> Remove
-            </button>
           </div>
-        </div>
-      )}
-
-      {place && confirmingId === place.id && (
-        <div className="sheet-confirm-wrap">
-          <ConfirmRow
-            onConfirm={() => { onDelete(place.id); onConfirmingChange(null); onClose() }}
-            onCancel={() => onConfirmingChange(null)}
-          />
+          <div className="sheet-navigation-row">
+            <a href={googleMapsUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="mobile-sheet-action" onClick={e => e.stopPropagation()}>
+              <MapPin size={14} /> Google Maps
+            </a>
+            <a href={wazeUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="mobile-sheet-action" onClick={e => e.stopPropagation()}>
+              <Navigation size={14} /> Waze
+            </a>
+          </div>
         </div>
       )}
 
       {/* Expanded content */}
       {place && sheetState === 'expanded' && (
         <div className="sheet-expanded-content">
-          <button className="sheet-close-btn" onClick={onClose} aria-label="Close">
-            <X size={16} />
-          </button>
-
           {place.date_from && (
             <p className="popup-date">{formatDateRange(place.date_from, place.date_to)}</p>
+          )}
+          {(place.price_tier || place.priority || place.rating || (place.amenities && place.amenities.length > 0)) && (
+            <p className="sheet-place-metrics">
+              {place.price_tier && <span className="sheet-place-metric">{formatPriceTier(place.price_tier)}</span>}
+              {place.priority && <span className="sheet-place-metric">{formatPriority(place.priority)}</span>}
+              {place.rating && <span className="sheet-place-metric">{formatRating(place.rating)}</span>}
+              {place.amenities?.slice(0, 3).map(a => <span key={a} className="sheet-place-metric">{formatAmenity(a)}</span>)}
+            </p>
           )}
           {place.notes && (
             <p className="popup-notes">"{place.notes}"</p>
           )}
 
-          {links.length > 0 && (
-            <div className="sheet-links">
-              {links.map(link => (
-                <a
-                  key={link.id || link.url}
-                  href={link.url}
-                  rel="noopener noreferrer"
-                  className="sheet-link-row"
-                >
-                  <span className="sheet-link-icon">
-                    <BrandIcon url={link.url} size={16} />
-                  </span>
-                  <span className="sheet-link-label">
-                    {link.label || 'Link'}
-                    {link.is_primary && <span className="sheet-link-primary">primary</span>}
-                  </span>
-                  <ExternalLink size={13} />
-                </a>
-              ))}
+          <div className="sheet-mobile-actions">
+            <div className="sheet-mobile-actions-section sheet-mobile-actions-section--manage">
+              <div className="sheet-mobile-actions-row">
+                {confirmingId === place.id ? (
+                  <ConfirmRow variant="inline" onConfirm={() => { onDelete(place.id); onConfirmingChange(null) }} onCancel={() => onConfirmingChange(null)} />
+                ) : (
+                  <button className="place-actions-row-link danger mobile-sheet-action" onClick={() => onConfirmingChange(place.id)}>
+                    <Trash2 size={14} /> <span className="place-actions-link-label">Delete</span>
+                  </button>
+                )}
+                </div>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

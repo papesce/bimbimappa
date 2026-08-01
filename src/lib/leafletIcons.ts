@@ -1,4 +1,6 @@
 import L from 'leaflet'
+import { getCategory, categoryIconHtml } from './categories'
+import type { PlaceCategory } from '../types'
 
 // Fix Leaflet's broken default icon paths in Vite
 delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl
@@ -8,67 +10,58 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 })
 
-export const customIcon = L.divIcon({
-  className: '',
-  html: `<div style="
-    background: #FF6B6B;
-    width: 32px;
-    height: 32px;
-    border-radius: 50% 50% 50% 0;
-    transform: rotate(-45deg);
-    border: 3px solid white;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-  "></div>`,
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -36],
-})
+export type MarkerVariant = 'normal' | 'new' | 'hover'
 
-export const newIcon = L.divIcon({
-  className: '',
-  html: `
-    <div style="position:relative;width:36px;height:36px;">
-      <div class="new-marker-ring"></div>
-      <div style="
-        background: #FF6B6B;
-        width: 36px;
-        height: 36px;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        border: 3px solid white;
-        box-shadow: 0 2px 12px rgba(255,107,107,0.6);
-        position: relative;
-        z-index: 1;
-      "></div>
-    </div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 36],
-  popupAnchor: [0, -40],
-})
+const iconCache: Record<string, L.DivIcon> = {}
 
-// Highlighted marker — used when hovering the "Viewing" chip so the viewed
-// place stands out on the map (same pulse ring as the new-place marker).
-export const hoverIcon = L.divIcon({
-  className: '',
-  html: `
-    <div style="position:relative;width:36px;height:36px;">
-      <div class="new-marker-ring"></div>
-      <div style="
-        background: #FF6B6B;
-        width: 36px;
-        height: 36px;
-        border-radius: 50% 50% 50% 0;
-        transform: rotate(-45deg);
-        border: 3px solid white;
-        box-shadow: 0 0 0 4px rgba(255,107,107,0.35), 0 2px 12px rgba(255,107,107,0.6);
-        position: relative;
-        z-index: 1;
-      "></div>
-    </div>`,
-  iconSize: [36, 36],
-  iconAnchor: [18, 36],
-  popupAnchor: [0, -40],
-})
+// One pin silhouette for every place; category varies color + inner glyph,
+// while `variant` overlays state (new pulse ring / hover glow). Keeps
+// "what kind of place" and "what the user is doing" as separate concerns.
+// Icons are cached per category+variant so markers keep stable identity.
+export function makePlaceIcon(category: PlaceCategory | null, variant: MarkerVariant = 'normal'): L.DivIcon {
+  const cacheKey = `${category ?? 'other'}|${variant}`
+  const cached = iconCache[cacheKey]
+  if (cached) return cached
+
+  const { color } = getCategory(category)
+  const size = variant === 'new' ? 36 : 32
+  const ring = variant !== 'normal'
+    ? `<div class="new-marker-ring" style="background:${color}59;"></div>`
+    : ''
+  const shadow = variant === 'new'
+    ? 'box-shadow: 0 2px 12px rgba(0,0,0,0.4);'
+    : variant === 'hover'
+      ? `box-shadow: 0 0 0 4px ${color}59, 0 2px 12px rgba(0,0,0,0.35);`
+      : 'box-shadow: 0 2px 8px rgba(0,0,0,0.3);'
+  const badge = categoryIconHtml(category, size >= 36 ? 15 : 13)
+
+  const icon = L.divIcon({
+    className: '',
+    html: `
+      <div style="position:relative;width:${size}px;height:${size}px;">
+        ${ring}
+        <div style="
+          background:${color};
+          width:${size}px;height:${size}px;
+          border-radius:50% 50% 50% 0;
+          transform:rotate(-45deg);
+          border:3px solid white;
+          ${shadow}
+          position:relative;z-index:1;
+          display:flex;align-items:center;justify-content:center;
+        ">
+          <span style="transform:rotate(45deg);display:flex;align-items:center;justify-content:center;">
+            ${badge}
+          </span>
+        </div>
+      </div>`,
+    iconSize: [size, size],
+    iconAnchor: [size / 2, size],
+    popupAnchor: [0, -(size + 4)],
+  })
+  iconCache[cacheKey] = icon
+  return icon
+}
 
 export const centerIcon = L.divIcon({
   className: '',

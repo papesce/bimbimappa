@@ -2,8 +2,11 @@ import { useEffect, useState } from 'react'
 import { MapPin } from 'lucide-react'
 import UnifiedSearchInput from './UnifiedSearchInput'
 import FilterChip from './FilterChip'
+import PanelFilters from './PanelFilters'
 import PlaceCard from './PlaceCard'
+import { toTitleCase } from '../lib/text'
 import type { ActiveFilterChip, FilterKey, GeoPoint, MapBounds, Place, ViewingPlace } from '../types'
+import type { PriceTier, PriorityLevel } from '../types'
 
 export interface PlacesListProps {
   places: Place[]
@@ -32,9 +35,17 @@ export interface PlacesListProps {
   onSearchChange: (query: string) => void
   onHoverRadius: (km: number | null) => void
   onHoverPlace?: (id: string | null) => void
+  amenityFilters: string[]
+  onAmenityFiltersChange: (filters: string[]) => void
+  priceFilter: PriceTier | null
+  onPriceFilterChange: (value: PriceTier | null) => void
+  priorityFilter: PriorityLevel | null
+  onPriorityFilterChange: (value: PriorityLevel | null) => void
+  ratingFilter: number | null
+  onRatingFilterChange: (value: number | null) => void
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, onRecenter, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, onHoverRadius, onHoverPlace }: PlacesListProps) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, onRecenter, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, onHoverRadius, onHoverPlace, amenityFilters, onAmenityFiltersChange, priceFilter, onPriceFilterChange, priorityFilter, onPriorityFilterChange, ratingFilter, onRatingFilterChange }: PlacesListProps) {
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
 
@@ -57,13 +68,6 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
       onRecenter: onRecenter,
     })
   }
-  if (filter && filter !== 'all') {
-    activeFilters.push({
-      type: 'date',
-      label: filter === 'week' ? 'This Week' : filter === 'month' ? 'This Month' : filter,
-      onClear: () => onFilterChange?.('all')
-    })
-  }
   if (viewportBounds && !center) {
     activeFilters.push({
       type: 'bounds',
@@ -75,7 +79,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
 
   const viewingFilter: ActiveFilterChip | null = viewingPlace ? {
     type: 'viewing',
-    label: viewingPlace.name,
+    label: toTitleCase(viewingPlace.name),
     onClear: onClearViewing,
     onHover: (hover) => onHoverPlace?.(hover ? viewingPlace.id : null),
     onRecenter: () => {
@@ -109,6 +113,18 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             query={searchQuery}
             onQueryChange={onSearchChange}
             onHoverRadius={onHoverRadius}
+          />
+          <PanelFilters
+            filter={filter}
+            onFilterChange={onFilterChange}
+            amenityFilters={amenityFilters}
+            onAmenityFiltersChange={onAmenityFiltersChange}
+            priceFilter={priceFilter}
+            onPriceFilterChange={onPriceFilterChange}
+            priorityFilter={priorityFilter}
+            onPriorityFilterChange={onPriorityFilterChange}
+            ratingFilter={ratingFilter}
+            onRatingFilterChange={onRatingFilterChange}
           />
           {viewingFilter && (
             <div className="filter-chips">
@@ -161,6 +177,18 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             onQueryChange={onSearchChange}
             onHoverRadius={onHoverRadius}
           />
+          <PanelFilters
+            filter={filter}
+            onFilterChange={onFilterChange}
+            amenityFilters={amenityFilters}
+            onAmenityFiltersChange={onAmenityFiltersChange}
+            priceFilter={priceFilter}
+            onPriceFilterChange={onPriceFilterChange}
+            priorityFilter={priorityFilter}
+            onPriorityFilterChange={onPriorityFilterChange}
+            ratingFilter={ratingFilter}
+            onRatingFilterChange={onRatingFilterChange}
+          />
           {viewingFilter && (
             <div className="filter-chips">
               <span className="filter-chips-label">Viewing</span>
@@ -189,6 +217,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             onLocate={onLocate}
             onDelete={onDelete}
             onEdit={onEdit}
+            onHoverPlace={onHoverPlace}
           />
         ))}
       </ul>

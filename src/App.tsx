@@ -1,11 +1,17 @@
-import { useState, useEffect, useRef } from 'react'
-import { MapPin, List, Plus, X } from 'lucide-react'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { MapPin, List, Plus, X, SlidersHorizontal } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
 import BottomSheet from './components/BottomSheet'
+import BackToAreaButton from './components/BackToAreaButton'
+import UnifiedSearchInput from './components/UnifiedSearchInput'
 import ExportButton from './components/ExportButton'
 import LocationControls from './components/LocationControls'
+import MobileExplorer from './components/MobileExplorer'
+import MobileFilterSheet from './components/MobileFilterSheet'
+import FilterChip from './components/FilterChip'
+import RadiusSelector from './components/RadiusSelector'
 import AccessDenied from './components/AccessDenied'
 import Toast from './components/Toast'
 import { usePlaces } from './hooks/usePlaces'
@@ -13,9 +19,10 @@ import { useAuth } from './hooks/useAuth'
 import { useMapFocus } from './hooks/useMapFocus'
 import { useIsMobile } from './hooks/useIsMobile'
 import { FILTERS, getFilterRange } from './lib/filters'
+import { formatAmenity, formatPriceTier, formatPriority } from './lib/placeAttributes'
 import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm } from './lib/geo'
 import './index.css'
-import type { FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceInput, SheetState, ViewingPlace } from './types'
+import type { ActiveFilterChip, FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceCategory, PlaceInput, SheetState, ViewingPlace, PriceTier, PriorityLevel } from './types'
 
 const EXPLORE_RADIUS_KM = 5
 
@@ -43,16 +50,37 @@ export default function App() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [deletedPlace, setDeletedPlace] = useState<Place | null>(null)
   const [hoverPlaceId, setHoverPlaceId] = useState<string | null>(null)
+  const [amenityFilters, setAmenityFilters] = useState<string[]>([])
+  const [priceFilter, setPriceFilter] = useState<PriceTier | null>(null)
+  const [priorityFilter, setPriorityFilter] = useState<PriorityLevel | null>(null)
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null)
+  const [mobileCategory, setMobileCategory] = useState<PlaceCategory | null>(null)
+  const [browseQuery, setBrowseQuery] = useState('')
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [radiusMenuOpen, setRadiusMenuOpen] = useState(false)
+  const [previousMobileArea, setPreviousMobileArea] = useState<{
+    center: GeoPoint | null
+    radius: number
+    cityName: string
+    stateName: string
+    countryCode: string
+  } | null>(null)
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
+
+  useEffect(() => {
+    if (!radiusMenuOpen) return
+    const timeout = window.setTimeout(() => setRadiusMenuOpen(false), 10000)
+    return () => window.clearTimeout(timeout)
+  }, [radiusMenuOpen])
 
   // Hover highlight on the "Viewing" chip is ephemeral — reset whenever the viewed place changes
   useEffect(() => {
     setHoverPlaceId(null)
   }, [viewingPlace])
 
-  async function handleDeletePlace(id: string) {
+  const handleDeletePlace = useCallback(async (id: string) => {
     const place = places.find(p => p.id === id)
     try {
       await deletePlace(id)
@@ -61,10 +89,15 @@ export default function App() {
       return
     }
     if (!place) return
+    if (selectedPlace?.id === id) {
+      setSelectedPlace(null)
+      setSheetState('hidden')
+      setConfirmingId(null)
+    }
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)
     setDeletedPlace(place)
     undoTimeoutRef.current = setTimeout(() => setDeletedPlace(null), 6000)
-  }
+  }, [places, deletePlace, selectedPlace])
 
   async function handleUndoDelete() {
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)
@@ -101,6 +134,11 @@ export default function App() {
   }
 
   function handleSelectPlace(place: Place) {
+    if (isMobile && !previousMobileArea) {
+      setPreviousMobileArea({ center, radius, cityName, stateName, countryCode })
+    }
+    setFocusPlace({ lat: place.lat, lng: place.lng })
+    if (isMobile) setViewingPlace({ id: place.id, name: place.name })
     setSelectedPlace(place)
     setSheetState('peek')
     setPanel(null)
@@ -111,7 +149,39 @@ export default function App() {
     if (place) handleSelectPlace(place)
   }
 
-  function handleExplorePlace(place: Place) {
+  const handleLocatePlace = useCallback((place: Place) => {
+    setFocusPlace({ lat: place.lat, lng: place.lng })
+    setViewingPlace({ id: place.id, name: place.name })
+    setPanel(null)
+    if (isMobile) {
+      handleSelectPlace(place)
+    } else {
+      setPopupPlaceId(place.id)
+    }
+  }, [isMobile])
+
+  function handleBackToArea() {
+    if (previousMobileArea?.center) {
+      setCenter(
+        previousMobileArea.center.lat,
+        previousMobileArea.center.lng,
+        previousMobileArea.cityName,
+        previousMobileArea.stateName,
+        previousMobileArea.countryCode,
+        previousMobileArea.radius,
+      )
+    } else {
+      clearCenter()
+    }
+    setPreviousMobileArea(null)
+    setViewingPlace(null)
+    setSelectedPlace(null)
+    setSheetState('hidden')
+    setConfirmingId(null)
+  }
+
+  const handleExplorePlace = useCallback((place: Place) => {
+    setPreviousMobileArea(null)
     setFocusPlace({ lat: place.lat, lng: place.lng })
     setCenter(place.lat, place.lng, place.name, '', '', EXPLORE_RADIUS_KM)
     setViewingPlace(null)
@@ -120,7 +190,7 @@ export default function App() {
     } else {
       setSheetState('hidden')
     }
-  }
+  }, [setCenter, isMobile])
 
   const filterRange = getFilterRange(filter)
   let filteredPlaces = matchedPlaces
@@ -151,6 +221,41 @@ export default function App() {
     const target = places.find(p => p.id === viewingPlace.id)
     if (target) filteredPlaces = [target, ...filteredPlaces]
   }
+  if (amenityFilters.length > 0) {
+    filteredPlaces = filteredPlaces.filter(p => amenityFilters.every(a => p.amenities?.includes(a)))
+  }
+  if (priceFilter) {
+    filteredPlaces = filteredPlaces.filter(p => p.price_tier === priceFilter)
+  }
+  if (priorityFilter) {
+    filteredPlaces = filteredPlaces.filter(p => p.priority === priorityFilter)
+  }
+  if (ratingFilter) {
+    filteredPlaces = filteredPlaces.filter(p => p.rating === ratingFilter)
+  }
+
+  const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
+  const contextLabels = [
+    cityName || (center ? 'Nearby' : ''),
+    center ? `${radius} km` : '',
+    filter !== 'all' ? FILTERS.find(f => f.key === filter)?.label : '',
+    ...amenityFilters.slice(0, 2).map(formatAmenity),
+    priceFilter ? formatPriceTier(priceFilter) : '',
+    priorityFilter ? `${formatPriority(priorityFilter)} priority` : '',
+    ratingFilter ? `${ratingFilter}★` : '',
+  ].filter(Boolean)
+  const areaFilter: ActiveFilterChip | null = center ? {
+    type: 'city',
+    label: cityName ? `📍 ${cityName} · ${radius} km` : `📍 ${radius} km radius`,
+    onClear: () => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) },
+    onHover: (hover) => setHoverRadiusKm(hover ? radius : null),
+    onRecenter: handleRecenter,
+  } : viewportBounds ? {
+    type: 'bounds',
+    label: boundsRadius ? `Within ${boundsRadius} km` : 'Current map view',
+    onClear: boundsRadius ? () => { setBoundsRadius(null); setHoverRadiusKm(null) } : () => { setViewportBounds(null); setFitBoundsTrigger(n => n + 1) },
+    onHover: boundsRadius ? (hover) => setHoverRadiusKm(hover ? boundsRadius : null) : undefined,
+  } : null
 
   function handleViewArea() {
     setViewingPlace(null)
@@ -224,6 +329,29 @@ export default function App() {
             <span className="version-badge">{__APP_VERSION__}</span>
           )}
         </div>
+        {!isMobile && (
+          <div className="topbar-search">
+            <UnifiedSearchInput
+              onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
+              onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
+              center={center}
+              stateName={stateName}
+              cityName={cityName}
+              radius={radius}
+              onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
+              viewportBounds={viewportBounds}
+              boundsRadius={boundsRadius}
+              onBoundsRadiusChange={(r) => { setBoundsRadius(r); setViewingPlace(null) }}
+              activeFilter={filter}
+              places={places}
+              onLocate={handleLocatePlace}
+              query={searchQuery}
+              onQueryChange={setSearchQuery}
+              onHoverRadius={setHoverRadiusKm}
+              variant="topbar"
+            />
+          </div>
+        )}
         <div className="topbar-actions">
           <span className="pin-count">
             {filteredPlaces.length === places.length
@@ -231,6 +359,36 @@ export default function App() {
               : <>{filteredPlaces.length} of {places.length} places{filter !== 'all' && ` · ${FILTERS.find(f => f.key === filter)?.label}`}{cityName && ` · ${cityName}`}</>
             }
           </span>
+          {areaFilter && (
+            <div className="header-radius-menu">
+              <FilterChip f={{ ...areaFilter, onRecenter: () => setRadiusMenuOpen(open => !open) }} />
+              {radiusMenuOpen && (
+                <div className="header-radius-popover">
+                  <span>Radius</span>
+                  <RadiusSelector
+                    value={center ? radius : boundsRadius ?? radius}
+                    onChange={(value) => {
+                      if (center) {
+                        setRadius(value)
+                        setViewportBounds(null)
+                        setViewingPlace(null)
+                      } else {
+                        setBoundsRadius(value)
+                      }
+                      setRadiusMenuOpen(false)
+                    }}
+                    onHover={setHoverRadiusKm}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+          {hasActiveFilters && (
+            <button className="topbar-context" onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')} title="Show active filters">
+              <SlidersHorizontal size={14} />
+              <span>{contextLabels.filter(label => label && !label.includes('km') && label !== cityName).join(' · ') || 'Filters'}</span>
+            </button>
+          )}
           <button
             className={`icon-btn${panel === 'list' ? ' active' : ''}`}
             onClick={() => {
@@ -247,28 +405,51 @@ export default function App() {
             <List size={18} />
           </button>
         </div>
+        <div className="mobile-topbar-summary">
+          {filteredPlaces.length === places.length
+            ? `${places.length} ${places.length === 1 ? 'place' : 'places'}`
+            : `${filteredPlaces.length} of ${places.length} places${filter !== 'all' ? ` · ${FILTERS.find(f => f.key === filter)?.label}` : ''}${cityName ? ` · ${cityName}` : ''}`}
+        </div>
       </header>
 
-      {/* Filter chip strip — floats below the topbar over the map */}
-      <div className="filter-strip">
-        {FILTERS.map(f => (
-          <button
-            key={f.key}
-            className={`filter-pill${filter === f.key ? ' active' : ''}`}
-            onClick={() => setFilter(f.key)}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Location controls — geolocation only, floats below the filter strip left side */}
+      {/* Location controls — geolocation only, floats top-right */}
       <LocationControls
         isGeolocating={isGeolocating}
         onReset={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
         onShowAll={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
         onFocusHere={handleFocusHere}
       />
+
+      {isMobile && !panel && !editingPlace && !selectedPlace && (
+        <MobileExplorer
+          places={filteredPlaces}
+          center={center}
+          cityName={cityName}
+          query={browseQuery}
+          onQueryChange={setBrowseQuery}
+          category={mobileCategory}
+          onCategoryChange={setMobileCategory}
+          onSelect={handleSelectPlace}
+          onNearMe={() => { setPreviousMobileArea(null); resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
+          onOpenFilters={() => setMobileFiltersOpen(true)}
+        />
+      )}
+
+      {isMobile && mobileFiltersOpen && (
+        <MobileFilterSheet
+          filter={filter}
+          onFilterChange={setFilter}
+          amenityFilters={amenityFilters}
+          onAmenityFiltersChange={setAmenityFilters}
+          priceFilter={priceFilter}
+          onPriceFilterChange={setPriceFilter}
+          priorityFilter={priorityFilter}
+          onPriorityFilterChange={setPriorityFilter}
+          ratingFilter={ratingFilter}
+          onRatingFilterChange={setRatingFilter}
+          onClose={() => setMobileFiltersOpen(false)}
+        />
+      )}
 
       {/* FAB — primary action, bottom-right; desktop only (mobile adds via list panel header) */}
       {!isMobile && !panel && !editingPlace && (
@@ -314,16 +495,7 @@ export default function App() {
                 places={filteredPlaces}
                 onDelete={handleDeletePlace}
                 onEdit={setEditingPlace}
-                onLocate={(place) => {
-                  setFocusPlace({ lat: place.lat, lng: place.lng })
-                  setViewingPlace({ id: place.id, name: place.name })
-                  setPanel(null)
-                  if (isMobile) {
-                    handleSelectPlace(place)
-                  } else {
-                    setPopupPlaceId(place.id)
-                  }
-                }}
+                onLocate={handleLocatePlace}
                 activeFilter={filter}
                 center={center}
                 stateName={stateName}
@@ -331,7 +503,7 @@ export default function App() {
                 radius={radius}
                 onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
                 onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
-                onClear={() => { clearCenter(); setViewingPlace(null); setSuppressFit(n => n + 1) }}
+                onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
                 onRecenter={handleRecenter}
                 viewingPlace={viewingPlace}
                 onClearViewing={() => { setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
@@ -346,6 +518,14 @@ export default function App() {
                 onSearchChange={setSearchQuery}
                 onHoverRadius={setHoverRadiusKm}
                 onHoverPlace={setHoverPlaceId}
+                amenityFilters={amenityFilters}
+                onAmenityFiltersChange={setAmenityFilters}
+                priceFilter={priceFilter}
+                onPriceFilterChange={setPriceFilter}
+                priorityFilter={priorityFilter}
+                onPriorityFilterChange={setPriorityFilter}
+                ratingFilter={ratingFilter}
+                onRatingFilterChange={setRatingFilter}
               />
             </div>
           </div>
@@ -365,14 +545,11 @@ export default function App() {
         )}
       </aside>
 
-      {isMobile && (
+      {isMobile && selectedPlace && (
         <BottomSheet
           place={selectedPlace}
           sheetState={sheetState}
           onSheetChange={setSheetState}
-          filter={filter}
-          onFilterChange={setFilter}
-          FILTERS={FILTERS}
           onEdit={(place) => {
             setEditingPlace(place)
             setPanel('add')
@@ -389,6 +566,15 @@ export default function App() {
             setConfirmingId(null)
           }}
           onExplore={handleExplorePlace}
+        />
+      )}
+
+      {isMobile && selectedPlace && viewingPlace && previousMobileArea && (
+        <BackToAreaButton
+          viewingPlace={viewingPlace}
+          onViewArea={handleBackToArea}
+          onDismissViewing={handleDismissViewing}
+          className={`mobile-map-reset mobile-map-reset--${sheetState}`}
         />
       )}
 

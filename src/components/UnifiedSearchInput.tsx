@@ -3,6 +3,7 @@ import { Search, X, Clock, Trash2, Check, MapPin } from 'lucide-react'
 import RadiusSelector from './RadiusSelector'
 import { loadRecent, saveRecent } from '../lib/recentCities'
 import { searchNominatim } from '../lib/nominatim'
+import { toTitleCase } from '../lib/text'
 import type { FilterKey, GeoPoint, MapBounds, NominatimResult, Place, RecentCity } from '../types'
 
 export interface UnifiedSearchInputProps {
@@ -22,9 +23,10 @@ export interface UnifiedSearchInputProps {
   boundsRadius: number | null
   onBoundsRadiusChange: (radius: number) => void
   onHoverRadius?: (km: number | null) => void
+  variant?: 'default' | 'topbar'
 }
 
-export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange, onHoverRadius }: UnifiedSearchInputProps) {
+export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange, onHoverRadius, variant = 'default' }: UnifiedSearchInputProps) {
   const [cityResults, setCityResults] = useState<NominatimResult[]>([])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState<RecentCity[]>(loadRecent)
@@ -44,7 +46,12 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
     ? places.filter(p =>
         p.name?.toLowerCase().includes(q) ||
         p.address?.toLowerCase().includes(q) ||
-        p.notes?.toLowerCase().includes(q)
+        p.notes?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q) ||
+        p.amenities?.some(a => a.toLowerCase().includes(q)) ||
+        String(p.price_tier ?? '').includes(q) ||
+        String(p.priority ?? '').includes(q) ||
+        String(p.rating ?? '').includes(q)
       )
     : []
 
@@ -170,7 +177,7 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
      (!showCitySection && matchedPlaces.length === 0))
 
   return (
-    <div className="unified-search">
+    <div className={`unified-search${variant === 'topbar' ? ' unified-search--topbar' : ''}`}>
       <div className="unified-search-row">
         <Search size={14} className="unified-search-icon" />
         <input
@@ -283,7 +290,7 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
                 >
                   <MapPin size={12} className="unified-search-option-icon" />
                   <span className="unified-search-option-text">
-                    <strong>{place.name}</strong>
+                    <strong>{toTitleCase(place.name)}</strong>
                     <span className="unified-search-option-sub">{place.address}</span>
                   </span>
                 </button>

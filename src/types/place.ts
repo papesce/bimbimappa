@@ -1,3 +1,12 @@
+export type PlaceCategory = 'home' | 'museum' | 'shopping' | 'event_venue' | 'maze' | 'food' | 'park' | 'farm' | 'adventure_park' | 'fun_center' | 'theater' | 'auditorium' | 'other'
+export type PriorityLevel = 1 | 2 | 3
+export type PriceTier = 1 | 2 | 3 | 4
+
+export interface PlaceAmenity {
+  id: string
+  label: string
+}
+
 export interface PlaceLink {
   id: string
   url: string
@@ -14,6 +23,11 @@ export interface Place {
   notes: string | null
   source_url: string | null
   links: PlaceLink[] | null
+  category: PlaceCategory | null
+  amenities: string[] | null
+  price_tier: PriceTier | null
+  priority: PriorityLevel | null
+  rating: number | null
   date_from: string | null
   date_to: string | null
   deleted_at: string | null
@@ -27,6 +41,11 @@ export interface PlaceInput {
   lng: number
   notes: string
   links: PlaceLink[]
+  category: PlaceCategory | null
+  amenities: string[]
+  price_tier: PriceTier | null
+  priority: PriorityLevel | null
+  rating: number | null
   date_from: string | null
   date_to: string | null
 }
