@@ -9,6 +9,7 @@ import ExportButton from './components/ExportButton'
 import LocationControls from './components/LocationControls'
 import MobileExplorer from './components/MobileExplorer'
 import MobileFilterSheet from './components/MobileFilterSheet'
+import FilterChip from './components/FilterChip'
 import AccessDenied from './components/AccessDenied'
 import Toast from './components/Toast'
 import { usePlaces } from './hooks/usePlaces'
@@ -19,7 +20,7 @@ import { FILTERS, getFilterRange } from './lib/filters'
 import { formatAmenity, formatPriceTier, formatPriority } from './lib/placeAttributes'
 import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm } from './lib/geo'
 import './index.css'
-import type { FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceCategory, PlaceInput, SheetState, ViewingPlace, PriceTier, PriorityLevel } from './types'
+import type { ActiveFilterChip, FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceCategory, PlaceInput, SheetState, ViewingPlace, PriceTier, PriorityLevel } from './types'
 
 const EXPLORE_RADIUS_KM = 5
 
@@ -226,13 +227,26 @@ export default function App() {
 
   const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
   const contextLabels = [
-    cityName,
+    cityName || (center ? 'Nearby' : ''),
+    center ? `${radius} km` : '',
     filter !== 'all' ? FILTERS.find(f => f.key === filter)?.label : '',
     ...amenityFilters.slice(0, 2).map(formatAmenity),
     priceFilter ? formatPriceTier(priceFilter) : '',
     priorityFilter ? `${formatPriority(priorityFilter)} priority` : '',
     ratingFilter ? `${ratingFilter}★` : '',
   ].filter(Boolean)
+  const areaFilter: ActiveFilterChip | null = center ? {
+    type: 'city',
+    label: cityName ? `📍 ${cityName} · ${radius} km` : `📍 ${radius} km radius`,
+    onClear: () => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) },
+    onHover: (hover) => setHoverRadiusKm(hover ? radius : null),
+    onRecenter: handleRecenter,
+  } : viewportBounds ? {
+    type: 'bounds',
+    label: boundsRadius ? `Within ${boundsRadius} km` : 'Current map view',
+    onClear: boundsRadius ? () => { setBoundsRadius(null); setHoverRadiusKm(null) } : () => { setViewportBounds(null); setFitBoundsTrigger(n => n + 1) },
+    onHover: boundsRadius ? (hover) => setHoverRadiusKm(hover ? boundsRadius : null) : undefined,
+  } : null
 
   function handleViewArea() {
     setViewingPlace(null)
@@ -336,6 +350,13 @@ export default function App() {
               : <>{filteredPlaces.length} of {places.length} places{filter !== 'all' && ` · ${FILTERS.find(f => f.key === filter)?.label}`}{cityName && ` · ${cityName}`}</>
             }
           </span>
+          {areaFilter && <FilterChip f={areaFilter} />}
+          {hasActiveFilters && (
+            <button className="topbar-context" onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')} title="Show active filters">
+              <SlidersHorizontal size={14} />
+              <span>{contextLabels.filter(label => label && !label.includes('km') && label !== cityName).join(' · ') || 'Filters'}</span>
+            </button>
+          )}
           <button
             className={`icon-btn${panel === 'list' ? ' active' : ''}`}
             onClick={() => {
@@ -354,26 +375,10 @@ export default function App() {
         </div>
         <div className="mobile-topbar-summary">
           {filteredPlaces.length === places.length
-            ? <>{places.length} {places.length === 1 ? 'place' : 'places'}</>
-            : <>{filteredPlaces.length} of {places.length} places{filter !== 'all' && ` · ${FILTERS.find(f => f.key === filter)?.label}`}{cityName && ` · ${cityName}`}</>
-          }
+            ? `${places.length} ${places.length === 1 ? 'place' : 'places'}`
+            : `${filteredPlaces.length} of ${places.length} places${filter !== 'all' ? ` · ${FILTERS.find(f => f.key === filter)?.label}` : ''}${cityName ? ` · ${cityName}` : ''}`}
         </div>
       </header>
-
-      {/* Map context pill keeps the active browse context visible above the map. */}
-      {hasActiveFilters && (
-        <div
-          className="map-filter-chip"
-        >
-          <button className="map-filter-chip-main" onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')} title="Show active filters" aria-label="Show active filters">
-            <SlidersHorizontal size={14} />
-            <span>{contextLabels.length > 0 ? contextLabels.join(' · ') : 'Active filters'}</span>
-          </button>
-          <button className="map-filter-chip-clear" onClick={() => { setFilter('all'); setAmenityFilters([]); setPriceFilter(null); setPriorityFilter(null); setRatingFilter(null) }} aria-label="Clear filters" title="Clear filters">
-            <X size={13} />
-          </button>
-        </div>
-      )}
 
       {/* Location controls — geolocation only, floats top-right */}
       <LocationControls
