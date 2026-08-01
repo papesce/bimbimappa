@@ -733,6 +733,19 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   min-width: 0;
 }
 
+.filter-chip--clickable {
+  cursor: pointer;
+}
+
+.filter-chip--clickable:hover {
+  border-color: var(--accent);
+}
+
+.filter-chip--clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .filter-chip--viewing {
   background: rgba(61, 90, 138, 0.08);
   border-color: rgba(61, 90, 138, 0.2);

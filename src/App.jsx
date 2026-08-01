@@ -170,6 +170,11 @@ export default function App() {
     setViewingPlace(null)
   }
 
+  function handleRecenter() {
+    setViewingPlace(null)
+    setFitBoundsTrigger(n => n + 1)
+  }
+
   function handleFocusHere() {
     if (!viewportBounds) return
     const lat = (viewportBounds.north + viewportBounds.south) / 2
@@ -334,6 +339,7 @@ export default function App() {
                 onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
                 onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
                 onClear={() => { clearCenter(); setViewingPlace(null); setSuppressFit(n => n + 1) }}
+                onRecenter={handleRecenter}
                 viewingPlace={viewingPlace}
                 onClearViewing={() => { setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
                 filter={filter}

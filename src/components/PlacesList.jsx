@@ -13,7 +13,32 @@ function toTitleCase(str) {
   return str
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, hoverRadius, onHoverRadius }) {
+function FilterChip({ f }) {
+  const clickable = !!f.onRecenter
+  return (
+    <div
+      className={`filter-chip filter-chip--${f.type}${clickable ? ' filter-chip--clickable' : ''}`}
+      onClick={clickable ? f.onRecenter : undefined}
+      role={clickable ? 'button' : undefined}
+      tabIndex={clickable ? 0 : undefined}
+      onKeyDown={clickable ? (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault()
+          f.onRecenter()
+        }
+      } : undefined}
+      onMouseEnter={f.onHover ? () => f.onHover(true) : undefined}
+      onMouseLeave={f.onHover ? () => f.onHover(false) : undefined}
+    >
+      <span className="filter-chip-label">{f.label}</span>
+      <button className="filter-chip-clear" onClick={(e) => { e.stopPropagation(); f.onClear() }} title={`Clear ${f.type} filter`}>
+        <X size={12} />
+      </button>
+    </div>
+  )
+}
+
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, onRecenter, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, hoverRadius, onHoverRadius }) {
   const [confirmingId, setConfirmingId] = useState(null)
   const [menuOpenId, setMenuOpenId] = useState(null)
 
@@ -33,6 +58,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
         : `📍 ${radius ? `${radius} km radius` : 'Nearby'}`,
       onClear: onClear,
       onHover: onHoverRadius,
+      onRecenter: onRecenter,
     })
   }
   if (filter && filter !== 'all') {
@@ -54,7 +80,11 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
   const viewingFilter = viewingPlace ? {
     type: 'viewing',
     label: viewingPlace.name,
-    onClear: onClearViewing
+    onClear: onClearViewing,
+    onRecenter: () => {
+      const place = places.find(p => p.id === viewingPlace.id)
+      if (place) onLocate(place)
+    }
   } : null
 
   if (places.length === 0) {
@@ -85,29 +115,14 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
           {viewingFilter && (
             <div className="filter-chips">
               <span className="filter-chips-label">Viewing</span>
-              <div className={`filter-chip filter-chip--${viewingFilter.type}`}>
-                <span className="filter-chip-label">{viewingFilter.label}</span>
-                <button className="filter-chip-clear" onClick={viewingFilter.onClear} title="Back to area">
-                  <X size={12} />
-                </button>
-              </div>
+              <FilterChip f={viewingFilter} />
             </div>
           )}
           {activeFilters.length > 0 && (
             <div className="filter-chips">
               <span className="filter-chips-label">Filters</span>
               {activeFilters.map((f, i) => (
-                <div
-                  key={i}
-                  className={`filter-chip filter-chip--${f.type}`}
-                  onMouseEnter={f.onHover ? () => f.onHover(true) : undefined}
-                  onMouseLeave={f.onHover ? () => f.onHover(false) : undefined}
-                >
-                  <span className="filter-chip-label">{f.label}</span>
-                  <button className="filter-chip-clear" onClick={f.onClear} title={`Clear ${f.type} filter`}>
-                    <X size={12} />
-                  </button>
-                </div>
+                <FilterChip key={i} f={f} />
               ))}
             </div>
           )}
