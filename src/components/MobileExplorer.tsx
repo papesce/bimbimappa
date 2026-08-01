@@ -1,4 +1,5 @@
-import { MapPin, Navigation, Search, SlidersHorizontal, X } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronDown, MapPin, Navigation, Search, SlidersHorizontal, X } from 'lucide-react'
 import { CATEGORIES, getCategory } from '../lib/categories'
 import { getDistanceKm } from '../lib/geo'
 import { getPrimaryLink } from '../lib/links'
@@ -20,6 +21,7 @@ interface MobileExplorerProps {
 }
 
 export default function MobileExplorer({ places, center, cityName, query, onQueryChange, category, onCategoryChange, onSelect, onNearMe, onOpenFilters }: MobileExplorerProps) {
+  const [expanded, setExpanded] = useState(true)
   const normalizedQuery = query.trim().toLowerCase()
   const visiblePlaces = places
     .filter(place => !category || place.category === category)
@@ -31,18 +33,20 @@ export default function MobileExplorer({ places, center, cityName, query, onQuer
     .slice(0, 12)
 
   return (
-    <section className="mobile-explorer" aria-label="Explore places">
+    <section className={`mobile-explorer${expanded ? ' expanded' : ' collapsed'}`} aria-label="Explore places">
       <div className="mobile-explorer-grip" />
       <div className="mobile-explorer-heading">
         <div>
           <p className="eyebrow">Explore</p>
-          <h2>{cityName ? `Near ${cityName}` : 'Places nearby'}</h2>
+          <h2>{cityName ? `Near ${cityName}` : 'Places nearby'} <span>{visiblePlaces.length}</span></h2>
         </div>
-        <button className="mobile-explorer-filter" onClick={onOpenFilters} aria-label="Open filters">
-          <SlidersHorizontal size={17} />
-        </button>
+        <div className="mobile-explorer-heading-actions">
+          <button className="mobile-explorer-filter" onClick={onOpenFilters} aria-label="Open filters"><SlidersHorizontal size={17} /></button>
+          <button className="mobile-explorer-filter" onClick={() => setExpanded(value => !value)} aria-label={expanded ? 'Collapse explorer' : 'Expand explorer'}><ChevronDown className={expanded ? '' : 'closed'} size={17} /></button>
+        </div>
       </div>
 
+      {expanded && <>
       <div className="mobile-explorer-search">
         <Search size={17} />
         <input value={query} onChange={e => onQueryChange(e.target.value)} placeholder="Search places" aria-label="Search places" />
@@ -51,7 +55,7 @@ export default function MobileExplorer({ places, center, cityName, query, onQuer
 
       <div className="mobile-explorer-actions">
         <button className="mobile-explorer-nearby" onClick={onNearMe}><Navigation size={15} /> Near me</button>
-        <span className="mobile-explorer-count">{visiblePlaces.length} places</span>
+        <span className="mobile-explorer-count">{places.length > visiblePlaces.length ? `Showing ${visiblePlaces.length} of ${places.length}` : `${places.length} nearby`}</span>
       </div>
 
       <div className="mobile-explorer-types" aria-label="Browse by type">
@@ -74,13 +78,17 @@ export default function MobileExplorer({ places, center, cityName, query, onQuer
               <div className="mobile-explorer-card-body">
                 <strong>{toTitleCase(place.name)}</strong>
                 <span>{config.label}{distance !== null ? ` · ${distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`}` : ''}</span>
+                {place.address && <small>{place.address}</small>}
               </div>
-              {primaryLink && <a className="mobile-explorer-source" href={primaryLink.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} aria-label={`Open source for ${place.name}`}><BrandIcon url={primaryLink.url} size={17} /></a>}
+              <div className="mobile-explorer-card-actions">
+                {primaryLink && <a className="mobile-explorer-source" href={primaryLink.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} aria-label={`Open source for ${place.name}`}><BrandIcon url={primaryLink.url} size={17} /></a>}
+                <a className="mobile-explorer-navigate" href={`https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} aria-label={`Navigate to ${place.name}`}><Navigation size={16} /></a>
+              </div>
             </article>
           )
         })}
         {visiblePlaces.length === 0 && <p className="mobile-explorer-empty">No places match. Try another type or search.</p>}
-      </div>
+      </div></>}
     </section>
   )
 }

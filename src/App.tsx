@@ -8,6 +8,7 @@ import UnifiedSearchInput from './components/UnifiedSearchInput'
 import ExportButton from './components/ExportButton'
 import LocationControls from './components/LocationControls'
 import MobileExplorer from './components/MobileExplorer'
+import MobileFilterSheet from './components/MobileFilterSheet'
 import AccessDenied from './components/AccessDenied'
 import Toast from './components/Toast'
 import { usePlaces } from './hooks/usePlaces'
@@ -50,6 +51,8 @@ export default function App() {
   const [priorityFilter, setPriorityFilter] = useState<PriorityLevel | null>(null)
   const [ratingFilter, setRatingFilter] = useState<number | null>(null)
   const [mobileCategory, setMobileCategory] = useState<PlaceCategory | null>(null)
+  const [browseQuery, setBrowseQuery] = useState('')
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
@@ -113,6 +116,7 @@ export default function App() {
   }
 
   function handleSelectPlace(place: Place) {
+    setFocusPlace({ lat: place.lat, lng: place.lng })
     setSelectedPlace(place)
     setSheetState('peek')
     setPanel(null)
@@ -313,7 +317,7 @@ export default function App() {
       {hasActiveFilters && (
         <button
           className="map-filter-chip"
-          onClick={() => setPanel('list')}
+          onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')}
           title="Show active filters"
           aria-label="Show active filters"
         >
@@ -335,13 +339,29 @@ export default function App() {
           places={filteredPlaces}
           center={center}
           cityName={cityName}
-          query={searchQuery}
-          onQueryChange={setSearchQuery}
+          query={browseQuery}
+          onQueryChange={setBrowseQuery}
           category={mobileCategory}
           onCategoryChange={setMobileCategory}
           onSelect={handleSelectPlace}
           onNearMe={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
-          onOpenFilters={() => setPanel('list')}
+          onOpenFilters={() => setMobileFiltersOpen(true)}
+        />
+      )}
+
+      {isMobile && mobileFiltersOpen && (
+        <MobileFilterSheet
+          filter={filter}
+          onFilterChange={setFilter}
+          amenityFilters={amenityFilters}
+          onAmenityFiltersChange={setAmenityFilters}
+          priceFilter={priceFilter}
+          onPriceFilterChange={setPriceFilter}
+          priorityFilter={priorityFilter}
+          onPriorityFilterChange={setPriorityFilter}
+          ratingFilter={ratingFilter}
+          onRatingFilterChange={setRatingFilter}
+          onClose={() => setMobileFiltersOpen(false)}
         />
       )}
 

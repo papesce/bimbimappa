@@ -6,6 +6,7 @@ import FilterChip from './FilterChip'
 import type { ActiveFilterChip, FilterKey, PriceTier, PriorityLevel } from '../types'
 
 export interface PanelFiltersProps {
+  alwaysOpen?: boolean
   filter: FilterKey
   onFilterChange: (filter: FilterKey) => void
   amenityFilters: string[]
@@ -19,6 +20,7 @@ export interface PanelFiltersProps {
 }
 
 export default function PanelFilters({
+  alwaysOpen = false,
   filter,
   onFilterChange,
   amenityFilters,
@@ -31,7 +33,7 @@ export default function PanelFilters({
   onRatingFilterChange,
 }: PanelFiltersProps) {
   const hasActive = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
-  const [open, setOpen] = useState(hasActive)
+  const [open, setOpen] = useState(alwaysOpen || hasActive)
 
   const activeCount =
     (filter !== 'all' ? 1 : 0) +
