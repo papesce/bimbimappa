@@ -31,9 +31,10 @@ export interface PlacesListProps {
   searchQuery: string
   onSearchChange: (query: string) => void
   onHoverRadius: (hover: boolean) => void
+  onHoverPlace?: (id: string | null) => void
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, onRecenter, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, onHoverRadius }: PlacesListProps) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, onRecenter, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, onHoverRadius, onHoverPlace }: PlacesListProps) {
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
 
@@ -76,6 +77,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
     type: 'viewing',
     label: viewingPlace.name,
     onClear: onClearViewing,
+    onHover: (hover) => onHoverPlace?.(hover ? viewingPlace.id : null),
     onRecenter: () => {
       const place = places.find(p => p.id === viewingPlace.id)
       if (place) onLocate(place)

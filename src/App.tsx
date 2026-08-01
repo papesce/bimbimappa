@@ -40,9 +40,15 @@ export default function App() {
   const [sheetState, setSheetState] = useState<SheetState>('hidden')
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [deletedPlace, setDeletedPlace] = useState<Place | null>(null)
+  const [hoverPlaceId, setHoverPlaceId] = useState<string | null>(null)
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
+
+  // Hover highlight on the "Viewing" chip is ephemeral — reset whenever the viewed place changes
+  useEffect(() => {
+    setHoverPlaceId(null)
+  }, [viewingPlace])
 
   async function handleDeletePlace(id: string) {
     const place = places.find(p => p.id === id)
@@ -193,6 +199,7 @@ export default function App() {
           confirmingId={confirmingId}
           setConfirmingId={setConfirmingId}
           onMobilePopup={handleMobilePopup}
+          hoverPlaceId={hoverPlaceId}
         />
       </div>
 
@@ -325,6 +332,7 @@ export default function App() {
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 onHoverRadius={setHoverRadius}
+                onHoverPlace={setHoverPlaceId}
               />
             </div>
           </div>

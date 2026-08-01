@@ -9,7 +9,7 @@ import ClosePopupOnDrag from './ClosePopupOnDrag'
 import PopupOpener from './PopupOpener'
 import NewMarker from './NewMarker'
 import SafariGestureGuard from './SafariGestureGuard'
-import { customIcon, newIcon, centerIcon } from '../lib/leafletIcons'
+import { customIcon, newIcon, hoverIcon, centerIcon } from '../lib/leafletIcons'
 import type { GeoPoint, MapBounds, Place, ViewingPlace } from '../types'
 
 export interface MapProps {
@@ -40,9 +40,10 @@ export interface MapProps {
   confirmingId: string | null
   setConfirmingId: (id: string | null) => void
   onMobilePopup: (placeId: string) => void
+  hoverPlaceId: string | null
 }
 
-export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadius, boundsCenter, boundsRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup }: MapProps) {
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadius, boundsCenter, boundsRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup, hoverPlaceId }: MapProps) {
   // confirmingId is lifted to App when mobile so BottomSheet can share it;
   // on desktop it arrives as null/undefined and we alias local names for clarity.
   const [localConfirmingId, setLocalConfirmingId] = useState<string | null>(null)
@@ -155,7 +156,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
         <NewMarker
           key={place.id}
           place={place}
-          icon={isNew ? newIcon : customIcon}
+          icon={isNew ? newIcon : hoverPlaceId === place.id ? hoverIcon : customIcon}
           isNew={isNew}
           confirmingId={activeConfirmingId}
           setConfirmingId={setActiveConfirmingId}

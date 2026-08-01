@@ -46,6 +46,30 @@ export const newIcon = L.divIcon({
   popupAnchor: [0, -40],
 })
 
+// Highlighted marker — used when hovering the "Viewing" chip so the viewed
+// place stands out on the map (same pulse ring as the new-place marker).
+export const hoverIcon = L.divIcon({
+  className: '',
+  html: `
+    <div style="position:relative;width:36px;height:36px;">
+      <div class="new-marker-ring"></div>
+      <div style="
+        background: #FF6B6B;
+        width: 36px;
+        height: 36px;
+        border-radius: 50% 50% 50% 0;
+        transform: rotate(-45deg);
+        border: 3px solid white;
+        box-shadow: 0 0 0 4px rgba(255,107,107,0.35), 0 2px 12px rgba(255,107,107,0.6);
+        position: relative;
+        z-index: 1;
+      "></div>
+    </div>`,
+  iconSize: [36, 36],
+  iconAnchor: [18, 36],
+  popupAnchor: [0, -40],
+})
+
 export const centerIcon = L.divIcon({
   className: '',
   html: `<div style="
