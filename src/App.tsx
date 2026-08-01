@@ -66,10 +66,15 @@ export default function App() {
       return
     }
     if (!place) return
+    if (selectedPlace?.id === id) {
+      setSelectedPlace(null)
+      setSheetState('hidden')
+      setConfirmingId(null)
+    }
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)
     setDeletedPlace(place)
     undoTimeoutRef.current = setTimeout(() => setDeletedPlace(null), 6000)
-  }, [places, deletePlace])
+  }, [places, deletePlace, selectedPlace])
 
   async function handleUndoDelete() {
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)

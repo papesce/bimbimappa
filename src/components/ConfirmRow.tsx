@@ -1,14 +1,21 @@
-import { Check, X } from 'lucide-react'
+import { Check, Trash2, X } from 'lucide-react'
 
 export interface ConfirmRowProps {
   message?: string
   confirmLabel?: string
   onConfirm: () => void
   onCancel: () => void
-  variant?: 'default' | 'dense'
+  variant?: 'default' | 'dense' | 'inline'
 }
 
 export default function ConfirmRow({ message = 'Remove this place?', confirmLabel = 'Remove', onConfirm, onCancel, variant = 'default' }: ConfirmRowProps) {
+  if (variant === 'inline') {
+    return (
+      <button className="confirm-btn danger confirm-btn--block" onClick={onConfirm}>
+        <Trash2 size={14} /> {confirmLabel}
+      </button>
+    )
+  }
   return (
     <div className={`confirm-row${variant === 'dense' ? ' confirm-row--dense' : ''}`}>
       <span className="confirm-message">{message}</span>

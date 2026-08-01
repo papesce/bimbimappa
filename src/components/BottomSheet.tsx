@@ -1,12 +1,11 @@
 import { useRef } from 'react'
-import { ExternalLink, Navigation, Car, Pencil, Trash2, X, Radar } from 'lucide-react'
-import { googleMapsUrl, wazeUrl } from '../lib/navigation'
-import { getLinks, getPrimaryLink } from '../lib/links'
+import { Pencil, X } from 'lucide-react'
+import { getPrimaryLink } from '../lib/links'
 import { formatDateRange } from '../lib/date'
 import { toTitleCase } from '../lib/text'
 import { formatAmenity, formatPriceTier, formatPriority, formatRating } from '../lib/placeAttributes'
 import BrandIcon from './BrandIcon'
-import ConfirmRow from './ConfirmRow'
+import PlaceActions from './PlaceActions'
 import type { Place, SheetState } from '../types'
 
 interface DragState {
@@ -109,9 +108,7 @@ export default function BottomSheet({
     }
   }
 
-  const links = place ? getLinks(place) : []
   const primaryLink = place ? getPrimaryLink(place) : null
-
   return (
     <div
       ref={sheetRef}
@@ -127,12 +124,12 @@ export default function BottomSheet({
         </div>
       </div>
 
-      {/* Peek row — name, address, one-tap action icons */}
+      {/* Peek row — name, address, primary link, Edit */}
       {place && sheetState !== 'hidden' && (
         <div className="sheet-peek-content" onClick={() => onSheetChange('expanded')}>
           <p className="sheet-place-name">{toTitleCase(place.name)}</p>
           <p className="sheet-place-address">{place.address}</p>
-          <div className="sheet-icon-actions">
+          <div className="sheet-peek-actions">
             {primaryLink && (
               <a
                 href={primaryLink.url}
@@ -144,54 +141,13 @@ export default function BottomSheet({
                 <BrandIcon url={primaryLink.url} size={18} />
               </a>
             )}
-            <a
-              href={googleMapsUrl(place.lat, place.lng)}
-              rel="noopener noreferrer"
-              className="sheet-icon-action"
-              title="Google Maps"
-              onClick={e => e.stopPropagation()}
-            >
-              <Navigation size={18} />
-            </a>
-            <a
-              href={wazeUrl(place.lat, place.lng)}
-              rel="noopener noreferrer"
-              className="sheet-icon-action"
-              title="Waze"
-              onClick={e => e.stopPropagation()}
-            >
-              <Car size={18} />
-            </a>
             <button
-              className="sheet-action-btn"
+              className="place-action-btn"
               onClick={(e) => { e.stopPropagation(); onEdit(place) }}
             >
               <Pencil size={14} /> Edit
             </button>
-            <button
-              className="sheet-action-btn explore"
-              onClick={(e) => { e.stopPropagation(); onExplore(place) }}
-              title="Explore nearby"
-            >
-              <Radar size={14} /> Nearby
-            </button>
-            <button
-              className="sheet-action-btn danger"
-              onClick={(e) => { e.stopPropagation(); onConfirmingChange(confirmingId === place.id ? null : place.id) }}
-              title="Remove"
-            >
-              <Trash2 size={14} /> Remove
-            </button>
           </div>
-        </div>
-      )}
-
-      {place && confirmingId === place.id && (
-        <div className="sheet-confirm-wrap">
-          <ConfirmRow
-            onConfirm={() => { onDelete(place.id); onConfirmingChange(null); onClose() }}
-            onCancel={() => onConfirmingChange(null)}
-          />
         </div>
       )}
 
@@ -217,27 +173,15 @@ export default function BottomSheet({
             <p className="popup-notes">"{place.notes}"</p>
           )}
 
-          {links.length > 0 && (
-            <div className="sheet-links">
-              {links.map(link => (
-                <a
-                  key={link.id || link.url}
-                  href={link.url}
-                  rel="noopener noreferrer"
-                  className="sheet-link-row"
-                >
-                  <span className="sheet-link-icon">
-                    <BrandIcon url={link.url} size={16} />
-                  </span>
-                  <span className="sheet-link-label">
-                    {link.label || 'Link'}
-                    {link.is_primary && <span className="sheet-link-primary">primary</span>}
-                  </span>
-                  <ExternalLink size={13} />
-                </a>
-              ))}
-            </div>
-          )}
+          <PlaceActions
+            place={place}
+            variant="expanded"
+            confirmingId={confirmingId}
+            setConfirmingId={onConfirmingChange}
+            onDelete={onDelete}
+            onEdit={onEdit}
+            onExplore={onExplore}
+          />
         </div>
       )}
     </div>
