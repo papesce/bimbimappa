@@ -7,6 +7,7 @@ import BottomSheet from './components/BottomSheet'
 import UnifiedSearchInput from './components/UnifiedSearchInput'
 import ExportButton from './components/ExportButton'
 import LocationControls from './components/LocationControls'
+import MobileExplorer from './components/MobileExplorer'
 import AccessDenied from './components/AccessDenied'
 import Toast from './components/Toast'
 import { usePlaces } from './hooks/usePlaces'
@@ -16,7 +17,7 @@ import { useIsMobile } from './hooks/useIsMobile'
 import { FILTERS, getFilterRange } from './lib/filters'
 import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm } from './lib/geo'
 import './index.css'
-import type { FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceInput, SheetState, ViewingPlace, PriceTier, PriorityLevel } from './types'
+import type { FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceCategory, PlaceInput, SheetState, ViewingPlace, PriceTier, PriorityLevel } from './types'
 
 const EXPLORE_RADIUS_KM = 5
 
@@ -48,6 +49,7 @@ export default function App() {
   const [priceFilter, setPriceFilter] = useState<PriceTier | null>(null)
   const [priorityFilter, setPriorityFilter] = useState<PriorityLevel | null>(null)
   const [ratingFilter, setRatingFilter] = useState<number | null>(null)
+  const [mobileCategory, setMobileCategory] = useState<PlaceCategory | null>(null)
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
@@ -327,6 +329,21 @@ export default function App() {
         onShowAll={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
         onFocusHere={handleFocusHere}
       />
+
+      {isMobile && !panel && !editingPlace && !selectedPlace && (
+        <MobileExplorer
+          places={filteredPlaces}
+          center={center}
+          cityName={cityName}
+          query={searchQuery}
+          onQueryChange={setSearchQuery}
+          category={mobileCategory}
+          onCategoryChange={setMobileCategory}
+          onSelect={handleSelectPlace}
+          onNearMe={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
+          onOpenFilters={() => setPanel('list')}
+        />
+      )}
 
       {/* FAB — primary action, bottom-right; desktop only (mobile adds via list panel header) */}
       {!isMobile && !panel && !editingPlace && (

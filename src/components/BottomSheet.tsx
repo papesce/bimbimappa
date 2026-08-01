@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Pencil, X } from 'lucide-react'
+import { Navigation, Pencil, X } from 'lucide-react'
 import { getPrimaryLink } from '../lib/links'
 import { formatDateRange } from '../lib/date'
 import { toTitleCase } from '../lib/text'
@@ -139,8 +139,19 @@ export default function BottomSheet({
                 onClick={e => e.stopPropagation()}
               >
                 <BrandIcon url={primaryLink.url} size={18} />
+                <span>Source</span>
               </a>
             )}
+            <a
+              href={`https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`}
+              rel="noopener noreferrer"
+              className="sheet-icon-action"
+              title="Navigate"
+              onClick={e => e.stopPropagation()}
+            >
+              <Navigation size={18} />
+              <span>Navigate</span>
+            </a>
             <button
               className="place-action-btn"
               onClick={(e) => { e.stopPropagation(); onEdit(place) }}
@@ -181,6 +192,7 @@ export default function BottomSheet({
             onDelete={onDelete}
             onEdit={onEdit}
             onExplore={onExplore}
+            isMobile
           />
         </div>
       )}

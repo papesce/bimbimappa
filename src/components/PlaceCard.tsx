@@ -18,11 +18,16 @@ export interface PlaceCardProps {
   onLocate: (place: Place) => void
   onDelete: (id: string) => void
   onEdit: (place: Place) => void
+  onHoverPlace?: (id: string | null) => void
 }
 
-export default function PlaceCard({ place, confirmingId, setConfirmingId, menuOpenId, setMenuOpenId, onLocate, onDelete, onEdit }: PlaceCardProps) {
+export default function PlaceCard({ place, confirmingId, setConfirmingId, menuOpenId, setMenuOpenId, onLocate, onDelete, onEdit, onHoverPlace }: PlaceCardProps) {
   return (
-    <li className="place-card">
+    <li
+      className="place-card"
+      onMouseEnter={() => onHoverPlace?.(place.id)}
+      onMouseLeave={() => onHoverPlace?.(null)}
+    >
       <button
         className="place-card-body"
         onClick={() => onLocate(place)}

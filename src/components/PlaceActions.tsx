@@ -13,6 +13,7 @@ export interface PlaceActionsProps {
   onDelete: (id: string) => void
   onEdit: (place: Place) => void
   onExplore: (place: Place) => void
+  isMobile?: boolean
   variant?: 'inline' | 'expanded'
 }
 
@@ -27,21 +28,40 @@ export default function PlaceActions({
   onDelete,
   onEdit,
   onExplore,
+  isMobile = false,
   variant = 'inline',
 }: PlaceActionsProps) {
   const [moreOpen, setMoreOpen] = useState(false)
   const links = getLinks(place)
   const confirming = isPlaceDeleteConfirming(place.id, confirmingId, place)
+  const primaryLink = links.find(link => link.is_primary) || links[0] || null
+  const secondaryLinks = primaryLink ? links.filter(link => link.id !== primaryLink.id || link.url !== primaryLink.url) : links
 
   return (
     <div className={`place-actions place-actions--${variant}`}>
       <div className="place-actions-primary">
+        {isMobile && primaryLink && (
+          <a href={primaryLink.url} rel="noopener noreferrer" className="place-action-btn source-link">
+            <ExternalLink size={12} /> Source
+          </a>
+        )}
+        {isMobile && (
+          <a
+            href={googleMapsUrl(place.lat, place.lng)}
+            rel="noopener noreferrer"
+            className="place-action-btn navigate-link"
+          >
+            <Navigation size={12} /> Navigate
+          </a>
+        )}
         <button className="place-action-btn explore" onClick={() => onExplore(place)}>
           <Compass size={12} /> Nearby
         </button>
-        <button className="place-action-btn" onClick={() => onEdit(place)}>
-          <Pencil size={12} /> Edit
-        </button>
+        {!isMobile && (
+          <button className="place-action-btn" onClick={() => onEdit(place)}>
+            <Pencil size={12} /> Edit
+          </button>
+        )}
         <button
           className="place-action-btn"
           onClick={() => setMoreOpen(o => !o)}
@@ -54,16 +74,20 @@ export default function PlaceActions({
 
       {moreOpen && (
         <div className="place-actions-more">
-          <a href={googleMapsUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-actions-row-link">
+          {!isMobile && (
+            <a href={googleMapsUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-actions-row-link">
             <MapPin size={14} /> <span className="place-actions-link-label">Google Maps</span>
           </a>
-          <a href={wazeUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-actions-row-link">
+          )}
+          {!isMobile && (
+            <a href={wazeUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-actions-row-link">
             <Navigation size={14} /> <span className="place-actions-link-label">Waze</span>
           </a>
+          )}
           {links.length > 0 && (
             <>
               <div className="place-actions-divider" />
-              {links.map(link => (
+              {secondaryLinks.map(link => (
                 <a
                   key={link.id || link.url}
                   href={link.url}

@@ -1083,10 +1083,19 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   border: 1.5px solid var(--border);
   border-radius: var(--radius);
   background: var(--mist);
-  transition: border-color 0.15s;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s, background 0.15s;
 }
 
-.place-card:hover { border-color: var(--accent); }
+.place-card:hover {
+  border-color: var(--accent);
+  background: white;
+  transform: translateY(-1px);
+  box-shadow: var(--elev-1);
+}
+
+.place-card:hover .place-name {
+  color: var(--accent);
+}
 
 .place-card-body {
   flex: 1;
@@ -1180,6 +1189,10 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   gap: 8px;
   align-items: center;
   align-self: stretch;
+}
+
+.place-card:hover .action-btn {
+  color: var(--accent);
 }
 
 .place-card-actions-spacer {
@@ -1300,6 +1313,19 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   color: var(--text);
   border-color: var(--text);
   background: var(--mist);
+}
+
+.place-action-btn.source-link,
+.place-action-btn.navigate-link {
+  color: var(--accent);
+  border-color: rgba(61, 90, 138, 0.28);
+  background: rgba(61, 90, 138, 0.06);
+}
+
+.place-action-btn.source-link:hover,
+.place-action-btn.navigate-link:hover {
+  background: rgba(61, 90, 138, 0.12);
+  border-color: var(--accent);
 }
 
 .place-action-btn.explore,
@@ -1876,6 +1902,10 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   .map-reset-dismiss { font-size: 12px; padding: 6px 10px 6px 8px; }
   .place-action-btn,
   .confirm-btn { min-height: 44px; }
+  .place-actions-primary { flex-direction: column; align-items: stretch; }
+  .place-action-btn { width: 100%; justify-content: center; }
+  .sheet-peek-actions { gap: 8px; }
+  .sheet-icon-action { width: auto; flex: 1 1 120px; }
   .date-field { flex: 1 1 0; flex-direction: row; align-items: center; gap: 8px; }
   .date-field-label { flex: 0 0 28px; margin-bottom: 0; }
   .date-field .input { flex: 1; min-width: 0; padding: 7px 10px; }
@@ -1883,6 +1913,53 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 /* ─── Bottom Sheet ──────────────────────────────────────────────── */
+.mobile-explorer {
+  display: none;
+}
+
+@media (max-width: 480px) {
+  .mobile-explorer {
+    position: fixed;
+    z-index: 900;
+    left: 12px;
+    right: 12px;
+    bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+    max-height: min(52dvh, 500px);
+    padding: 10px 12px 12px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(22, 32, 42, 0.12);
+    border-radius: 22px;
+    box-shadow: 0 12px 36px rgba(22, 32, 42, 0.2);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .mobile-explorer-grip { width: 34px; height: 4px; margin: 0 auto 10px; border-radius: 4px; background: var(--border); }
+  .mobile-explorer-heading, .mobile-explorer-actions { display: flex; align-items: center; justify-content: space-between; }
+  .mobile-explorer-heading h2 { margin-top: 2px; font-size: 20px; letter-spacing: -0.03em; }
+  .mobile-explorer .eyebrow { margin: 0; color: var(--coral); font-size: 10px; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; }
+  .mobile-explorer-filter { display: grid; place-items: center; width: 38px; height: 38px; border: 1px solid var(--border); border-radius: 50%; background: white; color: var(--text); }
+  .mobile-explorer-search { display: flex; align-items: center; gap: 8px; margin-top: 12px; padding: 0 11px; min-height: 42px; border: 1px solid var(--border); border-radius: 12px; color: var(--sub); background: var(--mist); }
+  .mobile-explorer-search input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; color: var(--ink); font: inherit; }
+  .mobile-explorer-search button { display: grid; place-items: center; border: 0; background: none; color: var(--sub); }
+  .mobile-explorer-actions { margin: 10px 2px 8px; }
+  .mobile-explorer-nearby { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border: 0; border-radius: 999px; background: var(--ink); color: white; font-size: 12px; font-weight: 700; }
+  .mobile-explorer-count { color: var(--sub); font-size: 12px; }
+  .mobile-explorer-types { display: flex; gap: 7px; overflow-x: auto; padding: 1px 0 10px; scrollbar-width: none; }
+  .mobile-explorer-types::-webkit-scrollbar { display: none; }
+  .mobile-explorer-types button { flex: 0 0 auto; padding: 7px 11px; border: 1px solid var(--border); border-radius: 999px; background: white; color: var(--sub); font-size: 12px; white-space: nowrap; }
+  .mobile-explorer-types button.active { border-color: var(--ink); background: var(--ink); color: white; }
+  .mobile-explorer-results { overflow-y: auto; max-height: 220px; overscroll-behavior: contain; }
+  .mobile-explorer-card { display: flex; align-items: center; gap: 10px; padding: 10px 2px; border-top: 1px solid var(--border); cursor: pointer; }
+  .mobile-explorer-card-icon { display: grid; place-items: center; flex: 0 0 32px; height: 32px; border-radius: 10px; color: white; }
+  .mobile-explorer-card-body { display: flex; flex: 1; min-width: 0; flex-direction: column; gap: 2px; }
+  .mobile-explorer-card-body strong { overflow: hidden; color: var(--ink); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-explorer-card-body span { overflow: hidden; color: var(--sub); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+  .mobile-explorer-source { display: grid; place-items: center; flex: 0 0 34px; height: 34px; border: 1px solid var(--border); border-radius: 50%; background: white; }
+  .mobile-explorer-empty { padding: 18px 4px 8px; color: var(--sub); font-size: 13px; text-align: center; }
+}
+
 .bottom-sheet {
   position: fixed;
   bottom: 0;
@@ -1966,15 +2043,17 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   align-items: center;
   gap: 10px;
   margin-top: 8px;
+  flex-wrap: wrap;
 }
 
 .sheet-icon-action {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
+  gap: 6px;
+  min-height: 40px;
+  padding: 0 12px;
+  border-radius: 999px;
   border: 1px solid var(--border);
   background: var(--mist);
   color: var(--text);

@@ -217,6 +217,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             onLocate={onLocate}
             onDelete={onDelete}
             onEdit={onEdit}
+            onHoverPlace={onHoverPlace}
           />
         ))}
       </ul>
