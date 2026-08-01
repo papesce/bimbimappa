@@ -733,6 +733,25 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   min-width: 0;
 }
 
+.filter-chip--clickable {
+  cursor: pointer;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.filter-chip--clickable:hover {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(61, 90, 138, 0.12);
+}
+
+.filter-chip--clickable:hover .filter-chip-label {
+  color: var(--accent);
+}
+
+.filter-chip--clickable:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .filter-chip--viewing {
   background: rgba(61, 90, 138, 0.08);
   border-color: rgba(61, 90, 138, 0.2);
@@ -929,6 +948,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 .popup-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   margin-top: 10px;
@@ -1023,6 +1043,13 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   color: var(--text);
   border-color: var(--text);
   background: var(--mist);
+}
+
+.popup-action-btn.explore,
+.popup-action-btn.explore:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(74,144,217,0.08);
 }
 
 .popup-action-btn.danger,
@@ -1728,6 +1755,13 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   color: var(--coral-dk);
   border-color: var(--coral-dk);
   background: rgba(255,107,107,0.1);
+}
+
+.sheet-action-btn.explore,
+.sheet-action-btn.explore:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(74,144,217,0.08);
 }
 
 .sheet-close-btn {
