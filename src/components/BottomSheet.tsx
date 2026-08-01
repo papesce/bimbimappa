@@ -1,5 +1,5 @@
 import { useRef } from 'react'
-import { Navigation, Pencil, X } from 'lucide-react'
+import { ChevronLeft, Navigation, Pencil, X } from 'lucide-react'
 import { getPrimaryLink } from '../lib/links'
 import { formatDateRange } from '../lib/date'
 import { toTitleCase } from '../lib/text'
@@ -24,6 +24,8 @@ export interface BottomSheetProps {
   confirmingId: string | null
   onConfirmingChange: (id: string | null) => void
   onClose: () => void
+  onBackToArea: () => void
+  canGoBackToArea: boolean
   onExplore: (place: Place) => void
 }
 
@@ -36,6 +38,8 @@ export default function BottomSheet({
   confirmingId,
   onConfirmingChange,
   onClose,
+  onBackToArea,
+  canGoBackToArea,
   onExplore,
 }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement | null>(null)
@@ -129,6 +133,11 @@ export default function BottomSheet({
         <div className="sheet-peek-content" onClick={() => onSheetChange('expanded')}>
           <p className="sheet-place-name">{toTitleCase(place.name)}</p>
           <p className="sheet-place-address">{place.address}</p>
+          {canGoBackToArea && (
+            <button className="sheet-back-area" onClick={(e) => { e.stopPropagation(); onBackToArea() }}>
+              <ChevronLeft size={15} /> Back to area
+            </button>
+          )}
           <div className="sheet-peek-actions">
             {primaryLink && (
               <a

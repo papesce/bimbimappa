@@ -53,6 +53,13 @@ export default function App() {
   const [mobileCategory, setMobileCategory] = useState<PlaceCategory | null>(null)
   const [browseQuery, setBrowseQuery] = useState('')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
+  const [previousMobileArea, setPreviousMobileArea] = useState<{
+    center: GeoPoint | null
+    radius: number
+    cityName: string
+    stateName: string
+    countryCode: string
+  } | null>(null)
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
@@ -116,7 +123,11 @@ export default function App() {
   }
 
   function handleSelectPlace(place: Place) {
+    if (isMobile && !previousMobileArea) {
+      setPreviousMobileArea({ center, radius, cityName, stateName, countryCode })
+    }
     setFocusPlace({ lat: place.lat, lng: place.lng })
+    if (isMobile) setViewingPlace({ id: place.id, name: place.name })
     setSelectedPlace(place)
     setSheetState('peek')
     setPanel(null)
@@ -138,7 +149,28 @@ export default function App() {
     }
   }, [isMobile])
 
+  function handleBackToArea() {
+    if (previousMobileArea?.center) {
+      setCenter(
+        previousMobileArea.center.lat,
+        previousMobileArea.center.lng,
+        previousMobileArea.cityName,
+        previousMobileArea.stateName,
+        previousMobileArea.countryCode,
+        previousMobileArea.radius,
+      )
+    } else {
+      clearCenter()
+    }
+    setPreviousMobileArea(null)
+    setViewingPlace(null)
+    setSelectedPlace(null)
+    setSheetState('hidden')
+    setConfirmingId(null)
+  }
+
   const handleExplorePlace = useCallback((place: Place) => {
+    setPreviousMobileArea(null)
     setFocusPlace({ lat: place.lat, lng: place.lng })
     setCenter(place.lat, place.lng, place.name, '', '', EXPLORE_RADIUS_KM)
     setViewingPlace(null)
@@ -311,6 +343,12 @@ export default function App() {
             <List size={18} />
           </button>
         </div>
+        <div className="mobile-topbar-summary">
+          {filteredPlaces.length === places.length
+            ? <>{places.length} {places.length === 1 ? 'place' : 'places'}</>
+            : <>{filteredPlaces.length} of {places.length} places{filter !== 'all' && ` · ${FILTERS.find(f => f.key === filter)?.label}`}{cityName && ` · ${cityName}`}</>
+          }
+        </div>
       </header>
 
       {/* Filter chip — single entry point to filters, shown only when one is active */}
@@ -344,7 +382,7 @@ export default function App() {
           category={mobileCategory}
           onCategoryChange={setMobileCategory}
           onSelect={handleSelectPlace}
-          onNearMe={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
+          onNearMe={() => { setPreviousMobileArea(null); resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
           onOpenFilters={() => setMobileFiltersOpen(true)}
         />
       )}
@@ -459,7 +497,7 @@ export default function App() {
         )}
       </aside>
 
-      {isMobile && (
+      {isMobile && selectedPlace && (
         <BottomSheet
           place={selectedPlace}
           sheetState={sheetState}
@@ -479,6 +517,8 @@ export default function App() {
             setSheetState('hidden')
             setConfirmingId(null)
           }}
+          onBackToArea={handleBackToArea}
+          canGoBackToArea={previousMobileArea !== null}
           onExplore={handleExplorePlace}
         />
       )}
