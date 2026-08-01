@@ -397,7 +397,6 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .link-label-input {
-  font-size: 13px;
   padding: 7px 10px;
 }
 
@@ -647,7 +646,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   min-width: 0;
   border: none;
   background: transparent;
-  font-size: 13px;
+  font-size: 16px;
   color: var(--text);
   font-family: inherit;
   outline: none;
