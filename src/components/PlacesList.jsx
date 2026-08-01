@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
-import { MapPin, Trash2, Pencil, Check, X, Navigation, MoreVertical } from 'lucide-react'
+import { MapPin, Trash2, Pencil, X, Navigation, MoreVertical } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { getLinks, BrandIcon } from '../lib/links.jsx'
 import UnifiedSearchInput from './UnifiedSearchInput'
+import ConfirmRow from './ConfirmRow'
 
 function toTitleCase(str) {
   if (!str) return str
@@ -228,15 +229,11 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
                     </button>
                     <div className="card-menu-divider" />
                     {confirmingId === place.id ? (
-                      <div className="card-menu-confirm">
-                        <span>Remove?</span>
-                        <button className="card-menu-confirm-btn danger" onClick={() => { onDelete(place.id); setConfirmingId(null); setMenuOpenId(null) }}>
-                          <Check size={12} />Yes
-                        </button>
-                        <button className="card-menu-confirm-btn" onClick={() => setConfirmingId(null)}>
-                          <X size={12} />No
-                        </button>
-                      </div>
+                      <ConfirmRow
+                        variant="dense"
+                        onConfirm={() => { onDelete(place.id); setConfirmingId(null); setMenuOpenId(null) }}
+                        onCancel={() => setConfirmingId(null)}
+                      />
                     ) : (
                       <button className="card-menu-item danger" onClick={() => setConfirmingId(place.id)}>
                         <Trash2 size={13} />Remove

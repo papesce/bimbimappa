@@ -1,7 +1,8 @@
 import { useRef } from 'react'
-import { ExternalLink, Navigation, Car, Pencil, Trash2, Check, X } from 'lucide-react'
+import { ExternalLink, Navigation, Car, Pencil, Trash2, X } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { getLinks, getPrimaryLink, BrandIcon } from '../lib/links.jsx'
+import ConfirmRow from './ConfirmRow'
 
 export default function BottomSheet({
   place,
@@ -20,7 +21,7 @@ export default function BottomSheet({
   const dragRef = useRef({ startY: 0, startVisiblePx: 0, dragging: false })
 
   const HIDDEN_PX = 60
-  const PEEK_PX = 175
+  const PEEK_PX = 230
 
   function getVisiblePx() {
     const maxVisible = window.innerHeight * 0.5
@@ -57,12 +58,12 @@ export default function BottomSheet({
     const finalVisible = dragRef.current.startVisiblePx + delta
     const maxVisible = window.innerHeight * 0.5
     let newState
-    if (finalVisible < 90) {
+    if (!place || finalVisible < 90) {
       newState = 'hidden'
     } else if (finalVisible < maxVisible * 0.6) {
       newState = 'peek'
     } else {
-      newState = place ? 'expanded' : 'peek'
+      newState = 'expanded'
     }
     if (sheetRef.current) {
       sheetRef.current.style.transform = ''
@@ -73,9 +74,15 @@ export default function BottomSheet({
   }
 
   function handleHandleTap() {
-    if (sheetState === 'hidden') onSheetChange(place ? 'peek' : 'peek')
-    else if (sheetState === 'peek') onSheetChange(place ? 'expanded' : 'hidden')
-    else onSheetChange('peek')
+    if (!place) {
+      onSheetChange('hidden')
+    } else if (sheetState === 'hidden') {
+      onSheetChange('peek')
+    } else if (sheetState === 'peek') {
+      onSheetChange('expanded')
+    } else {
+      onSheetChange('peek')
+    }
   }
 
   function formatDate(place) {
@@ -149,7 +156,29 @@ export default function BottomSheet({
             >
               <Car size={18} />
             </a>
+            <button
+              className="sheet-action-btn"
+              onClick={(e) => { e.stopPropagation(); onEdit(place) }}
+            >
+              <Pencil size={14} /> Edit
+            </button>
+            <button
+              className="sheet-action-btn danger"
+              onClick={(e) => { e.stopPropagation(); onConfirmingChange(confirmingId === place.id ? null : place.id) }}
+              title="Remove"
+            >
+              <Trash2 size={14} /> Remove
+            </button>
           </div>
+        </div>
+      )}
+
+      {place && confirmingId === place.id && (
+        <div className="sheet-confirm-wrap">
+          <ConfirmRow
+            onConfirm={() => { onDelete(place.id); onConfirmingChange(null); onClose() }}
+            onCancel={() => onConfirmingChange(null)}
+          />
         </div>
       )}
 
@@ -186,54 +215,6 @@ export default function BottomSheet({
                   <ExternalLink size={13} />
                 </a>
               ))}
-            </div>
-          )}
-
-          <div className="sheet-actions">
-            <a
-              href={googleMapsUrl(place.lat, place.lng)}
-                            rel="noopener noreferrer"
-              className="sheet-action-link"
-            >
-              <Navigation size={14} /> Google Maps
-            </a>
-            <a
-              href={wazeUrl(place.lat, place.lng)}
-                            rel="noopener noreferrer"
-              className="sheet-action-link"
-            >
-              <Car size={14} /> Waze
-            </a>
-            <button className="sheet-action-btn" onClick={() => onEdit(place)}>
-              <Pencil size={14} /> Edit
-            </button>
-            <button
-              className="sheet-action-btn danger"
-              onClick={() => onConfirmingChange(confirmingId === place.id ? null : place.id)}
-              style={{ marginLeft: 'auto' }}
-              title="Remove"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
-
-          {confirmingId === place.id && (
-            <div className="popup-confirm-row">
-              <span>Remove?</span>
-              <button
-                className="popup-action-btn danger"
-                onClick={() => { onDelete(place.id); onConfirmingChange(null); onClose() }}
-                title="Yes, remove"
-              >
-                <Check size={14} />
-              </button>
-              <button
-                className="popup-action-btn"
-                onClick={() => onConfirmingChange(null)}
-                title="Cancel"
-              >
-                <X size={14} />
-              </button>
             </div>
           )}
         </div>

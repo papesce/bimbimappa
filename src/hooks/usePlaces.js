@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase'
 /**
  * All DB operations for places.
  * Table shape (see schema.sql):
- *   id, name, address, lat, lng, notes, source_url, links, created_at
+ *   id, name, address, lat, lng, notes, source_url, links, date_from, date_to, deleted_at, created_at
  */
 export function usePlaces() {
   const [places, setPlaces] = useState([])
@@ -16,6 +16,7 @@ export function usePlaces() {
     const { data, error } = await supabase
       .from('places')
       .select('*')
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
     if (error) setError(error.message)
@@ -48,9 +49,25 @@ export function usePlaces() {
   }
 
   async function deletePlace(id) {
-    const { error } = await supabase.from('places').delete().eq('id', id)
+    const { error } = await supabase
+      .from('places')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id)
     if (error) throw new Error(error.message)
     setPlaces((prev) => prev.filter((p) => p.id !== id))
+  }
+
+  async function restorePlace(id) {
+    const { data, error } = await supabase
+      .from('places')
+      .update({ deleted_at: null })
+      .eq('id', id)
+      .select()
+      .single()
+
+    if (error) throw new Error(error.message)
+    setPlaces((prev) => [data, ...prev.filter((p) => p.id !== id)])
+    return data
   }
 
   async function updatePlace(id, updates) {
@@ -66,5 +83,5 @@ export function usePlaces() {
     return data[0]
   }
 
-  return { places, loading, error, addPlace, deletePlace, updatePlace, refetch: fetchPlaces }
+  return { places, loading, error, addPlace, deletePlace, restorePlace, updatePlace, refetch: fetchPlaces }
 }

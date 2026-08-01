@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { MapPin, List, Plus, X } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
@@ -7,6 +7,7 @@ import BottomSheet from './components/BottomSheet'
 import ExportButton from './components/ExportButton'
 import LocationControls from './components/LocationControls'
 import AccessDenied from './components/AccessDenied'
+import Toast from './components/Toast'
 import { usePlaces } from './hooks/usePlaces'
 import { useAuth } from './hooks/useAuth'
 import { useMapFocus } from './hooks/useMapFocus'
@@ -43,7 +44,7 @@ const FILTERS = [
 
 export default function App() {
   const { authed, login } = useAuth()
-  const { places, loading, addPlace, deletePlace, updatePlace } = usePlaces()
+  const { places, loading, addPlace, deletePlace, restorePlace, updatePlace } = usePlaces()
   const { center, radius, cityName, stateName, countryCode, matchedPlaces, isGeolocating, setCenter, setRadius, setFocusCenter, clearCenter, resetToGeolocation } = useMapFocus(places)
   const isMobile = useIsMobile()
   const [panel, setPanel] = useState(null)
@@ -63,6 +64,36 @@ export default function App() {
   const [selectedPlace, setSelectedPlace] = useState(null)
   const [sheetState, setSheetState] = useState('hidden')
   const [confirmingId, setConfirmingId] = useState(null)
+  const [deletedPlace, setDeletedPlace] = useState(null)
+  const undoTimeoutRef = useRef(null)
+
+  useEffect(() => () => clearTimeout(undoTimeoutRef.current), [])
+
+  async function handleDeletePlace(id) {
+    const place = places.find(p => p.id === id)
+    try {
+      await deletePlace(id)
+    } catch (err) {
+      console.error('Delete failed:', err)
+      return
+    }
+    if (!place) return
+    clearTimeout(undoTimeoutRef.current)
+    setDeletedPlace(place)
+    undoTimeoutRef.current = setTimeout(() => setDeletedPlace(null), 6000)
+  }
+
+  async function handleUndoDelete() {
+    clearTimeout(undoTimeoutRef.current)
+    if (deletedPlace) {
+      try {
+        await restorePlace(deletedPlace.id)
+      } catch (err) {
+        console.error('Restore failed:', err)
+      }
+    }
+    setDeletedPlace(null)
+  }
 
   async function handleAdd(data) {
     const result = await addPlace(data)
@@ -161,7 +192,7 @@ export default function App() {
           focusPlaces={matchedPlaces}
           center={center}
           radius={radius}
-          onDelete={deletePlace}
+          onDelete={handleDeletePlace}
           onEdit={setEditingPlace}
           focusPlace={focusPlace}
           onFocusDone={() => setFocusPlace(null)}
@@ -283,7 +314,7 @@ export default function App() {
             <div className="panel-body">
               <PlacesList
                 places={filteredPlaces}
-                onDelete={deletePlace}
+                onDelete={handleDeletePlace}
                 onEdit={setEditingPlace}
                 onLocate={(place) => {
                   setFocusPlace({ lat: place.lat, lng: place.lng })
@@ -350,7 +381,7 @@ export default function App() {
             setSheetState('hidden')
             setConfirmingId(null)
           }}
-          onDelete={deletePlace}
+          onDelete={handleDeletePlace}
           confirmingId={confirmingId}
           onConfirmingChange={setConfirmingId}
           onClose={() => {
@@ -358,6 +389,14 @@ export default function App() {
             setSheetState('hidden')
             setConfirmingId(null)
           }}
+        />
+      )}
+
+      {deletedPlace && (
+        <Toast
+          name={deletedPlace.name}
+          onUndo={handleUndoDelete}
+          onDismiss={() => setDeletedPlace(null)}
         />
       )}
     </div>

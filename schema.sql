@@ -12,6 +12,7 @@ create table if not exists places (
   links       jsonb default '[]',  -- [{ id, url, label, is_primary }]
   date_from   date,
   date_to     date,
+  deleted_at  timestamptz,       -- soft delete: set to now() instead of DELETE
   created_at  timestamptz default now()
 );
 

@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Circle, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { Trash2, Pencil, Check, X, Navigation, Car, ExternalLink, ChevronLeft } from 'lucide-react'
+import { Trash2, Pencil, X, Navigation, Car, ExternalLink, ChevronLeft } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { getLinks, BrandIcon } from '../lib/links.jsx'
 import SafariGestureGuard from './SafariGestureGuard'
+import ConfirmRow from './ConfirmRow'
 
 function MapController({ focusPlaces, center, radius, focusPlace, onFocusDone, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit }) {
   const map = useMap()
@@ -434,23 +435,11 @@ function NewMarker({ place, icon, isNew, confirmingId, setConfirmingId, onDelete
             </button>
           </div>
           {confirmingId === place.id && (
-            <div className="popup-confirm-row">
-              <span>Remove?</span>
-              <button
-                className="popup-action-btn danger"
-                onClick={() => { onDelete(place.id); setConfirmingId(null) }}
-                title="Yes, remove"
-              >
-                <Check size={12} />
-              </button>
-              <button
-                className="popup-action-btn"
-                onClick={() => setConfirmingId(null)}
-                title="Cancel"
-              >
-                <X size={12} />
-              </button>
-            </div>
+            <ConfirmRow
+              variant="dense"
+              onConfirm={() => { onDelete(place.id); setConfirmingId(null) }}
+              onCancel={() => setConfirmingId(null)}
+            />
           )}
         </div>
       </Popup>}

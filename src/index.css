@@ -964,27 +964,91 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   gap: 4px;
   font-size: 12px;
   font-family: inherit;
-  background: none;
-  border: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
   cursor: pointer;
   color: var(--sub);
   text-decoration: none;
-  padding: 0;
-  transition: color 0.15s;
+  padding: 6px 12px;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
 
-.popup-action-btn:hover  { color: var(--text); }
+.popup-action-btn:hover  {
+  color: var(--text);
+  border-color: var(--text);
+  background: var(--mist);
+}
+
 .popup-action-btn.danger,
 .popup-action-btn.danger:hover { color: var(--coral-dk); }
+.popup-action-btn.danger {
+  border-color: var(--coral-dk);
+}
+.popup-action-btn.danger:hover {
+  border-color: var(--coral-dk);
+  background: rgba(255,107,107,0.1);
+}
 
-.popup-confirm-row {
+/* ─── Delete confirm row — shared by popup, bottom sheet, card menu ─ */
+.confirm-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 12px;
+  border-radius: var(--radius);
+  background: var(--mist);
+}
+
+.confirm-row--dense {
+  margin-top: 6px;
+  padding: 4px 8px;
+}
+
+.confirm-message {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--coral-dk);
+}
+
+.confirm-actions {
   display: flex;
   align-items: center;
   gap: 6px;
-  margin-top: 6px;
+}
+
+.confirm-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 0 12px;
+  min-height: 30px;
   font-size: 12px;
-  color: var(--coral-dk);
   font-weight: 600;
+  font-family: inherit;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--sub);
+  cursor: pointer;
+  transition: background 0.1s, color 0.1s, border-color 0.1s;
+}
+
+.confirm-btn:hover {
+  background: var(--mist);
+  color: var(--text);
+}
+
+.confirm-btn.danger {
+  color: white;
+  background: #e05555;
+  border-color: #e05555;
+}
+
+.confirm-btn.danger:hover {
+  background: #c94545;
 }
 
 /* ─── Card action menu ───────────────────────────────────────────── */
@@ -1031,39 +1095,6 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   height: 1px;
   background: var(--border);
   margin: 4px 0;
-}
-
-.card-menu-confirm {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 600;
-  color: #e05555;
-}
-
-.card-menu-confirm-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  background: none;
-  border: 1px solid currentColor;
-  border-radius: 5px;
-  padding: 2px 7px;
-  font-size: 12px;
-  font-family: inherit;
-  cursor: pointer;
-  color: var(--sub);
-  transition: background 0.1s, color 0.1s;
-}
-
-.card-menu-confirm-btn.danger {
-  color: #e05555;
-}
-
-.card-menu-confirm-btn:hover {
-  background: var(--mist);
 }
 
 /* ─── Empty state ───────────────────────────────────────────────── */
@@ -1446,6 +1477,8 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   .map-reset-btn { bottom: 136px; left: 50%; transform: translateX(-50%); }
   .map-reset-main { font-size: 12px; padding: 6px 10px 6px 12px; }
   .map-reset-dismiss { font-size: 12px; padding: 6px 10px 6px 8px; }
+  .sheet-action-btn,
+  .confirm-btn { min-height: 44px; }
 }
 
 /* ─── Bottom Sheet ──────────────────────────────────────────────── */
@@ -1537,6 +1570,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 .sheet-icon-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 10px;
   margin-top: 8px;
 }
@@ -1613,33 +1647,39 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   position: relative;
 }
 
-.sheet-actions {
-  display: flex;
-  gap: 12px;
-  align-items: center;
-  flex-wrap: wrap;
-  padding-top: 4px;
+.sheet-confirm-wrap {
+  flex-shrink: 0;
+  padding: 0 16px 8px;
 }
 
-.sheet-action-link,
 .sheet-action-btn {
   display: inline-flex;
   align-items: center;
   gap: 5px;
   font-size: 13px;
   font-family: inherit;
-  background: none;
-  border: none;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 20px;
   cursor: pointer;
   color: var(--sub);
   text-decoration: none;
-  padding: 0;
-  transition: color 0.15s;
+  padding: 6px 12px;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
 }
 
-.sheet-action-link:hover { color: var(--coral); }
-.sheet-action-btn:hover  { color: var(--text); }
-.sheet-action-btn.danger { color: var(--coral-dk); }
+.sheet-action-btn:hover {
+  color: var(--text);
+  border-color: var(--text);
+  background: var(--mist);
+}
+
+.sheet-action-btn.danger { color: var(--coral-dk); border-color: var(--coral-dk); }
+.sheet-action-btn.danger:hover {
+  color: var(--coral-dk);
+  border-color: var(--coral-dk);
+  background: rgba(255,107,107,0.1);
+}
 
 .sheet-close-btn {
   position: absolute;
@@ -1659,4 +1699,72 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .sheet-close-btn:hover { color: var(--text); }
+
+/* ─── Undo toast ────────────────────────────────────────────────── */
+.toast {
+  position: fixed;
+  top: calc(64px + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: calc(100% - 32px);
+  padding: 8px 8px 8px 16px;
+  background: var(--ink);
+  color: white;
+  border-radius: 12px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  animation: toast-in 0.25s ease-out;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.toast-message {
+  font-size: 13px;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.toast-undo {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: inherit;
+  color: var(--coral);
+  background: none;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.toast-undo:hover { background: rgba(255,255,255,0.1); }
+
+.toast-close {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  background: none;
+  border: none;
+  border-radius: 50%;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  color: white;
+  background: rgba(255,255,255,0.1);
+}
 

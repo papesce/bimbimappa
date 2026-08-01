@@ -80,6 +80,7 @@ Single table: `places`
 | `links` | jsonb | `[{ id, url, label, is_primary }]` — multiple source links |
 | `date_from` | date | Optional start date |
 | `date_to` | date | Optional end date |
+| `deleted_at` | timestamptz | Soft delete — set instead of hard DELETE |
 | `created_at` | timestamptz | Defaults to `now()` |
 
 ### RLS Policies
@@ -100,7 +101,8 @@ All policies are permissive (any request with the anon key can read, insert, upd
 - `fetchPlaces()` — SELECT all, ordered by `created_at` DESC
 - `addPlace()` — INSERT with optimistic state update
 - `updatePlace(id, updates)` — UPDATE selected fields
-- `deletePlace(id)` — DELETE record
+- `deletePlace(id)` — soft delete (sets `deleted_at`); hidden from fetches, recoverable
+- `restorePlace(id)` — clears `deleted_at` (undo)
 - Supabase realtime channel subscribes to `postgres_changes` on the `places` table; any mutation triggers a full refetch so all family members see updates instantly
 
 ### 3. Geocoding — `geocode.js`
