@@ -7,7 +7,7 @@ import { toTitleCase } from '../lib/text'
 import { formatAmenity, formatPriceTier, formatPriority, formatRating } from '../lib/placeAttributes'
 import BrandIcon from './BrandIcon'
 import ConfirmRow from './ConfirmRow'
-import type { FilterKey, FilterOption, Place, SheetState } from '../types'
+import type { Place, SheetState } from '../types'
 
 interface DragState {
   startY: number
@@ -20,9 +20,6 @@ export interface BottomSheetProps {
   place: Place | null
   sheetState: SheetState
   onSheetChange: (state: SheetState) => void
-  filter: FilterKey
-  onFilterChange: (filter: FilterKey) => void
-  FILTERS: FilterOption[]
   onEdit: (place: Place) => void
   onDelete: (id: string) => void
   confirmingId: string | null
@@ -35,9 +32,6 @@ export default function BottomSheet({
   place,
   sheetState,
   onSheetChange,
-  filter,
-  onFilterChange,
-  FILTERS,
   onEdit,
   onDelete,
   confirmingId,
@@ -48,7 +42,7 @@ export default function BottomSheet({
   const sheetRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState>({ startY: 0, startVisiblePx: 0, dragging: false, interactive: false })
 
-  const HIDDEN_PX = 60
+  const HIDDEN_PX = 48
   const PEEK_PX = 230
 
   function getVisiblePx() {
@@ -126,21 +120,10 @@ export default function BottomSheet({
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
     >
-      {/* Always-visible: drag handle + filter chips */}
-      <div className="sheet-filter-bar">
+      {/* Always-visible: drag handle */}
+      <div className="sheet-grab-bar">
         <div className="sheet-drag-handle-wrap" onClick={handleHandleTap}>
           <div className="sheet-drag-handle" />
-        </div>
-        <div className="sheet-filters">
-          {FILTERS.map(f => (
-            <button
-              key={f.key}
-              className={`filter-pill${filter === f.key ? ' active' : ''}`}
-              onClick={() => onFilterChange(f.key)}
-            >
-              {f.label}
-            </button>
-          ))}
         </div>
       </div>
 

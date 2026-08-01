@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react'
-import { MapPin, Tag, DollarSign, Star, ArrowUpDown, X } from 'lucide-react'
+import { MapPin } from 'lucide-react'
 import UnifiedSearchInput from './UnifiedSearchInput'
 import FilterChip from './FilterChip'
+import PanelFilters from './PanelFilters'
 import PlaceCard from './PlaceCard'
 import { toTitleCase } from '../lib/text'
-import { AMENITY_OPTIONS, formatAmenity, formatPriceTier, formatPriority } from '../lib/placeAttributes'
 import type { ActiveFilterChip, FilterKey, GeoPoint, MapBounds, Place, ViewingPlace } from '../types'
 import type { PriceTier, PriorityLevel } from '../types'
 
@@ -68,13 +68,6 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
       onRecenter: onRecenter,
     })
   }
-  if (filter && filter !== 'all') {
-    activeFilters.push({
-      type: 'date',
-      label: filter === 'week' ? 'This Week' : filter === 'month' ? 'This Month' : filter,
-      onClear: () => onFilterChange?.('all')
-    })
-  }
   if (viewportBounds && !center) {
     activeFilters.push({
       type: 'bounds',
@@ -94,14 +87,6 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
       if (place) onLocate(place)
     }
   } : null
-
-  const toggleAmenity = (amenity: string) => {
-    onAmenityFiltersChange(
-      amenityFilters.includes(amenity)
-        ? amenityFilters.filter(a => a !== amenity)
-        : [...amenityFilters, amenity]
-    )
-  }
 
   if (places.length === 0) {
     const messages: Partial<Record<FilterKey, string>> = {
@@ -129,59 +114,18 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             onQueryChange={onSearchChange}
             onHoverRadius={onHoverRadius}
           />
-          <div className="panel-filters">
-            <div className="panel-filter-group">
-              <span className="panel-filter-label"><Tag size={12} /> Amenities</span>
-              <div className="panel-filter-chips">
-                {AMENITY_OPTIONS.map(option => (
-                  <button
-                    key={option}
-                    className={`filter-pill${amenityFilters.includes(option) ? ' active' : ''}`}
-                    onClick={() => toggleAmenity(option)}
-                  >
-                    {formatAmenity(option)}
-                  </button>
-                ))}
-                {amenityFilters.length > 0 && (
-                  <button className="filter-pill filter-pill-clear" onClick={() => onAmenityFiltersChange([])}>
-                    <X size={12} /> Clear
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="panel-filter-grid">
-              <div className="panel-filter-group">
-                <span className="panel-filter-label"><DollarSign size={12} /> Price</span>
-                <div className="panel-filter-chips">
-                  {[1,2,3,4].map(t => (
-                    <button key={t} className={`filter-pill${priceFilter === t ? ' active' : ''}`} onClick={() => onPriceFilterChange(priceFilter === t ? null : t as PriceTier)}>
-                      {formatPriceTier(t as PriceTier)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="panel-filter-group">
-                <span className="panel-filter-label"><ArrowUpDown size={12} /> Priority</span>
-                <div className="panel-filter-chips">
-                  {[1,2,3].map(t => (
-                    <button key={t} className={`filter-pill${priorityFilter === t ? ' active' : ''}`} onClick={() => onPriorityFilterChange(priorityFilter === t ? null : t as PriorityLevel)}>
-                      {formatPriority(t as PriorityLevel)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="panel-filter-group">
-                <span className="panel-filter-label"><Star size={12} /> Rating</span>
-                <div className="panel-filter-chips">
-                  {[1,2,3,4,5].map(t => (
-                    <button key={t} className={`filter-pill${ratingFilter === t ? ' active' : ''}`} onClick={() => onRatingFilterChange(ratingFilter === t ? null : t)}>
-                      {t}★
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <PanelFilters
+            filter={filter}
+            onFilterChange={onFilterChange}
+            amenityFilters={amenityFilters}
+            onAmenityFiltersChange={onAmenityFiltersChange}
+            priceFilter={priceFilter}
+            onPriceFilterChange={onPriceFilterChange}
+            priorityFilter={priorityFilter}
+            onPriorityFilterChange={onPriorityFilterChange}
+            ratingFilter={ratingFilter}
+            onRatingFilterChange={onRatingFilterChange}
+          />
           {viewingFilter && (
             <div className="filter-chips">
               <span className="filter-chips-label">Viewing</span>
@@ -233,59 +177,18 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             onQueryChange={onSearchChange}
             onHoverRadius={onHoverRadius}
           />
-          <div className="panel-filters">
-            <div className="panel-filter-group">
-              <span className="panel-filter-label"><Tag size={12} /> Amenities</span>
-              <div className="panel-filter-chips">
-                {AMENITY_OPTIONS.map(option => (
-                  <button
-                    key={option}
-                    className={`filter-pill${amenityFilters.includes(option) ? ' active' : ''}`}
-                    onClick={() => toggleAmenity(option)}
-                  >
-                    {formatAmenity(option)}
-                  </button>
-                ))}
-                {amenityFilters.length > 0 && (
-                  <button className="filter-pill filter-pill-clear" onClick={() => onAmenityFiltersChange([])}>
-                    <X size={12} /> Clear
-                  </button>
-                )}
-              </div>
-            </div>
-            <div className="panel-filter-grid">
-              <div className="panel-filter-group">
-                <span className="panel-filter-label"><DollarSign size={12} /> Price</span>
-                <div className="panel-filter-chips">
-                  {[1,2,3,4].map(t => (
-                    <button key={t} className={`filter-pill${priceFilter === t ? ' active' : ''}`} onClick={() => onPriceFilterChange(priceFilter === t ? null : t as PriceTier)}>
-                      {formatPriceTier(t as PriceTier)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="panel-filter-group">
-                <span className="panel-filter-label"><ArrowUpDown size={12} /> Priority</span>
-                <div className="panel-filter-chips">
-                  {[1,2,3].map(t => (
-                    <button key={t} className={`filter-pill${priorityFilter === t ? ' active' : ''}`} onClick={() => onPriorityFilterChange(priorityFilter === t ? null : t as PriorityLevel)}>
-                      {formatPriority(t as PriorityLevel)}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="panel-filter-group">
-                <span className="panel-filter-label"><Star size={12} /> Rating</span>
-                <div className="panel-filter-chips">
-                  {[1,2,3,4,5].map(t => (
-                    <button key={t} className={`filter-pill${ratingFilter === t ? ' active' : ''}`} onClick={() => onRatingFilterChange(ratingFilter === t ? null : t)}>
-                      {t}★
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          </div>
+          <PanelFilters
+            filter={filter}
+            onFilterChange={onFilterChange}
+            amenityFilters={amenityFilters}
+            onAmenityFiltersChange={onAmenityFiltersChange}
+            priceFilter={priceFilter}
+            onPriceFilterChange={onPriceFilterChange}
+            priorityFilter={priorityFilter}
+            onPriorityFilterChange={onPriorityFilterChange}
+            ratingFilter={ratingFilter}
+            onRatingFilterChange={onRatingFilterChange}
+          />
           {viewingFilter && (
             <div className="filter-chips">
               <span className="filter-chips-label">Viewing</span>

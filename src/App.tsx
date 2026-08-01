@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { MapPin, List, Plus, X } from 'lucide-react'
+import { MapPin, List, Plus, X, SlidersHorizontal } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
@@ -168,6 +168,8 @@ export default function App() {
     filteredPlaces = filteredPlaces.filter(p => p.rating === ratingFilter)
   }
 
+  const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
+
   function handleViewArea() {
     setViewingPlace(null)
     setFitBoundsTrigger(n => n + 1)
@@ -265,20 +267,20 @@ export default function App() {
         </div>
       </header>
 
-      {/* Filter chip strip — floats below the topbar over the map */}
-      <div className="filter-strip">
-        {FILTERS.map(f => (
-          <button
-            key={f.key}
-            className={`filter-pill${filter === f.key ? ' active' : ''}`}
-            onClick={() => setFilter(f.key)}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
+      {/* Filter chip — single entry point to filters, shown only when one is active */}
+      {hasActiveFilters && (
+        <button
+          className="map-filter-chip"
+          onClick={() => setPanel('list')}
+          title="Show active filters"
+          aria-label="Show active filters"
+        >
+          <SlidersHorizontal size={14} />
+          <span>Filters</span>
+        </button>
+      )}
 
-      {/* Location controls — geolocation only, floats below the filter strip left side */}
+      {/* Location controls — geolocation only, floats top-right */}
       <LocationControls
         isGeolocating={isGeolocating}
         onReset={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
@@ -394,9 +396,6 @@ export default function App() {
           place={selectedPlace}
           sheetState={sheetState}
           onSheetChange={setSheetState}
-          filter={filter}
-          onFilterChange={setFilter}
-          FILTERS={FILTERS}
           onEdit={(place) => {
             setEditingPlace(place)
             setPanel('add')

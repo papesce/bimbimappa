@@ -11,7 +11,7 @@ export type SheetState = 'hidden' | 'peek' | 'expanded'
 
 export type Status = 'idle' | 'searching' | 'saving' | 'error'
 
-export type ActiveFilterChipType = 'city' | 'date' | 'bounds' | 'viewing'
+export type ActiveFilterChipType = 'city' | 'date' | 'bounds' | 'viewing' | 'attribute'
 
 export interface ActiveFilterChip {
   type: ActiveFilterChipType
