@@ -67,7 +67,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   user-select: none;
 }
 
-/* ─── Leaflet zoom controls — pinned bottom-right ───────────────── */
+/* ─── Leaflet zoom controls — bottom-left (bottom-right on mobile) ─ */
 .main-map .leaflet-top.leaflet-left {
   top: auto;
   bottom: 92px;
@@ -75,14 +75,22 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   right: 30px;
 }
 
+@media (min-width: 481px) {
+  .main-map .leaflet-top.leaflet-left {
+    left: 16px;
+    right: auto;
+  }
+}
+
 /* ─── Top bar ───────────────────────────────────────────────────── */
 .topbar {
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 1000;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  justify-content: space-between;
+  gap: 12px;
   padding: max(12px, env(safe-area-inset-top)) 16px 12px;
   background: rgba(255,255,255,0.92);
   backdrop-filter: blur(12px);
@@ -98,6 +106,14 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   font-size: 15px;
   color: var(--ink);
   letter-spacing: -0.02em;
+  white-space: nowrap;
+}
+
+.topbar-search {
+  min-width: 0;
+  max-width: 520px;
+  width: 100%;
+  justify-self: center;
 }
 
 .version-badge {
@@ -850,6 +866,22 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   padding: 12px 16px 0px;
 }
 
+.unified-search--topbar {
+  padding: 0;
+}
+
+.unified-search--topbar .unified-search-row {
+  background: white;
+}
+
+.unified-search--topbar .unified-search-radius-inline {
+  display: none;
+}
+
+.unified-search--topbar .unified-search-dropdown {
+  z-index: 1002;
+}
+
 .unified-search-row {
   display: flex;
   align-items: center;
@@ -1518,7 +1550,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 /* ─── Location controls (geo + show-all buttons) ─────────────── */
 .location-controls {
   position: absolute;
-  top: calc(105px + env(safe-area-inset-top, 0px));
+  top: calc(100px + env(safe-area-inset-top, 0px));
   right: 16px;
   z-index: 999;
   display: flex;
@@ -1812,6 +1844,11 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 .map-reset-dismiss:hover {
   color: #e05555;
   background: rgba(0, 0, 0, 0.04);
+}
+
+/* ─── Tablet — slim topbar for the docked search ────────────────── */
+@media (max-width: 720px) {
+  .version-badge { display: none; }
 }
 
 /* ─── Mobile ────────────────────────────────────────────────────── */

@@ -23,9 +23,10 @@ export interface UnifiedSearchInputProps {
   boundsRadius: number | null
   onBoundsRadiusChange: (radius: number) => void
   onHoverRadius?: (km: number | null) => void
+  variant?: 'default' | 'topbar'
 }
 
-export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange, onHoverRadius }: UnifiedSearchInputProps) {
+export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange, onHoverRadius, variant = 'default' }: UnifiedSearchInputProps) {
   const [cityResults, setCityResults] = useState<NominatimResult[]>([])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState<RecentCity[]>(loadRecent)
@@ -176,7 +177,7 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
      (!showCitySection && matchedPlaces.length === 0))
 
   return (
-    <div className="unified-search">
+    <div className={`unified-search${variant === 'topbar' ? ' unified-search--topbar' : ''}`}>
       <div className="unified-search-row">
         <Search size={14} className="unified-search-icon" />
         <input

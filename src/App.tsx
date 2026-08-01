@@ -4,6 +4,7 @@ import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
 import BottomSheet from './components/BottomSheet'
+import UnifiedSearchInput from './components/UnifiedSearchInput'
 import ExportButton from './components/ExportButton'
 import LocationControls from './components/LocationControls'
 import AccessDenied from './components/AccessDenied'
@@ -114,6 +115,17 @@ export default function App() {
     const place = places.find(p => p.id === placeId)
     if (place) handleSelectPlace(place)
   }
+
+  const handleLocatePlace = useCallback((place: Place) => {
+    setFocusPlace({ lat: place.lat, lng: place.lng })
+    setViewingPlace({ id: place.id, name: place.name })
+    setPanel(null)
+    if (isMobile) {
+      handleSelectPlace(place)
+    } else {
+      setPopupPlaceId(place.id)
+    }
+  }, [isMobile])
 
   const handleExplorePlace = useCallback((place: Place) => {
     setFocusPlace({ lat: place.lat, lng: place.lng })
@@ -242,6 +254,29 @@ export default function App() {
             <span className="version-badge">{__APP_VERSION__}</span>
           )}
         </div>
+        {!isMobile && (
+          <div className="topbar-search">
+            <UnifiedSearchInput
+              onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
+              onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
+              center={center}
+              stateName={stateName}
+              cityName={cityName}
+              radius={radius}
+              onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
+              viewportBounds={viewportBounds}
+              boundsRadius={boundsRadius}
+              onBoundsRadiusChange={(r) => { setBoundsRadius(r); setViewingPlace(null) }}
+              activeFilter={filter}
+              places={places}
+              onLocate={handleLocatePlace}
+              query={searchQuery}
+              onQueryChange={setSearchQuery}
+              onHoverRadius={setHoverRadiusKm}
+              variant="topbar"
+            />
+          </div>
+        )}
         <div className="topbar-actions">
           <span className="pin-count">
             {filteredPlaces.length === places.length
@@ -332,16 +367,7 @@ export default function App() {
                 places={filteredPlaces}
                 onDelete={handleDeletePlace}
                 onEdit={setEditingPlace}
-                onLocate={(place) => {
-                  setFocusPlace({ lat: place.lat, lng: place.lng })
-                  setViewingPlace({ id: place.id, name: place.name })
-                  setPanel(null)
-                  if (isMobile) {
-                    handleSelectPlace(place)
-                  } else {
-                    setPopupPlaceId(place.id)
-                  }
-                }}
+                onLocate={handleLocatePlace}
                 activeFilter={filter}
                 center={center}
                 stateName={stateName}
