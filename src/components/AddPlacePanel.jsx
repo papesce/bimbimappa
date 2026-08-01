@@ -89,6 +89,7 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
   const [dateTo, setDateTo] = useState(editPlace?.date_to || '')
   const [status, setStatus] = useState('idle') // idle | searching | saving | error
   const [errorMsg, setErrorMsg] = useState('')
+  const [changingAddress, setChangingAddress] = useState(false)
   const [resolved, setResolved] = useState(
     editPlace ? { lat: editPlace.lat, lng: editPlace.lng, formattedAddress: editPlace.address } : null
   )
@@ -209,49 +210,77 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
       </div>
 
       <div className="panel-body">
-        {/* Step 1: find the location */}
-        <form onSubmit={handleSearch} className="field-group">
-          <label className="field-label">
-            <Search size={14} /> {isEditing ? 'Change address or location' : 'Search address or place name'}
-          </label>
-          <div className="input-row">
-            <div className="input-wrapper">
-              <input
-                className="input"
-                placeholder="e.g. Temaiken Zoo, Buenos Aires"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {searchQuery && (
-                <button type="button" className="input-clear" onClick={() => setSearchQuery('')} aria-label="Clear">
-                  <X size={14} />
-                </button>
-              )}
+        <div className="panel-scroll-area">
+          {isEditing && (
+            <div className="location-summary">
+              <div className="location-summary-main">
+                <CheckCircle2 size={14} />
+                <span className="location-summary-address">
+                  {resolved?.formattedAddress || editPlace?.address}
+                </span>
+              </div>
+              <button
+                type="button"
+                className="btn-secondary small"
+                onClick={() => {
+                  if (changingAddress && !resolved && editPlace) {
+                    setResolved({ lat: editPlace.lat, lng: editPlace.lng, formattedAddress: editPlace.address })
+                  }
+                  setChangingAddress(!changingAddress)
+                }}
+              >
+                {changingAddress ? 'Cancel' : <><RotateCcw size={12} /> Change</>}
+              </button>
             </div>
-            <button className="btn-secondary" type="submit" disabled={status === 'searching'}>
-              {status === 'searching' ? <Loader size={14} className="spin" /> : 'Find'}
-            </button>
-          </div>
-        </form>
+          )}
 
-        {errorMsg && status === 'error' && !resolved && (
-          <p className="error-msg" style={{ padding: '4px 20px 0' }}>{errorMsg}</p>
-        )}
+          {(!isEditing || changingAddress) && (
+            <>
+              {/* Step 1: find the location */}
+              <form onSubmit={handleSearch} className="field-group">
+                <label className="field-label">
+                  <Search size={14} /> {isEditing ? 'Change address or location' : 'Search address or place name'}
+                </label>
+                <div className="input-row">
+                  <div className="input-wrapper">
+                    <input
+                      className="input"
+                      placeholder="e.g. Temaiken Zoo, Buenos Aires"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <button type="button" className="input-clear" onClick={() => setSearchQuery('')} aria-label="Clear">
+                        <X size={14} />
+                      </button>
+                    )}
+                  </div>
+                  <button className="btn-secondary" type="submit" disabled={status === 'searching'}>
+                    {status === 'searching' ? <Loader size={14} className="spin" /> : 'Find'}
+                  </button>
+                </div>
+              </form>
 
-        {resolved && (
-          <LocationPreview
-            resolved={resolved}
-            onReset={() => { setResolved(null); setSearchQuery('') }}
-            onShowInMap={onShowInMap}
-          />
-        )}
+              {errorMsg && status === 'error' && !resolved && (
+                <p className="error-msg" style={{ padding: '4px 20px 0' }}>{errorMsg}</p>
+              )}
 
-        {/* Step 2: fill in the details — locked until location is resolved */}
-        <form
-          id="details-form"
-          onSubmit={handleSave}
-          className={`field-group step-2${!resolved && !isEditing ? ' locked' : ''}`}
-        >
+              {resolved && (
+                <LocationPreview
+                  resolved={resolved}
+                  onReset={() => { setResolved(null); setSearchQuery('') }}
+                  onShowInMap={onShowInMap}
+                />
+              )}
+            </>
+          )}
+
+          {/* Step 2: fill in the details — locked until location is resolved */}
+          <form
+            id="details-form"
+            onSubmit={handleSave}
+            className={`field-group step-2${!resolved && !isEditing ? ' locked' : ''}`}
+          >
           <label className="field-label">
             <MapPin size={14} /> Place name
           </label>
@@ -321,7 +350,7 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
                 aria-label="From date"
               />
             </div>
-            <div className="date-field">
+            <div className="date-field date-field--to">
               <span className="date-field-label">To</span>
               <input
                 className="input"
@@ -333,7 +362,7 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
             </div>
             {(dateFrom || dateTo) && (
               <button
-                className="action-btn"
+                className="action-btn date-clear"
                 type="button"
                 onClick={() => { setDateFrom(''); setDateTo('') }}
                 title="Clear dates"
@@ -356,6 +385,7 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
 
           {errorMsg && resolved && <p className="error-msg">{errorMsg}</p>}
         </form>
+        </div>
       </div>
 
       {/* Sticky footer — Save button always visible */}

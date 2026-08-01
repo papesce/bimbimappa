@@ -217,6 +217,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 .panel-scroll-area {
   flex: 1;
+  overflow-x: hidden;
   overflow-y: auto;
   padding-bottom: 8px;
 }
@@ -314,6 +315,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 
 .input-row {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 
@@ -351,7 +353,8 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .date-field {
-  flex: 1;
+  flex: 1 1 140px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 4px;
@@ -366,6 +369,11 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .date-field .input { width: 100%; }
+
+.date-clear {
+  flex-shrink: 0;
+  align-self: center;
+}
 
 /* ─── Link editor (add / edit form) ─────────────────────────────── */
 .link-row {
@@ -492,6 +500,44 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .location-preview-show:hover { text-decoration: underline; }
+
+/* ─── Edit-mode location summary (collapsed address) ────────────── */
+.location-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin: 10px 20px 0;
+  padding: 10px 12px;
+  border: 1.5px solid #bbf0ce;
+  border-radius: var(--radius);
+  background: white;
+}
+
+.location-summary-main {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  color: #1a9e52;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.location-summary-address {
+  color: var(--text);
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.location-summary .btn-secondary.small {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  font-size: 12px;
+  white-space: nowrap;
+}
 
 /* ─── Buttons ───────────────────────────────────────────────────── */
 .btn-primary {
@@ -1479,6 +1525,11 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   .map-reset-dismiss { font-size: 12px; padding: 6px 10px 6px 8px; }
   .sheet-action-btn,
   .confirm-btn { min-height: 44px; }
+  .date-field { flex: 1 1 0; flex-direction: row; align-items: center; gap: 8px; }
+  .date-field-label { flex: 0 0 28px; margin-bottom: 0; }
+  .date-field .input { flex: 1; min-width: 0; padding: 7px 10px; }
+  .date-clear { flex: 0 0 28px; align-self: center; }
+  .input, .input:focus { font-size: 16px; }
 }
 
 /* ─── Bottom Sheet ──────────────────────────────────────────────── */

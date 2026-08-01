@@ -35,11 +35,12 @@ export default function BottomSheet({
       startY: e.touches[0].clientY,
       startVisiblePx: getVisiblePx(),
       dragging: true,
+      interactive: !!e.target.closest('button, a, input, textarea, select, label'),
     }
   }
 
   function handleTouchMove(e) {
-    if (!dragRef.current.dragging) return
+    if (!dragRef.current.dragging || dragRef.current.interactive) return
     const delta = dragRef.current.startY - e.touches[0].clientY
     const maxVisible = window.innerHeight * 0.5
     const newVisible = dragRef.current.startVisiblePx + delta
@@ -54,6 +55,7 @@ export default function BottomSheet({
   function handleTouchEnd(e) {
     if (!dragRef.current.dragging) return
     dragRef.current.dragging = false
+    if (dragRef.current.interactive) return
     const delta = dragRef.current.startY - e.changedTouches[0].clientY
     const finalVisible = dragRef.current.startVisiblePx + delta
     const maxVisible = window.innerHeight * 0.5
