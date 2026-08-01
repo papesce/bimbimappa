@@ -131,7 +131,7 @@ export default function PanelFilters({
                 return (
                   <button
                     key={option}
-                    className={`filter-pill${active ? ' active' : ''}`}
+                    className={`filter-pill filter-pill--attribute${active ? ' active' : ''}`}
                     onClick={() => toggleAmenity(option)}
                   >
                     {formatAmenity(option)}
@@ -150,7 +150,7 @@ export default function PanelFilters({
               <span className="panel-filter-label">Price</span>
               <div className="panel-filter-chips">
                 {[1,2,3,4].map(t => (
-                  <button key={t} className={`filter-pill${priceFilter === t ? ' active' : ''}`} onClick={() => onPriceFilterChange(priceFilter === t ? null : t as PriceTier)}>
+                  <button key={t} className={`filter-pill filter-pill--attribute${priceFilter === t ? ' active' : ''}`} onClick={() => onPriceFilterChange(priceFilter === t ? null : t as PriceTier)}>
                     {formatPriceTier(t as PriceTier)}
                   </button>
                 ))}
@@ -160,7 +160,7 @@ export default function PanelFilters({
               <span className="panel-filter-label">Priority</span>
               <div className="panel-filter-chips">
                 {[1,2,3].map(t => (
-                  <button key={t} className={`filter-pill${priorityFilter === t ? ' active' : ''}`} onClick={() => onPriorityFilterChange(priorityFilter === t ? null : t as PriorityLevel)}>
+                  <button key={t} className={`filter-pill filter-pill--attribute${priorityFilter === t ? ' active' : ''}`} onClick={() => onPriorityFilterChange(priorityFilter === t ? null : t as PriorityLevel)}>
                     {formatPriority(t as PriorityLevel)}
                   </button>
                 ))}
@@ -170,7 +170,7 @@ export default function PanelFilters({
               <span className="panel-filter-label">Rating</span>
               <div className="panel-filter-chips">
                 {[1,2,3,4,5].map(t => (
-                  <button key={t} className={`filter-pill${ratingFilter === t ? ' active' : ''}`} onClick={() => onRatingFilterChange(ratingFilter === t ? null : t)}>
+                  <button key={t} className={`filter-pill filter-pill--attribute${ratingFilter === t ? ' active' : ''}`} onClick={() => onRatingFilterChange(ratingFilter === t ? null : t)}>
                     {t}★
                   </button>
                 ))}

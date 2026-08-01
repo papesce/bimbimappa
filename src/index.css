@@ -12,7 +12,13 @@
   --accent:   #3d5a8a;   /* interactive focus/hover/active — distinct from coral */
   --date:     #6b7280;   /* date chips — neutral, not coral */
   --radius:   10px;
-  --shadow:   0 4px 20px rgba(0,0,0,0.10);
+  /* Elevation — surface layering: map < floating controls < dropdowns < overlays.
+     FAB's coral glow and the edge shadows (panel/sheet) are deliberate exceptions. */
+  --elev-1: 0 2px 12px rgba(0,0,0,0.10);
+  --elev-2: 0 6px 24px rgba(0,0,0,0.13);
+  --elev-3: 0 8px 32px rgba(0,0,0,0.16);
+  --shadow-panel: -4px 0 32px rgba(0,0,0,0.12);
+  --shadow-sheet: 0 -4px 32px rgba(0,0,0,0.14);
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --font-display: 'Space Grotesk', 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
@@ -162,7 +168,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   -webkit-backdrop-filter: blur(10px);
   border-radius: 20px;
   border: 1.5px solid var(--accent);
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  box-shadow: var(--elev-1);
   cursor: pointer;
   white-space: nowrap;
   transition: background 0.15s, transform 0.15s;
@@ -212,7 +218,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   max-width: 100%;
   display: flex;
   flex-direction: column;
-  box-shadow: -4px 0 32px rgba(0,0,0,0.12);
+  box-shadow: var(--shadow-panel);
   transform: translateX(100%);
   visibility: hidden;
   transition: transform 0.22s ease-out, visibility 0s linear 0.22s;
@@ -368,6 +374,8 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 }
 
 .panel-header h2 {
+  font-family: var(--font-display);
+  letter-spacing: 0.01em;
   font-size: 17px;
   font-weight: 700;
   color: var(--ink);
@@ -1178,7 +1186,9 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   flex: 1;
 }
 
-.action-link, .action-btn {
+/* Ghost icon button — icon-only affordances (menu toggles, inline clears).
+   Do NOT reuse for text buttons; use .place-action-btn / .btn-* instead. */
+.action-btn {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1192,7 +1202,6 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   transition: color 0.15s;
 }
 
-.action-link:hover { color: var(--accent); }
 .action-btn.danger:hover { color: #e05555; }
 
 
@@ -1437,7 +1446,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   padding: 4px 0;
   z-index: 20;
   min-width: 150px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.13);
+  box-shadow: var(--elev-2);
 }
 
 .card-menu-item {
@@ -1497,7 +1506,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   padding: 40px 32px;
   background: white;
   border-radius: 16px;
-  box-shadow: var(--shadow);
+  box-shadow: var(--elev-2);
 }
 
 .access-denied-box h1 {
@@ -1542,6 +1551,16 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   border-color: var(--accent);
 }
 
+/* Attribute filters (amenities / price / priority / rating) read as a second tier
+   to the date pills — tinted rest state, same active state. */
+.filter-pill--attribute {
+  background: var(--mist);
+}
+
+.filter-pill--attribute.active {
+  border-color: var(--accent);
+}
+
 /* ─── Location controls (geo + show-all buttons) ─────────────── */
 .location-controls {
   position: absolute;
@@ -1564,7 +1583,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   -webkit-backdrop-filter: blur(12px);
   border-radius: 22px;
   border: 1px solid var(--border);
-  box-shadow: 0 2px 16px rgba(0, 0, 0, 0.10);
+  box-shadow: var(--elev-1);
   cursor: pointer;
   color: var(--sub);
   padding: 0;
@@ -1590,7 +1609,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   background: white;
   border: 1px solid var(--border);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--elev-2);
   max-height: 440px;
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -1793,7 +1812,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
   border-radius: 22px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
+  box-shadow: var(--elev-1);
 }
 
 .map-reset-main {
@@ -1873,7 +1892,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   z-index: 1001;
   background: white;
   border-radius: 20px 20px 0 0;
-  box-shadow: 0 -4px 32px rgba(0,0,0,0.14);
+  box-shadow: var(--shadow-sheet);
   display: flex;
   flex-direction: column;
   transform: translateY(calc(50dvh - 48px));
@@ -2013,7 +2032,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   background: var(--ink);
   color: white;
   border-radius: 12px;
-  box-shadow: 0 6px 24px rgba(0,0,0,0.25);
+  box-shadow: var(--elev-3);
   animation: toast-in 0.25s ease-out;
 }
 
