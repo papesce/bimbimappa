@@ -10,6 +10,11 @@ create table if not exists places (
   notes       text,
   source_url  text,           -- legacy single link, migrated into `links`
   links       jsonb default '[]',  -- [{ id, url, label, is_primary }]
+  category    text,  -- marker color + glyph; values driven by src/lib/categories.ts, unknown values fall back to "other"
+  amenities   text[] not null default '{}'::text[],
+  price_tier  smallint,
+  priority    smallint,
+  rating      smallint,
   date_from   date,
   date_to     date,
   deleted_at  timestamptz,       -- soft delete: set to now() instead of DELETE

@@ -3,6 +3,8 @@ import { ExternalLink, Navigation, Car, Pencil, Trash2, X, Radar } from 'lucide-
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { getLinks, getPrimaryLink } from '../lib/links'
 import { formatDateRange } from '../lib/date'
+import { toTitleCase } from '../lib/text'
+import { formatAmenity, formatPriceTier, formatPriority, formatRating } from '../lib/placeAttributes'
 import BrandIcon from './BrandIcon'
 import ConfirmRow from './ConfirmRow'
 import type { FilterKey, FilterOption, Place, SheetState } from '../types'
@@ -145,7 +147,7 @@ export default function BottomSheet({
       {/* Peek row — name, address, one-tap action icons */}
       {place && sheetState !== 'hidden' && (
         <div className="sheet-peek-content" onClick={() => onSheetChange('expanded')}>
-          <p className="sheet-place-name">{place.name}</p>
+          <p className="sheet-place-name">{toTitleCase(place.name)}</p>
           <p className="sheet-place-address">{place.address}</p>
           <div className="sheet-icon-actions">
             {primaryLink && (
@@ -219,6 +221,14 @@ export default function BottomSheet({
 
           {place.date_from && (
             <p className="popup-date">{formatDateRange(place.date_from, place.date_to)}</p>
+          )}
+          {(place.price_tier || place.priority || place.rating || (place.amenities && place.amenities.length > 0)) && (
+            <p className="sheet-place-metrics">
+              {place.price_tier && <span className="sheet-place-metric">{formatPriceTier(place.price_tier)}</span>}
+              {place.priority && <span className="sheet-place-metric">{formatPriority(place.priority)}</span>}
+              {place.rating && <span className="sheet-place-metric">{formatRating(place.rating)}</span>}
+              {place.amenities?.slice(0, 3).map(a => <span key={a} className="sheet-place-metric">{formatAmenity(a)}</span>)}
+            </p>
           )}
           {place.notes && (
             <p className="popup-notes">"{place.notes}"</p>

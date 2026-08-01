@@ -1,9 +1,11 @@
 import { useState } from 'react'
-import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar, CheckCircle2, RotateCcw, Plus } from 'lucide-react'
+import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar, CheckCircle2, RotateCcw, Plus, Tag, Star, ArrowUpDown } from 'lucide-react'
 import { geocodePlace } from '../lib/geocode'
 import { getLinks, inferLinkLabel } from '../lib/links'
+import { AMENITY_OPTIONS, formatAmenity, formatPriceTier, formatPriority } from '../lib/placeAttributes'
 import LocationPreview from './LocationPreview'
-import type { GeoPoint, Place, PlaceInput, PlaceLink, ResolvedLocation, Status } from '../types'
+import CategoryPicker from './CategoryPicker'
+import type { GeoPoint, Place, PlaceCategory, PlaceInput, PlaceLink, ResolvedLocation, Status, PriceTier, PriorityLevel } from '../types'
 
 export interface AddPlacePanelProps {
   onAdd?: (data: PlaceInput) => Promise<void>
@@ -35,6 +37,12 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
   })
   const [dateFrom, setDateFrom] = useState(editPlace?.date_from || '')
   const [dateTo, setDateTo] = useState(editPlace?.date_to || '')
+  const [category, setCategory] = useState<PlaceCategory | null>(editPlace?.category ?? null)
+  const [amenities, setAmenities] = useState<string[]>(editPlace?.amenities ?? [])
+  const [amenityInput, setAmenityInput] = useState('')
+  const [priceTier, setPriceTier] = useState<PriceTier | null>(editPlace?.price_tier ?? null)
+  const [priority, setPriority] = useState<PriorityLevel | null>(editPlace?.priority ?? null)
+  const [rating, setRating] = useState<number | null>(editPlace?.rating ?? null)
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [changingAddress, setChangingAddress] = useState(false)
@@ -118,6 +126,11 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
         lng: resolved.lng,
         notes: notes.trim(),
         links: finalLinks,
+        category,
+        amenities,
+        price_tier: priceTier,
+        priority,
+        rating,
         date_from: dateFrom || null,
         date_to: dateTo || null,
       }
@@ -132,6 +145,12 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
       setSearchQuery('')
       setNotes('')
       setLinks([])
+      setCategory(null)
+      setAmenities([])
+      setAmenityInput('')
+      setPriceTier(null)
+      setPriority(null)
+      setRating(null)
       setResolved(null)
       setStatus('idle')
       onClose()
@@ -239,6 +258,94 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
             onChange={(e) => setName(e.target.value)}
             required
           />
+
+          <label className="field-label" style={{ marginTop: '12px' }}>
+            <Tag size={14} /> Category <span className="optional">(optional)</span>
+          </label>
+          <CategoryPicker value={category} onChange={setCategory} />
+
+          <label className="field-label" style={{ marginTop: '12px' }}>
+            <Tag size={14} /> Amenities <span className="optional">(optional)</span>
+          </label>
+          <div className="amenity-input-row">
+            <input
+              className="input"
+              placeholder="Add amenity and press Enter"
+              value={amenityInput}
+              onChange={(e) => setAmenityInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key !== 'Enter') return
+                e.preventDefault()
+                const next = amenityInput.trim().toLowerCase().replace(/\s+/g, '_')
+                if (!next || amenities.includes(next)) return
+                setAmenities(prev => [...prev, next])
+                setAmenityInput('')
+              }}
+            />
+          </div>
+          <div className="amenity-chip-grid">
+            {AMENITY_OPTIONS.map(option => {
+              const active = amenities.includes(option)
+              return (
+                <button
+                  key={option}
+                  type="button"
+                  className={`amenity-chip${active ? ' active' : ''}`}
+                  onClick={() => setAmenities(prev => active ? prev.filter(a => a !== option) : [...prev, option])}
+                >
+                  {formatAmenity(option)}
+                </button>
+              )
+            })}
+          </div>
+          {amenities.length > 0 && (
+            <div className="selected-amenities">
+              {amenities.map(a => (
+                <button key={a} type="button" className="selected-amenity" onClick={() => setAmenities(prev => prev.filter(x => x !== a))}>
+                  {formatAmenity(a)} <X size={12} />
+                </button>
+              ))}
+            </div>
+          )}
+
+          <div className="detail-grid" style={{ marginTop: '12px' }}>
+            <div>
+              <label className="field-label">
+                <ArrowUpDown size={14} /> Price <span className="optional">(optional)</span>
+              </label>
+              <div className="metric-pills">
+                {[1,2,3,4].map(t => (
+                  <button key={t} type="button" className={`metric-pill${priceTier === t ? ' active' : ''}`} onClick={() => setPriceTier(priceTier === t ? null : t as PriceTier)}>
+                    {formatPriceTier(t as PriceTier)}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="field-label">
+                <Star size={14} /> Rating <span className="optional">(optional)</span>
+              </label>
+              <div className="metric-pills">
+                {[1,2,3,4,5].map(t => (
+                  <button key={t} type="button" className={`metric-pill${rating === t ? ' active' : ''}`} onClick={() => setRating(rating === t ? null : t)}>
+                    {t}★
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="field-label">
+                <ArrowUpDown size={14} /> Priority <span className="optional">(optional)</span>
+              </label>
+              <div className="metric-pills">
+                {[1,2,3].map(t => (
+                  <button key={t} type="button" className={`metric-pill${priority === t ? ' active' : ''}`} onClick={() => setPriority(priority === t ? null : t as PriorityLevel)}>
+                    {formatPriority(t as PriorityLevel)}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
 
           <label className="field-label" style={{ marginTop: '12px' }}>
             <Link size={14} /> Links <span className="optional">(optional — pick one as primary)</span>

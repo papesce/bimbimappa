@@ -14,7 +14,7 @@
 |---|---|
 | Frontend Framework | React 18.3.1 |
 | Build Tool | Vite 5.3.0 |
-| Language | JavaScript (ES modules, no TypeScript) |
+| Language | TypeScript |
 | Map | react-leaflet 4.2.1 + Leaflet 1.9.4 (OpenStreetMap tiles — free, no API key) |
 | Geocoding | Google Places Geocoding API |
 | Database | Supabase (PostgreSQL) |
@@ -30,20 +30,20 @@
 ```
 bimbimappa/
 ├── src/
-│   ├── App.jsx                   # Root component — state, layout, filter logic
-│   ├── main.jsx                  # React DOM entry point
+│   ├── App.tsx                   # Root component — state, layout, filter logic
+│   ├── main.tsx                  # React DOM entry point
 │   ├── index.css                 # Global styles (CSS variables, components)
 │   ├── components/
-│   │   ├── Map.jsx               # Leaflet map, markers, popups
-│   │   ├── AddPlacePanel.jsx     # Slide-in form — add / edit place (two-step)
-│   │   ├── PlacesList.jsx        # Scrollable list of saved places
-│   │   └── AccessDenied.jsx      # Auth-gate component
+│   │   ├── Map.tsx               # Leaflet map, markers, popups
+│   │   ├── AddPlacePanel.tsx     # Slide-in form — add / edit place (two-step)
+│   │   ├── PlacesList.tsx        # Scrollable list of saved places
+│   │   └── AccessDenied.tsx      # Auth-gate component
 │   ├── hooks/
-│   │   ├── usePlaces.js          # Supabase CRUD + realtime subscriptions
-│   │   └── useAuth.js            # Token-based auth (URL → localStorage)
+│   │   ├── usePlaces.ts          # Supabase CRUD + realtime subscriptions
+│   │   └── useAuth.ts            # Token-based auth (URL → localStorage)
 │   └── lib/
-│       ├── supabase.js           # Supabase client singleton
-│       └── geocode.js            # Google Geocoding API wrapper
+│       ├── supabase.ts           # Supabase client singleton
+│       └── geocode.ts            # Google Geocoding API wrapper
 ├── supabase/
 │   ├── config.toml               # Local Supabase dev config
 │   └── migrations/               # Progressive schema history
@@ -78,6 +78,7 @@ Single table: `places`
 | `notes` | text | Optional user notes |
 | `source_url` | text | Legacy single link, migrated into `links` |
 | `links` | jsonb | `[{ id, url, label, is_primary }]` — multiple source links |
+| `category` | text | Optional place category for marker styling and filtering |
 | `date_from` | date | Optional start date |
 | `date_to` | date | Optional end date |
 | `deleted_at` | timestamptz | Soft delete — set instead of hard DELETE |
@@ -113,7 +114,7 @@ All policies are permissive (any request with the anon key can read, insert, upd
 
 ### 4. Map — `Map.jsx`
 - OpenStreetMap tiles via react-leaflet
-- Custom coral teardrop markers
+- Custom coral teardrop markers, plus state-based variants for new/hovered/center
 - Default center: Buenos Aires (-34.6037, -58.3816), zoom 5 (no places) / 10 (places loaded)
 - Popup actions: edit, delete, open primary source link + secondary links via the "More" menu
 - Leaflet icon CDN URL fix required for Vite
@@ -194,8 +195,17 @@ npm run dev                   # http://localhost:5173
 
 ## Roadmap (noted in README)
 
-- Category / emoji tags (beach, playground, museum…)
+- Category / emoji tags (home, museum, shopping, food, park, etc.)
 - Visited toggle
 - Photo upload via Supabase Storage
 - Filter by tag (client-side)
 - PWA (add-to-home-screen, offline cache)
+
+---
+
+## Current UI notes
+
+- Map-first layout with a fixed topbar, floating filter controls, floating location controls, and a right-side panel on desktop.
+- Mobile uses a bottom sheet for selected place details and actions.
+- Marker styling is currently state-based; category-aware markers are a planned extension.
+- The UI would benefit from reducing duplicated filter controls and consolidating contextual actions into fewer surfaces.

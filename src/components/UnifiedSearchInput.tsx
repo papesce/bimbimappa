@@ -3,6 +3,7 @@ import { Search, X, Clock, Trash2, Check, MapPin } from 'lucide-react'
 import RadiusSelector from './RadiusSelector'
 import { loadRecent, saveRecent } from '../lib/recentCities'
 import { searchNominatim } from '../lib/nominatim'
+import { toTitleCase } from '../lib/text'
 import type { FilterKey, GeoPoint, MapBounds, NominatimResult, Place, RecentCity } from '../types'
 
 export interface UnifiedSearchInputProps {
@@ -44,7 +45,12 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
     ? places.filter(p =>
         p.name?.toLowerCase().includes(q) ||
         p.address?.toLowerCase().includes(q) ||
-        p.notes?.toLowerCase().includes(q)
+        p.notes?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q) ||
+        p.amenities?.some(a => a.toLowerCase().includes(q)) ||
+        String(p.price_tier ?? '').includes(q) ||
+        String(p.priority ?? '').includes(q) ||
+        String(p.rating ?? '').includes(q)
       )
     : []
 
@@ -283,7 +289,7 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
                 >
                   <MapPin size={12} className="unified-search-option-icon" />
                   <span className="unified-search-option-text">
-                    <strong>{place.name}</strong>
+                    <strong>{toTitleCase(place.name)}</strong>
                     <span className="unified-search-option-sub">{place.address}</span>
                   </span>
                 </button>

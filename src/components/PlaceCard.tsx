@@ -3,8 +3,10 @@ import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { getLinks } from '../lib/links'
 import { toTitleCase } from '../lib/text'
 import { formatDateRange } from '../lib/date'
+import { formatAmenity, formatPriceTier, formatPriority, formatRating } from '../lib/placeAttributes'
 import BrandIcon from './BrandIcon'
 import ConfirmRow from './ConfirmRow'
+import CategoryBadge from './CategoryBadge'
 import type { Place } from '../types'
 
 export interface PlaceCardProps {
@@ -26,10 +28,21 @@ export default function PlaceCard({ place, confirmingId, setConfirmingId, menuOp
         onClick={() => onLocate(place)}
         title="Show on map"
       >
-        <p className="place-name">{toTitleCase(place.name)}</p>
+        <p className="place-name">
+          {place.category && <CategoryBadge category={place.category} />}
+          {toTitleCase(place.name)}
+        </p>
         <p className="place-address">{place.address}</p>
         {place.date_from && (
           <p className="place-date">{formatDateRange(place.date_from, place.date_to)}</p>
+        )}
+        {(place.price_tier || place.priority || place.rating || (place.amenities && place.amenities.length > 0)) && (
+          <p className="place-metrics">
+            {place.price_tier && <span className="place-metric">{formatPriceTier(place.price_tier)}</span>}
+            {place.priority && <span className="place-metric">{formatPriority(place.priority)}</span>}
+            {place.rating && <span className="place-metric">{formatRating(place.rating)}</span>}
+            {place.amenities?.slice(0, 3).map(a => <span key={a} className="place-metric">{formatAmenity(a)}</span>)}
+          </p>
         )}
         {place.notes && <p className="place-notes">"{place.notes}"</p>}
       </button>

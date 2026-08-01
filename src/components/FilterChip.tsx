@@ -23,7 +23,7 @@ export default function FilterChip({ f }: FilterChipProps) {
       onMouseLeave={f.onHover ? () => f.onHover?.(false) : undefined}
     >
       <span className="filter-chip-label">{f.label}</span>
-      <button className="filter-chip-clear" onClick={(e) => { e.stopPropagation(); f.onClear() }} title={`Clear ${f.type} filter`}>
+      <button className="filter-chip-clear" onClick={(e) => { e.stopPropagation(); f.onHover?.(false); f.onClear() }} title={`Clear ${f.type} filter`}>
         <X size={12} />
       </button>
     </div>

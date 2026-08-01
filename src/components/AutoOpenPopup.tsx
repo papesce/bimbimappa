@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import type { MutableRefObject } from 'react'
 import L from 'leaflet'
 
@@ -11,13 +11,17 @@ export interface AutoOpenPopupProps {
 
 // Auto-opens the popup for the newly added marker
 export default function AutoOpenPopup({ markerRef, isMobile, placeId, onMobilePopup }: AutoOpenPopupProps) {
+  const didOpenRef = useRef(false)
+
   useEffect(() => {
+    if (didOpenRef.current) return
+    didOpenRef.current = true
+
     if (isMobile) {
       onMobilePopup(placeId)
     } else {
       if (markerRef.current) markerRef.current.openPopup()
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [isMobile, markerRef, onMobilePopup, placeId])
   return null
 }

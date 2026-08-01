@@ -1,4 +1,5 @@
 import { RotateCcw, X } from 'lucide-react'
+import { toTitleCase } from '../lib/text'
 
 export interface ToastProps {
   name: string
@@ -9,7 +10,7 @@ export interface ToastProps {
 export default function Toast({ name, onUndo, onDismiss }: ToastProps) {
   return (
     <div className="toast" role="status">
-      <span className="toast-message">Removed "{name}"</span>
+      <span className="toast-message">Removed "{toTitleCase(name)}"</span>
       <button className="toast-undo" onClick={onUndo}>
         <RotateCcw size={14} /> Undo
       </button>

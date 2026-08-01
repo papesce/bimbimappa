@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, TileLayer, Marker, Popup, Circle } from 'react-leaflet'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
@@ -9,7 +9,7 @@ import ClosePopupOnDrag from './ClosePopupOnDrag'
 import PopupOpener from './PopupOpener'
 import NewMarker from './NewMarker'
 import SafariGestureGuard from './SafariGestureGuard'
-import { customIcon, newIcon, hoverIcon, centerIcon } from '../lib/leafletIcons'
+import { makePlaceIcon, centerIcon } from '../lib/leafletIcons'
 import type { GeoPoint, MapBounds, Place, ViewingPlace } from '../types'
 
 export interface MapProps {
@@ -41,6 +41,16 @@ export interface MapProps {
   onMobilePopup: (placeId: string) => void
   hoverPlaceId: string | null
   onExplorePlace: (place: Place) => void
+}
+
+function SearchCenterPopupContent({ radius }: { radius: number }) {
+  const content = useMemo(() => (
+    <div className="popup">
+      <p className="popup-name">Search center</p>
+      <p className="popup-address">{radius} km radius</p>
+    </div>
+  ), [radius])
+  return content
 }
 
 export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadiusKm, boundsCenter, boundsRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup, hoverPlaceId, onExplorePlace }: MapProps) {
@@ -143,10 +153,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
             icon={centerIcon}
           >
             <Popup autoPanPaddingTopLeft={L.point(24, 96)} autoPanPaddingBottomRight={L.point(24, 24)}>
-              <div className="popup">
-                <p className="popup-name">Search center</p>
-                <p className="popup-address">{radius} km radius</p>
-              </div>
+              <SearchCenterPopupContent radius={radius} />
             </Popup>
           </Marker>
       )}
@@ -157,8 +164,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
         <NewMarker
           key={place.id}
           place={place}
-          icon={isNew ? newIcon : hoverPlaceId === place.id ? hoverIcon : customIcon}
-          isNew={isNew}
+          icon={makePlaceIcon(place.category, isNew ? 'new' : hoverPlaceId === place.id ? 'hover' : 'normal')}
           confirmingId={activeConfirmingId}
           setConfirmingId={setActiveConfirmingId}
           onDelete={onDelete}

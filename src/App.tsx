@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { MapPin, List, Plus, X } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
@@ -15,7 +15,7 @@ import { useIsMobile } from './hooks/useIsMobile'
 import { FILTERS, getFilterRange } from './lib/filters'
 import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm } from './lib/geo'
 import './index.css'
-import type { FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceInput, SheetState, ViewingPlace } from './types'
+import type { FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceInput, SheetState, ViewingPlace, PriceTier, PriorityLevel } from './types'
 
 const EXPLORE_RADIUS_KM = 5
 
@@ -43,6 +43,10 @@ export default function App() {
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [deletedPlace, setDeletedPlace] = useState<Place | null>(null)
   const [hoverPlaceId, setHoverPlaceId] = useState<string | null>(null)
+  const [amenityFilters, setAmenityFilters] = useState<string[]>([])
+  const [priceFilter, setPriceFilter] = useState<PriceTier | null>(null)
+  const [priorityFilter, setPriorityFilter] = useState<PriorityLevel | null>(null)
+  const [ratingFilter, setRatingFilter] = useState<number | null>(null)
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
@@ -52,7 +56,7 @@ export default function App() {
     setHoverPlaceId(null)
   }, [viewingPlace])
 
-  async function handleDeletePlace(id: string) {
+  const handleDeletePlace = useCallback(async (id: string) => {
     const place = places.find(p => p.id === id)
     try {
       await deletePlace(id)
@@ -64,7 +68,7 @@ export default function App() {
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)
     setDeletedPlace(place)
     undoTimeoutRef.current = setTimeout(() => setDeletedPlace(null), 6000)
-  }
+  }, [places, deletePlace])
 
   async function handleUndoDelete() {
     if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current)
@@ -111,7 +115,7 @@ export default function App() {
     if (place) handleSelectPlace(place)
   }
 
-  function handleExplorePlace(place: Place) {
+  const handleExplorePlace = useCallback((place: Place) => {
     setFocusPlace({ lat: place.lat, lng: place.lng })
     setCenter(place.lat, place.lng, place.name, '', '', EXPLORE_RADIUS_KM)
     setViewingPlace(null)
@@ -120,7 +124,7 @@ export default function App() {
     } else {
       setSheetState('hidden')
     }
-  }
+  }, [setCenter, isMobile])
 
   const filterRange = getFilterRange(filter)
   let filteredPlaces = matchedPlaces
@@ -150,6 +154,18 @@ export default function App() {
   if (viewingPlace && !filteredPlaces.some(p => p.id === viewingPlace.id)) {
     const target = places.find(p => p.id === viewingPlace.id)
     if (target) filteredPlaces = [target, ...filteredPlaces]
+  }
+  if (amenityFilters.length > 0) {
+    filteredPlaces = filteredPlaces.filter(p => amenityFilters.every(a => p.amenities?.includes(a)))
+  }
+  if (priceFilter) {
+    filteredPlaces = filteredPlaces.filter(p => p.price_tier === priceFilter)
+  }
+  if (priorityFilter) {
+    filteredPlaces = filteredPlaces.filter(p => p.priority === priorityFilter)
+  }
+  if (ratingFilter) {
+    filteredPlaces = filteredPlaces.filter(p => p.rating === ratingFilter)
   }
 
   function handleViewArea() {
@@ -331,7 +347,7 @@ export default function App() {
                 radius={radius}
                 onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
                 onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
-                onClear={() => { clearCenter(); setViewingPlace(null); setSuppressFit(n => n + 1) }}
+                onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
                 onRecenter={handleRecenter}
                 viewingPlace={viewingPlace}
                 onClearViewing={() => { setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
@@ -346,6 +362,14 @@ export default function App() {
                 onSearchChange={setSearchQuery}
                 onHoverRadius={setHoverRadiusKm}
                 onHoverPlace={setHoverPlaceId}
+                amenityFilters={amenityFilters}
+                onAmenityFiltersChange={setAmenityFilters}
+                priceFilter={priceFilter}
+                onPriceFilterChange={setPriceFilter}
+                priorityFilter={priorityFilter}
+                onPriorityFilterChange={setPriorityFilter}
+                ratingFilter={ratingFilter}
+                onRatingFilterChange={setRatingFilter}
               />
             </div>
           </div>
