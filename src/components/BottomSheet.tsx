@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
-import { Compass, MapPin, MoreHorizontal, Navigation, Pencil, Trash2, X } from 'lucide-react'
+import { useRef } from 'react'
+import { Compass, MapPin, Navigation, Pencil, Trash2, X } from 'lucide-react'
 import { getPrimaryLink } from '../lib/links'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { formatDateRange } from '../lib/date'
@@ -41,14 +41,8 @@ export default function BottomSheet({
 }: BottomSheetProps) {
   const sheetRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState>({ startY: 0, startVisiblePx: 0, dragging: false, interactive: false })
-  const [actionsOpen, setActionsOpen] = useState(false)
-
-  useEffect(() => {
-    setActionsOpen(false)
-  }, [place?.id])
-
   const HIDDEN_PX = 48
-  const PEEK_PX = 230
+  const PEEK_PX = 210
 
   function getVisiblePx() {
     const maxVisible = window.innerHeight * 0.5
@@ -141,7 +135,7 @@ export default function BottomSheet({
           <p className="sheet-place-name">{toTitleCase(place.name)}</p>
           <p className="sheet-place-address">{place.address}</p>
           <div className="sheet-peek-actions">
-            {primaryLink && (
+            {primaryLink ? (
               <a
                 href={primaryLink.url}
                 rel="noopener noreferrer"
@@ -152,6 +146,10 @@ export default function BottomSheet({
                 <BrandIcon url={primaryLink.url} size={18} />
                 <span>Source</span>
               </a>
+            ) : (
+              <button className="sheet-icon-action mobile-sheet-action sheet-source-unavailable" disabled title="No source available">
+                <span>Source</span>
+              </button>
             )}
             <button
               className="place-action-btn explore mobile-sheet-action"
@@ -165,13 +163,14 @@ export default function BottomSheet({
             >
               <Pencil size={14} /> Edit
             </button>
-            <button
-              className="place-action-btn sheet-more-btn mobile-sheet-action"
-              onClick={(e) => { e.stopPropagation(); setActionsOpen(true); onSheetChange('expanded') }}
-              aria-label="More actions"
-            >
-              <MoreHorizontal size={16} />
-            </button>
+          </div>
+          <div className="sheet-navigation-row">
+            <a href={googleMapsUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="mobile-sheet-action" onClick={e => e.stopPropagation()}>
+              <MapPin size={14} /> Google Maps
+            </a>
+            <a href={wazeUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="mobile-sheet-action" onClick={e => e.stopPropagation()}>
+              <Navigation size={14} /> Waze
+            </a>
           </div>
         </div>
       )}
@@ -194,37 +193,19 @@ export default function BottomSheet({
             <p className="popup-notes">"{place.notes}"</p>
           )}
 
-          {!actionsOpen ? (
-            <button className="place-action-btn sheet-expanded-more" onClick={() => setActionsOpen(true)}>
-              <MoreHorizontal size={16} /> More actions
-            </button>
-          ) : (
-            <div className="sheet-mobile-actions">
-              <div className="sheet-mobile-actions-section">
-                <span className="sheet-mobile-actions-label">Navigation</span>
-                <div className="sheet-mobile-actions-row">
-                  <a href={googleMapsUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="place-actions-row-link mobile-sheet-action">
-                    <MapPin size={14} /> <span className="place-actions-link-label">Google Maps</span>
-                  </a>
-                  <a href={wazeUrl(place.lat, place.lng)} target="_blank" rel="noopener noreferrer" className="place-actions-row-link mobile-sheet-action">
-                    <Navigation size={14} /> <span className="place-actions-link-label">Waze</span>
-                  </a>
+          <div className="sheet-mobile-actions">
+            <div className="sheet-mobile-actions-section sheet-mobile-actions-section--manage">
+              <div className="sheet-mobile-actions-row">
+                {confirmingId === place.id ? (
+                  <ConfirmRow variant="inline" onConfirm={() => { onDelete(place.id); onConfirmingChange(null) }} onCancel={() => onConfirmingChange(null)} />
+                ) : (
+                  <button className="place-actions-row-link danger mobile-sheet-action" onClick={() => onConfirmingChange(place.id)}>
+                    <Trash2 size={14} /> <span className="place-actions-link-label">Delete</span>
+                  </button>
+                )}
                 </div>
-              </div>
-              <div className="sheet-mobile-actions-section sheet-mobile-actions-section--manage">
-                <span className="sheet-mobile-actions-label">Manage</span>
-                <div className="sheet-mobile-actions-row">
-                  {confirmingId === place.id ? (
-                    <ConfirmRow variant="inline" onConfirm={() => { onDelete(place.id); onConfirmingChange(null) }} onCancel={() => onConfirmingChange(null)} />
-                  ) : (
-                    <button className="place-actions-row-link danger mobile-sheet-action" onClick={() => onConfirmingChange(place.id)}>
-                      <Trash2 size={14} /> <span className="place-actions-link-label">Delete</span>
-                    </button>
-                  )}
-                </div>
-              </div>
             </div>
-          )}
+          </div>
         </div>
       )}
     </div>

@@ -52,9 +52,6 @@ export default function NewMarker({ place, icon, confirmingId, setConfirmingId, 
             {place.amenities?.slice(0, 3).map(a => <span key={a} className="popup-metric">{formatAmenity(a)}</span>)}
           </p>
         )}
-        {place.notes && (
-          <p className="popup-notes">"{place.notes}"</p>
-        )}
         <PlaceActions
           place={place}
           variant="inline"
@@ -63,6 +60,7 @@ export default function NewMarker({ place, icon, confirmingId, setConfirmingId, 
           onDelete={onDelete}
           onEdit={onEdit}
           onExplore={onExplorePlace}
+          notes={place.notes}
         />
       </div>
     )
