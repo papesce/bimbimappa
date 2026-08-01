@@ -16,6 +16,7 @@ import { useAuth } from './hooks/useAuth'
 import { useMapFocus } from './hooks/useMapFocus'
 import { useIsMobile } from './hooks/useIsMobile'
 import { FILTERS, getFilterRange } from './lib/filters'
+import { formatAmenity, formatPriceTier, formatPriority } from './lib/placeAttributes'
 import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm } from './lib/geo'
 import './index.css'
 import type { FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceCategory, PlaceInput, SheetState, ViewingPlace, PriceTier, PriorityLevel } from './types'
@@ -224,6 +225,14 @@ export default function App() {
   }
 
   const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
+  const contextLabels = [
+    cityName,
+    filter !== 'all' ? FILTERS.find(f => f.key === filter)?.label : '',
+    ...amenityFilters.slice(0, 2).map(formatAmenity),
+    priceFilter ? formatPriceTier(priceFilter) : '',
+    priorityFilter ? `${formatPriority(priorityFilter)} priority` : '',
+    ratingFilter ? `${ratingFilter}★` : '',
+  ].filter(Boolean)
 
   function handleViewArea() {
     setViewingPlace(null)
@@ -351,17 +360,19 @@ export default function App() {
         </div>
       </header>
 
-      {/* Filter chip — single entry point to filters, shown only when one is active */}
+      {/* Map context pill keeps the active browse context visible above the map. */}
       {hasActiveFilters && (
-        <button
+        <div
           className="map-filter-chip"
-          onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')}
-          title="Show active filters"
-          aria-label="Show active filters"
         >
-          <SlidersHorizontal size={14} />
-          <span>Filters</span>
-        </button>
+          <button className="map-filter-chip-main" onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')} title="Show active filters" aria-label="Show active filters">
+            <SlidersHorizontal size={14} />
+            <span>{contextLabels.length > 0 ? contextLabels.join(' · ') : 'Active filters'}</span>
+          </button>
+          <button className="map-filter-chip-clear" onClick={() => { setFilter('all'); setAmenityFilters([]); setPriceFilter(null); setPriorityFilter(null); setRatingFilter(null) }} aria-label="Clear filters" title="Clear filters">
+            <X size={13} />
+          </button>
+        </div>
       )}
 
       {/* Location controls — geolocation only, floats top-right */}
