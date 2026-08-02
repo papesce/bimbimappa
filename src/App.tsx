@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { MapPin, List, Plus, X, SlidersHorizontal } from 'lucide-react'
+import { MapPin, List, Plus, X, Search, SlidersHorizontal } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
@@ -31,6 +31,7 @@ export default function App() {
   const { places, loading, addPlace, deletePlace, restorePlace, updatePlace } = usePlaces()
   const { center, radius, cityName, stateName, countryCode, matchedPlaces, isGeolocating, setCenter, setRadius, setFocusCenter, clearCenter, resetToGeolocation } = useMapFocus(places)
   const isMobile = useIsMobile()
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [panel, setPanel] = useState<PanelState>(null)
   const [editingPlace, setEditingPlace] = useState<Place | null>(null)
   const [filter, setFilter] = useState<FilterKey>('all')
@@ -58,13 +59,6 @@ export default function App() {
   const [browseQuery, setBrowseQuery] = useState('')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [radiusMenuOpen, setRadiusMenuOpen] = useState(false)
-  const [previousMobileArea, setPreviousMobileArea] = useState<{
-    center: GeoPoint | null
-    radius: number
-    cityName: string
-    stateName: string
-    countryCode: string
-  } | null>(null)
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
@@ -134,9 +128,6 @@ export default function App() {
   }
 
   function handleSelectPlace(place: Place) {
-    if (isMobile && !previousMobileArea) {
-      setPreviousMobileArea({ center, radius, cityName, stateName, countryCode })
-    }
     setFocusPlace({ lat: place.lat, lng: place.lng })
     if (isMobile) setViewingPlace({ id: place.id, name: place.name })
     setSelectedPlace(place)
@@ -160,28 +151,7 @@ export default function App() {
     }
   }, [isMobile])
 
-  function handleBackToArea() {
-    if (previousMobileArea?.center) {
-      setCenter(
-        previousMobileArea.center.lat,
-        previousMobileArea.center.lng,
-        previousMobileArea.cityName,
-        previousMobileArea.stateName,
-        previousMobileArea.countryCode,
-        previousMobileArea.radius,
-      )
-    } else {
-      clearCenter()
-    }
-    setPreviousMobileArea(null)
-    setViewingPlace(null)
-    setSelectedPlace(null)
-    setSheetState('hidden')
-    setConfirmingId(null)
-  }
-
   const handleExplorePlace = useCallback((place: Place) => {
-    setPreviousMobileArea(null)
     setFocusPlace({ lat: place.lat, lng: place.lng })
     setCenter(place.lat, place.lng, place.name, '', '', EXPLORE_RADIUS_KM)
     setViewingPlace(null)
@@ -260,7 +230,13 @@ export default function App() {
   function handleViewArea() {
     setViewingPlace(null)
     setFitBoundsTrigger(n => n + 1)
-    setPanel('list')
+    if (isMobile) {
+      setSelectedPlace(null)
+      setSheetState('hidden')
+      setConfirmingId(null)
+    } else {
+      setPanel('list')
+    }
   }
 
   function handleDismissViewing() {
@@ -329,86 +305,100 @@ export default function App() {
             <span className="version-badge">{__APP_VERSION__}</span>
           )}
         </div>
-        {!isMobile && (
-          <div className="topbar-search">
-            <UnifiedSearchInput
-              onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
-              onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
-              center={center}
-              stateName={stateName}
-              cityName={cityName}
-              radius={radius}
-              onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
-              viewportBounds={viewportBounds}
-              boundsRadius={boundsRadius}
-              onBoundsRadiusChange={(r) => { setBoundsRadius(r); setViewingPlace(null) }}
-              activeFilter={filter}
-              places={places}
-              onLocate={handleLocatePlace}
-              query={searchQuery}
-              onQueryChange={setSearchQuery}
-              onHoverRadius={setHoverRadiusKm}
-              variant="topbar"
-            />
-          </div>
-        )}
-        <div className="topbar-actions">
-          <span className="pin-count">
-            {filteredPlaces.length === places.length
-              ? <>{places.length} {places.length === 1 ? 'place' : 'places'}</>
-              : <>{filteredPlaces.length} of {places.length} places{filter !== 'all' && ` · ${FILTERS.find(f => f.key === filter)?.label}`}{cityName && ` · ${cityName}`}</>
-            }
-          </span>
-          {areaFilter && (
-            <div className="header-radius-menu">
-              <FilterChip f={{ ...areaFilter, onRecenter: () => setRadiusMenuOpen(open => !open) }} />
-              {radiusMenuOpen && (
-                <div className="header-radius-popover">
-                  <span>Radius</span>
-                  <RadiusSelector
-                    value={center ? radius : boundsRadius ?? radius}
-                    onChange={(value) => {
-                      if (center) {
-                        setRadius(value)
-                        setViewportBounds(null)
-                        setViewingPlace(null)
-                      } else {
-                        setBoundsRadius(value)
-                      }
-                      setRadiusMenuOpen(false)
-                    }}
-                    onHover={setHoverRadiusKm}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-          {hasActiveFilters && (
-            <button className="topbar-context" onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')} title="Show active filters">
-              <SlidersHorizontal size={14} />
-              <span>{contextLabels.filter(label => label && !label.includes('km') && label !== cityName).join(' · ') || 'Filters'}</span>
-            </button>
-          )}
+        {isMobile && !mobileSearchOpen && (
           <button
-            className={`icon-btn${panel === 'list' ? ' active' : ''}`}
-            onClick={() => {
-              if (panel === 'list') {
-                setPanel(null)
-              } else {
-                setPanel('list')
-                setSheetState('hidden')
-              }
-            }}
-            aria-label="Saved places"
-            title="Saved places"
+            className="icon-btn mobile-search-toggle"
+            onClick={() => setMobileSearchOpen(true)}
+            aria-label="Search"
+            title="Search"
           >
-            <List size={18} />
+            <Search size={18} />
           </button>
+        )}
+        <div className={`topbar-search${mobileSearchOpen ? '' : ' topbar-search--collapsed'}`}>
+          <UnifiedSearchInput
+            onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
+            onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
+            center={center}
+            stateName={stateName}
+            cityName={cityName}
+            radius={radius}
+            onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
+            viewportBounds={viewportBounds}
+            boundsRadius={boundsRadius}
+            onBoundsRadiusChange={(r) => { setBoundsRadius(r); setViewingPlace(null) }}
+            activeFilter={filter}
+            places={places}
+            onLocate={handleLocatePlace}
+            query={searchQuery}
+            onQueryChange={setSearchQuery}
+            onHoverRadius={setHoverRadiusKm}
+            variant="topbar"
+            autoFocus={mobileSearchOpen}
+            onFocusChange={(focused) => { if (!focused && !searchQuery) setMobileSearchOpen(false) }}
+          />
         </div>
-        <div className="mobile-topbar-summary">
-          {filteredPlaces.length === places.length
-            ? `${places.length} ${places.length === 1 ? 'place' : 'places'}`
-            : `${filteredPlaces.length} of ${places.length} places${filter !== 'all' ? ` · ${FILTERS.find(f => f.key === filter)?.label}` : ''}${cityName ? ` · ${cityName}` : ''}`}
+        <div className="topbar-right">
+          <div className="topbar-chips">
+            <span className="pin-count">
+              {filteredPlaces.length === places.length
+                ? <>{places.length} {places.length === 1 ? 'place' : 'places'}</>
+                : <>{filteredPlaces.length} of {places.length} places{filter !== 'all' && ` · ${FILTERS.find(f => f.key === filter)?.label}`}{cityName && ` · ${cityName}`}</>
+              }
+            </span>
+            {areaFilter && (
+              <div className="header-radius-menu">
+                <FilterChip f={{ ...areaFilter, onRecenter: () => setRadiusMenuOpen(open => !open) }} />
+                {radiusMenuOpen && (
+                  <div className="header-radius-popover">
+                    <span>Radius</span>
+                    <RadiusSelector
+                      value={center ? radius : boundsRadius ?? radius}
+                      onChange={(value) => {
+                        if (center) {
+                          setRadius(value)
+                          setViewportBounds(null)
+                          setViewingPlace(null)
+                        } else {
+                          setBoundsRadius(value)
+                        }
+                        setRadiusMenuOpen(false)
+                      }}
+                      onHover={setHoverRadiusKm}
+                    />
+                  </div>
+                )}
+              </div>
+            )}
+            {hasActiveFilters && (
+              <button className="topbar-context" onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')} title="Show active filters">
+                <SlidersHorizontal size={14} />
+                <span>{contextLabels.filter(label => label && !label.includes('km') && label !== cityName).join(' · ') || 'Filters'}</span>
+              </button>
+            )}
+          </div>
+          <div className="topbar-actions">
+            <span className="mobile-topbar-summary">
+              {filteredPlaces.length === places.length
+                ? `${places.length} ${places.length === 1 ? 'place' : 'places'}`
+                : `${filteredPlaces.length} of ${places.length} places`}
+            </span>
+            <button
+              className={`icon-btn${panel === 'list' ? ' active' : ''}`}
+              onClick={() => {
+                if (panel === 'list') {
+                  setPanel(null)
+                } else {
+                  setPanel('list')
+                  setSheetState('hidden')
+                }
+              }}
+              aria-label="Saved places"
+              title="Saved places"
+            >
+              <List size={18} />
+            </button>
+          </div>
         </div>
       </header>
 
@@ -430,7 +420,7 @@ export default function App() {
           category={mobileCategory}
           onCategoryChange={setMobileCategory}
           onSelect={handleSelectPlace}
-          onNearMe={() => { setPreviousMobileArea(null); resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
+          onNearMe={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
           onOpenFilters={() => setMobileFiltersOpen(true)}
         />
       )}
@@ -569,10 +559,10 @@ export default function App() {
         />
       )}
 
-      {isMobile && selectedPlace && viewingPlace && previousMobileArea && (
+      {isMobile && viewingPlace && (
         <BackToAreaButton
           viewingPlace={viewingPlace}
-          onViewArea={handleBackToArea}
+          onViewArea={handleViewArea}
           onDismissViewing={handleDismissViewing}
           className={`mobile-map-reset mobile-map-reset--${sheetState}`}
         />

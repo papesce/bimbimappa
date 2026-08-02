@@ -24,9 +24,11 @@ export interface UnifiedSearchInputProps {
   onBoundsRadiusChange: (radius: number) => void
   onHoverRadius?: (km: number | null) => void
   variant?: 'default' | 'topbar'
+  autoFocus?: boolean
+  onFocusChange?: (focused: boolean) => void
 }
 
-export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange, onHoverRadius, variant = 'default' }: UnifiedSearchInputProps) {
+export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange, onHoverRadius, variant = 'default', autoFocus, onFocusChange }: UnifiedSearchInputProps) {
   const [cityResults, setCityResults] = useState<NominatimResult[]>([])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState<RecentCity[]>(loadRecent)
@@ -37,6 +39,10 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
   const dropdownRef = useRef<HTMLDivElement | null>(null)
   const shouldRefocus = useRef(false)
   const [isScrollable, setIsScrollable] = useState(false)
+
+  useEffect(() => {
+    if (autoFocus && inputRef.current) inputRef.current.focus()
+  }, [autoFocus])
 
   const q = query.trim().toLowerCase()
   const hasCity = !!cityName
@@ -133,12 +139,14 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
 
   function handleFocus() {
     setOpen(true)
+    onFocusChange?.(true)
   }
 
   function handleBlur() {
     blurRef.current = setTimeout(() => {
       setOpen(false)
       setCityResults([])
+      onFocusChange?.(false)
     }, 150)
   }
 
