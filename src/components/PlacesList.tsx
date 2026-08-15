@@ -43,9 +43,10 @@ export interface PlacesListProps {
   onPriorityFilterChange: (value: PriorityLevel | null) => void
   ratingFilter: number | null
   onRatingFilterChange: (value: number | null) => void
+  onAddToTrip?: (place: Place) => void
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, onRecenter, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, onHoverRadius, onHoverPlace, amenityFilters, onAmenityFiltersChange, priceFilter, onPriceFilterChange, priorityFilter, onPriorityFilterChange, ratingFilter, onRatingFilterChange }: PlacesListProps) {
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, onRecenter, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, onHoverRadius, onHoverPlace, amenityFilters, onAmenityFiltersChange, priceFilter, onPriceFilterChange, priorityFilter, onPriorityFilterChange, ratingFilter, onRatingFilterChange, onAddToTrip }: PlacesListProps) {
   const [confirmingId, setConfirmingId] = useState<string | null>(null)
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
 
@@ -218,6 +219,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             onDelete={onDelete}
             onEdit={onEdit}
             onHoverPlace={onHoverPlace}
+            onAddToTrip={onAddToTrip}
           />
         ))}
       </ul>

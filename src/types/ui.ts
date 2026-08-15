@@ -5,7 +5,7 @@ export interface FilterOption {
   label: string
 }
 
-export type PanelState = 'add' | 'list' | null
+export type PanelState = 'add' | 'list' | 'trips' | null
 
 export type SheetState = 'hidden' | 'peek' | 'expanded'
 

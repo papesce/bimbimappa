@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Compass, ExternalLink, MapPin, MoreVertical, Navigation, Pencil, Trash2 } from 'lucide-react'
+import { Compass, ExternalLink, MapPin, MoreVertical, Navigation, Pencil, Plus, Trash2 } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { getLinks } from '../lib/links'
 import BrandIcon from './BrandIcon'
@@ -13,6 +13,7 @@ export interface PlaceActionsProps {
   onDelete: (id: string) => void
   onEdit: (place: Place) => void
   onExplore: (place: Place) => void
+  onAddToTrip?: (place: Place) => void
   notes?: string | null
   isMobile?: boolean
   variant?: 'inline' | 'expanded'
@@ -29,6 +30,7 @@ export default function PlaceActions({
   onDelete,
   onEdit,
   onExplore,
+  onAddToTrip,
   notes,
   isMobile = false,
   variant = 'inline',
@@ -67,6 +69,11 @@ export default function PlaceActions({
         <button className="place-action-btn explore" onClick={() => onExplore(place)}>
           <Compass size={12} /> Nearby
         </button>
+        {onAddToTrip && (
+          <button className="place-action-btn trip" onClick={() => onAddToTrip(place)} title="Add to trip">
+            <Plus size={12} /> Trip
+          </button>
+        )}
         {!isMobile && (
           <button className="place-action-btn" onClick={() => onEdit(place)}>
             <Pencil size={12} /> Edit

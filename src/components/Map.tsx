@@ -41,6 +41,7 @@ export interface MapProps {
   onMobilePopup: (placeId: string) => void
   hoverPlaceId: string | null
   onExplorePlace: (place: Place) => void
+  onAddToTrip?: (place: Place) => void
 }
 
 function SearchCenterPopupContent({ radius }: { radius: number }) {
@@ -53,7 +54,7 @@ function SearchCenterPopupContent({ radius }: { radius: number }) {
   return content
 }
 
-export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadiusKm, boundsCenter, boundsRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup, hoverPlaceId, onExplorePlace }: MapProps) {
+export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadiusKm, boundsCenter, boundsRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup, hoverPlaceId, onExplorePlace, onAddToTrip }: MapProps) {
   const hovering = hoverRadiusKm !== null
   // confirmingId is lifted to App when mobile so BottomSheet can share it;
   // on desktop it arrives as null/undefined and we alias local names for clarity.
@@ -173,6 +174,7 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
           isMobile={isMobile}
           onMobilePopup={onMobilePopup}
           onExplorePlace={onExplorePlace}
+          onAddToTrip={onAddToTrip}
         />
         )
       })}

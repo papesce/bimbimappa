@@ -20,9 +20,10 @@ export interface NewMarkerProps {
   isMobile: boolean
   onMobilePopup: (placeId: string) => void
   onExplorePlace: (place: Place) => void
+  onAddToTrip?: (place: Place) => void
 }
 
-export default function NewMarker({ place, icon, confirmingId, setConfirmingId, onDelete, onEdit, markerRefs, isMobile, onMobilePopup, onExplorePlace }: NewMarkerProps) {
+export default function NewMarker({ place, icon, confirmingId, setConfirmingId, onDelete, onEdit, markerRefs, isMobile, onMobilePopup, onExplorePlace, onAddToTrip }: NewMarkerProps) {
   const markerRef = useRef<L.Marker | null>(null)
 
   useEffect(() => {
@@ -61,11 +62,12 @@ export default function NewMarker({ place, icon, confirmingId, setConfirmingId, 
           onDelete={onDelete}
           onEdit={onEdit}
           onExplore={onExplorePlace}
+          onAddToTrip={onAddToTrip}
           notes={place.notes}
         />
       </div>
     )
-  }, [place, confirmingId, setConfirmingId, onDelete, onEdit, onExplorePlace])
+  }, [place, confirmingId, setConfirmingId, onDelete, onEdit, onExplorePlace, onAddToTrip])
 
   return (
     <Marker

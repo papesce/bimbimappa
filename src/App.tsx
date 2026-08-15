@@ -1,8 +1,10 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { MapPin, List, Plus, X, Search, SlidersHorizontal } from 'lucide-react'
+import { MapPin, List, Plus, X, Search, SlidersHorizontal, Compass } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
+import TripsPanel from './components/TripsPanel'
+import AddToTripModal from './components/AddToTripModal'
 import BottomSheet from './components/BottomSheet'
 import BackToAreaButton from './components/BackToAreaButton'
 import UnifiedSearchInput from './components/UnifiedSearchInput'
@@ -15,6 +17,7 @@ import RadiusSelector from './components/RadiusSelector'
 import AccessDenied from './components/AccessDenied'
 import Toast from './components/Toast'
 import { usePlaces } from './hooks/usePlaces'
+import { useTrips } from './hooks/useTrips'
 import { useAuth } from './hooks/useAuth'
 import { useMapFocus } from './hooks/useMapFocus'
 import { useIsMobile } from './hooks/useIsMobile'
@@ -29,10 +32,13 @@ const EXPLORE_RADIUS_KM = 5
 export default function App() {
   const { authed, login } = useAuth()
   const { places, loading, addPlace, deletePlace, restorePlace, updatePlace, uploadPlacePhoto, deletePlacePhoto } = usePlaces()
+  const { trips, addTrip, editTrip, deleteTrip, addPlaceToTrip, removePlaceFromTrip, togglePlaceInTrip } = useTrips()
   const { center, radius, cityName, stateName, countryCode, matchedPlaces, isGeolocating, setCenter, setRadius, setFocusCenter, clearCenter, resetToGeolocation } = useMapFocus(places)
   const isMobile = useIsMobile()
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [panel, setPanel] = useState<PanelState>(null)
+  const [activeTripId, setActiveTripId] = useState<string | null>(null)
+  const [tripModalPlace, setTripModalPlace] = useState<Place | null>(null)
   const [editingPlace, setEditingPlace] = useState<Place | null>(null)
   const [filter, setFilter] = useState<FilterKey>('all')
   const [focusPlace, setFocusPlace] = useState<GeoPoint | null>(null)
@@ -225,8 +231,14 @@ export default function App() {
     filteredPlaces = filteredPlaces.filter(p => p.rating === ratingFilter)
   }
 
-  const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
+  const activeTrip = trips.find(t => t.id === activeTripId) || null
+  if (activeTrip) {
+    filteredPlaces = filteredPlaces.filter(p => activeTrip.place_ids.includes(p.id))
+  }
+
+  const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null || activeTripId !== null
   const contextLabels = [
+    activeTrip ? `Trip: ${activeTrip.name}` : '',
     cityName || (center ? 'Nearby' : ''),
     center ? `${radius} km` : '',
     filter !== 'all' ? FILTERS.find(f => f.key === filter)?.label : '',
@@ -235,7 +247,12 @@ export default function App() {
     priorityFilter ? `${formatPriority(priorityFilter)} priority` : '',
     ratingFilter ? `${ratingFilter}★` : '',
   ].filter(Boolean)
-  const areaFilter: ActiveFilterChip | null = center ? {
+  const areaFilter: ActiveFilterChip | null = activeTrip ? {
+    type: 'viewing',
+    label: `🚗 Trip: ${activeTrip.name} (${activeTrip.place_ids.length})`,
+    onClear: () => { setActiveTripId(null); setFitBoundsTrigger(n => n + 1) },
+    onRecenter: () => setFitBoundsTrigger(n => n + 1),
+  } : center ? {
     type: 'city',
     label: cityName ? `📍 ${cityName} · ${radius} km` : `📍 ${radius} km radius`,
     onClear: () => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) },
@@ -315,6 +332,7 @@ export default function App() {
           onMobilePopup={handleMobilePopup}
           hoverPlaceId={hoverPlaceId}
           onExplorePlace={handleExplorePlace}
+          onAddToTrip={(place) => setTripModalPlace(place)}
         />
       </div>
 
@@ -405,6 +423,22 @@ export default function App() {
                 : `${filteredPlaces.length} of ${places.length} places`}
             </span>
             <button
+              className={`icon-btn${panel === 'trips' ? ' active' : ''}`}
+              onClick={() => {
+                if (panel === 'trips') {
+                  setPanel(null)
+                } else {
+                  setPanel('trips')
+                  setSheetState('hidden')
+                }
+              }}
+              aria-label="Next trips"
+              title="Next trips"
+            >
+              <Compass size={18} />
+              {trips.length > 0 && <span className="topbar-badge">{trips.length}</span>}
+            </button>
+            <button
               className={`icon-btn${panel === 'list' ? ' active' : ''}`}
               onClick={() => {
                 if (panel === 'list') {
@@ -487,6 +521,35 @@ export default function App() {
             onShowInMap={(coords) => setPreviewArea(coords)}
           />
         )}
+        {panel === 'trips' && !editingPlace && (
+          <TripsPanel
+            trips={trips}
+            places={places}
+            activeTripId={activeTripId}
+            onSelectTrip={trip => {
+              setActiveTripId(trip ? trip.id : null)
+            }}
+            onAddTrip={addTrip}
+            onUpdateTrip={editTrip}
+            onDeleteTrip={async id => {
+              await deleteTrip(id)
+              if (activeTripId === id) setActiveTripId(null)
+            }}
+            onAddPlaceToTrip={addPlaceToTrip}
+            onRemovePlaceFromTrip={removePlaceFromTrip}
+            onLocatePlace={handleLocatePlace}
+            onClose={() => setPanel(null)}
+            onFocusTripOnMap={trip => {
+              setActiveTripId(trip.id)
+              setFitBoundsTrigger(n => n + 1)
+              setViewingPlace(null)
+              if (isMobile) {
+                setPanel(null)
+                setSheetState('hidden')
+              }
+            }}
+          />
+        )}
         {panel === 'list' && !editingPlace && (
           <div className="panel">
             <div className="panel-header">
@@ -537,6 +600,7 @@ export default function App() {
                 onPriorityFilterChange={setPriorityFilter}
                 ratingFilter={ratingFilter}
                 onRatingFilterChange={setRatingFilter}
+                onAddToTrip={(place) => setTripModalPlace(place)}
               />
             </div>
           </div>
@@ -577,6 +641,17 @@ export default function App() {
             setConfirmingId(null)
           }}
           onExplore={handleExplorePlace}
+          onAddToTrip={(place) => setTripModalPlace(place)}
+        />
+      )}
+
+      {tripModalPlace && (
+        <AddToTripModal
+          place={tripModalPlace}
+          trips={trips}
+          onToggleTripPlace={togglePlaceInTrip}
+          onCreateTrip={addTrip}
+          onClose={() => setTripModalPlace(null)}
         />
       )}
 

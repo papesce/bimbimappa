@@ -1,4 +1,4 @@
-import { MapPin, Trash2, Pencil, Navigation, MoreVertical } from 'lucide-react'
+import { MapPin, Trash2, Pencil, Navigation, MoreVertical, Compass } from 'lucide-react'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { getLinks } from '../lib/links'
 import { toTitleCase } from '../lib/text'
@@ -19,9 +19,10 @@ export interface PlaceCardProps {
   onDelete: (id: string) => void
   onEdit: (place: Place) => void
   onHoverPlace?: (id: string | null) => void
+  onAddToTrip?: (place: Place) => void
 }
 
-export default function PlaceCard({ place, confirmingId, setConfirmingId, menuOpenId, setMenuOpenId, onLocate, onDelete, onEdit, onHoverPlace }: PlaceCardProps) {
+export default function PlaceCard({ place, confirmingId, setConfirmingId, menuOpenId, setMenuOpenId, onLocate, onDelete, onEdit, onHoverPlace, onAddToTrip }: PlaceCardProps) {
   return (
     <li
       className="place-card"
@@ -74,6 +75,11 @@ export default function PlaceCard({ place, confirmingId, setConfirmingId, menuOp
                   <BrandIcon url={link.url} size={13} />{link.label || 'Link'}{link.is_primary ? ' ★' : ''}
                 </a>
               ))}
+              {onAddToTrip && (
+                <button className="card-menu-item" onClick={() => { onAddToTrip(place); setMenuOpenId(null) }}>
+                  <Compass size={13} />Add to Trip
+                </button>
+              )}
               <button className="card-menu-item" onClick={() => { onEdit(place); setMenuOpenId(null) }}>
                 <Pencil size={13} />Edit
               </button>

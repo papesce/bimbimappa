@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react'
-import { Compass, MapPin, Maximize2, Navigation, Pencil, Trash2, X } from 'lucide-react'
+import { Compass, MapPin, Maximize2, Navigation, Pencil, Plus, Trash2, X } from 'lucide-react'
 import { getPrimaryLink } from '../lib/links'
 import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { formatDateRange } from '../lib/date'
@@ -27,6 +27,7 @@ export interface BottomSheetProps {
   onConfirmingChange: (id: string | null) => void
   onClose: () => void
   onExplore: (place: Place) => void
+  onAddToTrip?: (place: Place) => void
 }
 
 export default function BottomSheet({
@@ -39,6 +40,7 @@ export default function BottomSheet({
   onConfirmingChange,
   onClose,
   onExplore,
+  onAddToTrip,
 }: BottomSheetProps) {
   const [isLightboxOpen, setLightboxOpen] = useState(false)
   const sheetRef = useRef<HTMLDivElement | null>(null)
@@ -197,6 +199,14 @@ export default function BottomSheet({
               >
                 <Compass size={14} /> Nearby
               </button>
+              {onAddToTrip && (
+                <button
+                  className="place-action-btn mobile-sheet-action sheet-trip-btn"
+                  onClick={(e) => { e.stopPropagation(); onAddToTrip(place) }}
+                >
+                  <Plus size={14} /> Trip
+                </button>
+              )}
               <button
                 className="place-action-btn mobile-sheet-action sheet-edit-btn"
                 onClick={(e) => { e.stopPropagation(); onEdit(place) }}
@@ -264,6 +274,14 @@ export default function BottomSheet({
               >
                 <Compass size={14} /> Nearby
               </button>
+              {onAddToTrip && (
+                <button
+                  className="place-action-btn mobile-sheet-action sheet-trip-btn"
+                  onClick={() => onAddToTrip(place)}
+                >
+                  <Plus size={14} /> Trip
+                </button>
+              )}
               <button
                 className="place-action-btn mobile-sheet-action sheet-edit-btn"
                 onClick={() => onEdit(place)}
