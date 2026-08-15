@@ -80,6 +80,11 @@ export default function MobileExplorer({ places, center, cityName, query, onQuer
                 <span>{config.label}{distance !== null ? ` · ${distance < 1 ? `${Math.round(distance * 1000)} m` : `${distance.toFixed(1)} km`}` : ''}</span>
                 {place.address && <small>{place.address}</small>}
               </div>
+              {place.photo_url && (
+                <div className="mobile-explorer-card-photo-wrap">
+                  <img src={place.photo_url} alt="" className="mobile-explorer-card-photo" />
+                </div>
+              )}
               <div className="mobile-explorer-card-actions">
                 {primaryLink && <a className="mobile-explorer-source" href={primaryLink.url} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} aria-label={`Open source for ${place.name}`}><BrandIcon url={primaryLink.url} size={17} /></a>}
                 <a className="mobile-explorer-navigate" href={`https://www.google.com/maps/search/?api=1&query=${place.lat},${place.lng}`} target="_blank" rel="noopener noreferrer" onClick={e => e.stopPropagation()} aria-label={`Navigate to ${place.name}`}><Navigation size={16} /></a>
