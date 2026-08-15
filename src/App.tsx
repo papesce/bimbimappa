@@ -436,7 +436,6 @@ export default function App() {
               title="Next trips"
             >
               <Compass size={18} />
-              {trips.length > 0 && <span className="topbar-badge">{trips.length}</span>}
             </button>
             <button
               className={`icon-btn${panel === 'list' ? ' active' : ''}`}
