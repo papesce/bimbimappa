@@ -38,6 +38,7 @@ export default function PlaceCard({ place, confirmingId, setConfirmingId, menuOp
           {toTitleCase(place.name)}
         </p>
         <p className="place-address">{place.address}</p>
+        {place.photo_url && <img src={place.photo_url} alt="" className="place-card-photo" />}
         {place.date_from && (
           <p className="place-date">{formatDateRange(place.date_from, place.date_to)}</p>
         )}

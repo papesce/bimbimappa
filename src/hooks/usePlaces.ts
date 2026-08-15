@@ -7,6 +7,7 @@ import {
   restorePlace as restorePlaceService,
   updatePlace as updatePlaceService,
 } from '../lib/placesService'
+import { uploadPlacePhoto, deletePlacePhoto } from '../lib/photoService'
 import type { Place, PlaceInput } from '../types'
 
 /**
@@ -66,5 +67,5 @@ export function usePlaces() {
     return data
   }
 
-  return { places, loading, error, addPlace, deletePlace, restorePlace, updatePlace, refetch: fetchPlacesData }
+  return { places, loading, error, addPlace, deletePlace, restorePlace, updatePlace, refetch: fetchPlacesData, uploadPlacePhoto, deletePlacePhoto }
 }

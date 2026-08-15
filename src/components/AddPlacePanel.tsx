@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar, CheckCircle2, RotateCcw, Plus, Tag, Star, ArrowUpDown } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { MapPin, Link, StickyNote, Search, Loader, X, Pencil, Calendar, CheckCircle2, RotateCcw, Plus, Tag, Star, ArrowUpDown, Camera } from 'lucide-react'
 import { geocodePlace } from '../lib/geocode'
 import { getLinks, inferLinkLabel } from '../lib/links'
 import { AMENITY_OPTIONS, formatAmenity, formatPriceTier, formatPriority } from '../lib/placeAttributes'
@@ -8,8 +8,8 @@ import CategoryPicker from './CategoryPicker'
 import type { GeoPoint, Place, PlaceCategory, PlaceInput, PlaceLink, ResolvedLocation, Status, PriceTier, PriorityLevel } from '../types'
 
 export interface AddPlacePanelProps {
-  onAdd?: (data: PlaceInput) => Promise<void>
-  onUpdate?: (id: string, data: PlaceInput) => Promise<void>
+  onAdd?: (data: PlaceInput, photo?: File | null) => Promise<void>
+  onUpdate?: (id: string, data: PlaceInput, photo?: File | null, removePhoto?: boolean) => Promise<void>
   onClose: () => void
   editPlace?: Place | null
   cityName: string
@@ -46,9 +46,25 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
   const [status, setStatus] = useState<Status>('idle')
   const [errorMsg, setErrorMsg] = useState('')
   const [changingAddress, setChangingAddress] = useState(false)
+  const [photoFile, setPhotoFile] = useState<File | null>(null)
+  const [removePhoto, setRemovePhoto] = useState(false)
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [resolved, setResolved] = useState<ResolvedLocation | null>(
     editPlace ? { lat: editPlace.lat, lng: editPlace.lng, formattedAddress: editPlace.address } : null
   )
+
+  const existingPhotoUrl = editPlace?.photo_url ?? null
+  const previewSrc = photoFile ? previewUrl : (removePhoto ? null : existingPhotoUrl)
+
+  useEffect(() => {
+    if (!photoFile) {
+      setPreviewUrl(null)
+      return
+    }
+    const url = URL.createObjectURL(photoFile)
+    setPreviewUrl(url)
+    return () => URL.revokeObjectURL(url)
+  }, [photoFile])
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault()
@@ -100,6 +116,19 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
     })
   }
 
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0]
+    if (file) {
+      setPhotoFile(file)
+      setRemovePhoto(false)
+    }
+  }
+
+  function handleRemovePhoto() {
+    setPhotoFile(null)
+    setRemovePhoto(true)
+  }
+
   async function handleSave(e: React.FormEvent) {
     e.preventDefault()
     if (!resolved || !name.trim()) return
@@ -133,12 +162,13 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
         rating,
         date_from: dateFrom || null,
         date_to: dateTo || null,
+        photo_url: removePhoto ? null : existingPhotoUrl,
       }
 
       if (isEditing) {
-        await onUpdate!(editPlace.id, data)
+        await onUpdate!(editPlace.id, data, photoFile, removePhoto)
       } else {
-        await onAdd!(data)
+        await onAdd!(data, photoFile)
       }
 
       setName('')
@@ -151,6 +181,9 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
       setPriceTier(null)
       setPriority(null)
       setRating(null)
+      setPhotoFile(null)
+      setRemovePhoto(false)
+      setPreviewUrl(null)
       setResolved(null)
       setStatus('idle')
       onClose()
@@ -390,6 +423,34 @@ export default function AddPlacePanel({ onAdd, onUpdate, onClose, editPlace, cit
           <button className="btn-link-add" type="button" onClick={addLink}>
             <Plus size={14} /> Add another link
           </button>
+
+          <label className="field-label" style={{ marginTop: '12px' }}>
+            <Camera size={14} /> Photo <span className="optional">(optional)</span>
+          </label>
+          <div className="photo-picker">
+            {previewSrc ? (
+              <div className="photo-picker-preview">
+                <img src={previewSrc} alt="Place photo preview" className="photo-picker-img" />
+                <button
+                  type="button"
+                  className="photo-picker-remove"
+                  onClick={handleRemovePhoto}
+                  aria-label="Remove photo"
+                  title="Remove photo"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <label className="photo-picker-upload">
+                <Camera size={14} /> {isEditing ? 'Add photo' : 'Upload photo'}
+                <input type="file" accept="image/*" onChange={handlePhotoChange} hidden />
+              </label>
+            )}
+            {removePhoto && !previewSrc && (
+              <p className="photo-picker-note">Photo will be removed when you save.</p>
+            )}
+          </div>
 
           <label className="field-label" style={{ marginTop: '12px' }}>
             <Calendar size={14} /> Date <span className="optional">(optional — single day or range)</span>

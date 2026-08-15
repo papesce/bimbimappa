@@ -88,6 +88,51 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   }
 }
 
+/* ─── Rounded zoom buttons — match the app's circular control style ─ */
+.main-map .leaflet-control-zoom.leaflet-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  background: transparent;
+  box-shadow: none;
+  border: 0;
+  border-radius: 0;
+}
+
+.main-map .leaflet-control-zoom a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 50% !important;
+  box-shadow: var(--elev-1);
+  color: var(--sub);
+  transition: color 0.15s, background 0.15s;
+}
+
+.main-map .leaflet-control-zoom a:hover,
+.main-map .leaflet-control-zoom a:focus {
+  background: rgba(61, 90, 138, 0.08);
+  color: var(--accent);
+}
+
+.main-map .leaflet-control-zoom a.leaflet-disabled {
+  cursor: default;
+  background: rgba(247, 247, 251, 0.95);
+  color: #bbb;
+}
+
+.main-map .leaflet-control-zoom a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 /* ─── Top bar ───────────────────────────────────────────────────── */
 .topbar {
   position: fixed;
@@ -791,6 +836,71 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   color: var(--coral);
 }
 
+/* ─── Photo picker (add / edit form) ───────────────────────────── */
+.photo-picker {
+  margin-top: 8px;
+}
+
+.photo-picker-preview {
+  position: relative;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.photo-picker-img {
+  display: block;
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+}
+
+.photo-picker-remove {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.55);
+  color: white;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.photo-picker-remove:hover {
+  background: rgba(0, 0, 0, 0.75);
+}
+
+.photo-picker-upload {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.photo-picker-upload:hover {
+  border-color: var(--accent);
+}
+
+.photo-picker-note {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--coral-dk);
+}
+
 /* ─── Location preview card ─────────────────────────────────────── */
 .location-preview {
   margin: 10px 20px 0;
@@ -1370,6 +1480,60 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   font-size: 12px;
   color: var(--sub);
   margin: 0 0 8px;
+}
+
+.popup-photo {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 160px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  display: block;
+  background: var(--mist);
+}
+
+.sheet-photo {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 220px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: var(--radius);
+  box-shadow: var(--elev-1);
+  margin-bottom: 12px;
+  display: block;
+  background: var(--mist);
+}
+
+.place-card-photo {
+  width: 100%;
+  max-width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 140px;
+  object-fit: cover;
+  object-position: center;
+  border-radius: var(--radius);
+  margin-top: 8px;
+  display: block;
+  background: var(--mist);
+}
+
+/* Tighter caps on small screens so a photo never crowds the viewport */
+@media (max-width: 480px) {
+  .popup-photo { max-height: 130px; }
+  .place-card-photo { max-height: 110px; }
+
+  /* Full-bleed photo in the bottom sheet — spans edge to edge */
+  .sheet-photo {
+    max-height: 260px;
+    width: calc(100% + 40px);
+    margin: -12px -20px 12px;
+    border-radius: 0;
+  }
 }
 
 .popup-date {

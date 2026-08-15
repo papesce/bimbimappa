@@ -178,6 +178,7 @@ export default function BottomSheet({
       {/* Expanded content */}
       {place && sheetState === 'expanded' && (
         <div className="sheet-expanded-content">
+          {place.photo_url && <img src={place.photo_url} alt="" className="sheet-photo" />}
           {place.date_from && (
             <p className="popup-date">{formatDateRange(place.date_from, place.date_to)}</p>
           )}

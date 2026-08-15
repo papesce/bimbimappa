@@ -28,7 +28,7 @@ const EXPLORE_RADIUS_KM = 5
 
 export default function App() {
   const { authed, login } = useAuth()
-  const { places, loading, addPlace, deletePlace, restorePlace, updatePlace } = usePlaces()
+  const { places, loading, addPlace, deletePlace, restorePlace, updatePlace, uploadPlacePhoto, deletePlacePhoto } = usePlaces()
   const { center, radius, cityName, stateName, countryCode, matchedPlaces, isGeolocating, setCenter, setRadius, setFocusCenter, clearCenter, resetToGeolocation } = useMapFocus(places)
   const isMobile = useIsMobile()
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
@@ -105,9 +105,17 @@ export default function App() {
     setDeletedPlace(null)
   }
 
-  async function handleAdd(data: PlaceInput) {
+  async function handleAdd(data: PlaceInput, photo?: File | null) {
     const result = await addPlace(data)
     if (result) {
+      if (photo) {
+        try {
+          const photoUrl = await uploadPlacePhoto(result.id, photo)
+          await updatePlace(result.id, { ...data, photo_url: photoUrl })
+        } catch (err) {
+          console.error('Photo upload failed:', err)
+        }
+      }
       setViewportBounds(null)
       setFocusPlace({ lat: result.lat, lng: result.lng })
       setNewPlaceId(result.id)
@@ -118,8 +126,21 @@ export default function App() {
     }
   }
 
-  async function handleUpdate(id: string, data: PlaceInput) {
-    const result = await updatePlace(id, data)
+  async function handleUpdate(id: string, data: PlaceInput, photo?: File | null, removePhoto = false) {
+    let finalData = data
+    const existing = places.find(p => p.id === id)
+    if (removePhoto) {
+      finalData = { ...data, photo_url: null }
+      if (existing?.photo_url) {
+        deletePlacePhoto(existing.photo_url).catch(err => console.error('Photo delete failed:', err))
+      }
+    } else if (photo) {
+      finalData = { ...data, photo_url: await uploadPlacePhoto(id, photo) }
+      if (existing?.photo_url) {
+        deletePlacePhoto(existing.photo_url).catch(err => console.error('Photo delete failed:', err))
+      }
+    }
+    const result = await updatePlace(id, finalData)
     if (result) {
       setFocusPlace({ lat: result.lat, lng: result.lng })
       setPopupPlaceId(result.id)

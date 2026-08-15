@@ -30,6 +30,7 @@ export interface Place {
   rating: number | null
   date_from: string | null
   date_to: string | null
+  photo_url: string | null
   deleted_at: string | null
   created_at: string
 }
@@ -48,6 +49,7 @@ export interface PlaceInput {
   rating: number | null
   date_from: string | null
   date_to: string | null
+  photo_url: string | null
 }
 
 export interface ViewingPlace {

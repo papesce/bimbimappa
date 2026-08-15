@@ -41,6 +41,7 @@ export default function NewMarker({ place, icon, confirmingId, setConfirmingId, 
           {toTitleCase(place.name)}
         </p>
         <p className="popup-address">{place.address}</p>
+        {place.photo_url && <img src={place.photo_url} alt="" className="popup-photo" />}
         {place.date_from && (
           <p className="popup-date">{formatDateRange(place.date_from, place.date_to)}</p>
         )}

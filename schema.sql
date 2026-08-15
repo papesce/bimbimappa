@@ -17,9 +17,13 @@ create table if not exists places (
   rating      smallint,
   date_from   date,
   date_to     date,
+  photo_url   text,              -- public Supabase Storage URL for the place photo
   deleted_at  timestamptz,       -- soft delete: set to now() instead of DELETE
   created_at  timestamptz default now()
 );
+
+-- Place photos are stored in the public 'place-photos' bucket (see migration
+-- 20260815120000_add_photo_url.sql). No extra schema needed here.
 
 -- Allow anyone with the anon key to read and write.
 -- The real "auth" is the VITE_HOUSEHOLD_TOKEN in the client.
