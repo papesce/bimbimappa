@@ -108,8 +108,9 @@ export default function NewMarker({
       ref={markerRef}
       position={[place.lat, place.lng]}
       icon={icon}
-      className={dimmed ? 'marker--dimmed' : undefined}
-      eventHandlers={isMobile ? { click: () => onMobilePopup(place.id) } : undefined}
+      eventHandlers={
+        dimmed ? undefined : isMobile ? { click: () => onMobilePopup(place.id) } : undefined
+      }
     >
       {!isMobile && (
         <Popup

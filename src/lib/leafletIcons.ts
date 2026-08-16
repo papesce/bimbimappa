@@ -51,7 +51,7 @@ export function makePlaceIcon(
         : 'box-shadow: 0 2px 8px rgba(0,0,0,0.3);';
   const badge = categoryIconHtml(category, size >= 36 ? 15 : 13);
 
-  const dimStyle = isDimmed ? 'opacity:0.35;filter:saturate(0.4);' : '';
+  const dimStyle = isDimmed ? 'opacity:0.35;filter:saturate(0.4);pointer-events:none;' : '';
 
   const tripBadge =
     tripIndex != null

@@ -22,7 +22,6 @@ interface TripDetailViewProps {
   allPlaces: Place[];
   onBack: () => void;
   onUpdateTrip: (id: string, updates: Partial<TripInput>) => Promise<Trip>;
-  onDeleteTrip: (id: string) => Promise<void>;
   onRemovePlace: (tripId: string, placeId: string) => Promise<void>;
   onAddPlace: (tripId: string, placeId: string) => Promise<void>;
   onLocatePlace: (place: Place) => void;
@@ -34,7 +33,6 @@ export default function TripDetailView({
   allPlaces,
   onBack,
   onUpdateTrip,
-  onDeleteTrip,
   onRemovePlace,
   onAddPlace,
   onLocatePlace,

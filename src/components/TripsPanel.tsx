@@ -155,11 +155,6 @@ export default function TripsPanel({
           setSelectedTripId(null);
         }}
         onUpdateTrip={onUpdateTrip}
-        onDeleteTrip={async id => {
-          await onDeleteTrip(id);
-          setSelectedTripId(null);
-          onSelectTrip(null);
-        }}
         onAddPlace={onAddPlaceToTrip}
         onRemovePlace={onRemovePlaceFromTrip}
         onLocatePlace={onLocatePlace}
