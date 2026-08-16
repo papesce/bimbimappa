@@ -1,8 +1,9 @@
-import { ArrowUpDown, Compass, MapPin, Plus, Search, Sparkles, X } from 'lucide-react';
+import { ArrowUpDown, Compass, Plus, Search, Sparkles, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useDismissable } from '../hooks/useDismissable';
 import { toTitleCase } from '../lib/text';
 import type { Place, Trip, TripInput, TripPriority, TripSortOption } from '../types';
+import TripActions from './TripActions';
 import TripDetailView from './TripDetailView';
 
 interface TripsPanelProps {
@@ -45,6 +46,7 @@ export default function TripsPanel({
   onPendingTripConsumed,
 }: TripsPanelProps) {
   const [selectedTripId, setSelectedTripId] = useState<string | null>(activeTripId);
+  const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState<TripSortOption>('priority');
@@ -137,17 +139,22 @@ export default function TripsPanel({
       <TripDetailView
         trip={selectedTrip}
         allPlaces={places}
-        onBack={() => setSelectedTripId(null)}
+        onBack={() => {
+          setSelectedTripId(null);
+          setEditingTripId(null);
+        }}
         onUpdateTrip={onUpdateTrip}
         onDeleteTrip={async id => {
           await onDeleteTrip(id);
           setSelectedTripId(null);
+          setEditingTripId(null);
           onSelectTrip(null);
         }}
         onAddPlace={onAddPlaceToTrip}
         onRemovePlace={onRemovePlaceFromTrip}
         onLocatePlace={onLocatePlace}
         onFocusTripOnMap={onFocusTripOnMap}
+        initialEditing={editingTripId === selectedTrip.id}
       />
     );
   }
@@ -360,78 +367,61 @@ export default function TripsPanel({
                 trip.priority === 1 ? 'High' : trip.priority === 2 ? 'Medium' : 'Low';
               const priorityClass = `priority-badge--p${trip.priority}`;
               const isMapActive = activeTripId === trip.id;
-              const openTrip = () => {
-                setSelectedTripId(trip.id);
-                onSelectTrip(trip);
-              };
 
               return (
                 <li
                   key={trip.id}
-                  className={`trip-item-card${isMapActive ? ' is-map-active' : ''}`}
-                  onClick={openTrip}
-                  role="button"
-                  tabIndex={0}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' || e.key === ' ') {
-                      e.preventDefault();
-                      openTrip();
-                    }
-                  }}
+                  className={`place-card${isMapActive ? ' place-card--active' : ''}`}
                 >
-                  <div className="trip-item-top">
-                    <div className="trip-item-info">
-                      <div className="trip-item-title-row">
-                        <span className={`priority-badge ${priorityClass}`}>{priorityLabel}</span>
-                        <h3 className="trip-item-name">{toTitleCase(trip.name)}</h3>
-                      </div>
-                      {trip.target_date && (
-                        <span className="trip-item-date">📅 {trip.target_date}</span>
-                      )}
-                    </div>
+                  <button
+                    type="button"
+                    className="place-card-body"
+                    onClick={() => onFocusTripOnMap(trip)}
+                    title="Focus on map"
+                  >
+                    <p className="place-name">
+                      <span className={`priority-badge ${priorityClass}`}>{priorityLabel}</span>
+                      {toTitleCase(trip.name)}
+                    </p>
+                    <p className="place-address">
+                      {trip.target_date && `${trip.target_date} · `}
+                      {tripPlaceObjs.length} {tripPlaceObjs.length === 1 ? 'place' : 'places'}
+                    </p>
                     {tripPlaceObjs.length > 0 && (
-                      <button
-                        type="button"
-                        className={`icon-btn trip-item-map-btn${isMapActive ? ' active' : ''}`}
-                        title="View trip on map"
-                        onClick={e => {
-                          e.stopPropagation();
-                          onFocusTripOnMap(trip);
-                        }}
-                      >
-                        <Compass size={16} />
-                      </button>
-                    )}
-                  </div>
-
-                  {trip.notes && <p className="trip-item-notes">"{trip.notes}"</p>}
-
-                  <div className="trip-item-footer">
-                    <span className="trip-item-places-count">
-                      <MapPin size={13} /> {tripPlaceObjs.length}{' '}
-                      {tripPlaceObjs.length === 1 ? 'place' : 'places'}
-                    </span>
-
-                    {tripPlaceObjs.length > 0 && (
-                      <div className="trip-item-photo-previews">
+                      <div className="trip-card-photos">
                         {tripPlaceObjs.slice(0, 4).map(p => (
-                          <div key={p.id} className="trip-photo-preview-item" title={p.name}>
+                          <div key={p.id} className="trip-card-photo-item" title={p.name}>
                             {p.photo_url ? (
-                              <img src={p.photo_url} alt="" className="trip-photo-preview-img" />
+                              <img src={p.photo_url} alt="" className="trip-card-photo-img" />
                             ) : (
-                              <span className="trip-photo-preview-initial">
+                              <span className="trip-card-photo-initial">
                                 {p.name[0]?.toUpperCase()}
                               </span>
                             )}
                           </div>
                         ))}
                         {tripPlaceObjs.length > 4 && (
-                          <span className="trip-photo-preview-more">
-                            +{tripPlaceObjs.length - 4}
-                          </span>
+                          <span className="trip-card-photo-more">+{tripPlaceObjs.length - 4}</span>
                         )}
                       </div>
                     )}
+                    {trip.notes && <p className="place-notes">"{trip.notes}"</p>}
+                  </button>
+                  <div className="place-card-actions">
+                    <TripActions
+                      trip={trip}
+                      onViewTrip={t => {
+                        setEditingTripId(null);
+                        setSelectedTripId(t.id);
+                        onSelectTrip(t);
+                      }}
+                      onEditTrip={t => {
+                        setEditingTripId(t.id);
+                        setSelectedTripId(t.id);
+                        onSelectTrip(t);
+                      }}
+                      onDeleteTrip={onDeleteTrip}
+                    />
                   </div>
                 </li>
               );

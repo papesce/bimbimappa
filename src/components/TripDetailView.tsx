@@ -16,6 +16,7 @@ interface TripDetailViewProps {
   onAddPlace: (tripId: string, placeId: string) => Promise<void>;
   onLocatePlace: (place: Place) => void;
   onFocusTripOnMap: (trip: Trip) => void;
+  initialEditing?: boolean;
 }
 
 export default function TripDetailView({
@@ -28,8 +29,9 @@ export default function TripDetailView({
   onAddPlace,
   onLocatePlace,
   onFocusTripOnMap,
+  initialEditing = false,
 }: TripDetailViewProps) {
-  const [isEditing, setIsEditing] = useState(false);
+  const [isEditing, setIsEditing] = useState(initialEditing);
   const [name, setName] = useState(trip.name);
   const [priority, setPriority] = useState<TripPriority>(trip.priority);
   const [notes, setNotes] = useState(trip.notes || '');
