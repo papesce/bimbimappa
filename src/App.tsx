@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
-import { MapPin, Library, Plus, X, Search, SlidersHorizontal, Compass } from 'lucide-react'
+import { MapPin, Library, Plus, X, Search, SlidersHorizontal } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
@@ -14,6 +14,7 @@ import MobileExplorer from './components/MobileExplorer'
 import MobileFilterSheet from './components/MobileFilterSheet'
 import FilterChip from './components/FilterChip'
 import RadiusSelector from './components/RadiusSelector'
+import FocusBar from './components/FocusBar'
 import AccessDenied from './components/AccessDenied'
 import Toast from './components/Toast'
 import { usePlaces } from './hooks/usePlaces'
@@ -24,10 +25,9 @@ import { useIsMobile } from './hooks/useIsMobile'
 import { useDismissable } from './hooks/useDismissable'
 import { FILTERS, getFilterRange } from './lib/filters'
 import { formatAmenity, formatPriceTier, formatPriority } from './lib/placeAttributes'
-import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm, getNearbySuggestions } from './lib/geo'
-import { toTitleCase } from './lib/text'
+import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm, getTripCentroid, getCoveringRadiusKm } from './lib/geo'
 import './index.css'
-import type { ActiveFilterChip, FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceCategory, PlaceInput, SheetState, ViewingPlace, PriceTier, PriorityLevel } from './types'
+import type { ActiveFilterChip, FilterKey, FocusEntity, GeoPoint, MapBounds, PanelState, Place, PlaceCategory, PlaceInput, SheetState, Trip, ViewingPlace, PriceTier, PriorityLevel } from './types'
 
 const EXPLORE_RADIUS_KM = 5
 
@@ -41,6 +41,7 @@ export default function App() {
   const [panel, setPanel] = useState<PanelState>(null)
   const [libraryTab, setLibraryTab] = useState<'places' | 'trips'>('places')
   const [activeTripId, setActiveTripId] = useState<string | null>(null)
+  const [placeFocusPlace, setPlaceFocusPlace] = useState<Place | null>(null)
   const [tripModalPlace, setTripModalPlace] = useState<Place | null>(null)
   const [editingPlace, setEditingPlace] = useState<Place | null>(null)
   const [filter, setFilter] = useState<FilterKey>('all')
@@ -68,7 +69,6 @@ export default function App() {
   const [browseQuery, setBrowseQuery] = useState('')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [radiusMenuOpen, setRadiusMenuOpen] = useState(false)
-  const [nearbyMenuOpen, setNearbyMenuOpen] = useState(false)
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
@@ -86,15 +86,6 @@ export default function App() {
     outsideClick: radiusMenuOpen,
     escape: radiusMenuOpen,
   })
-
-  const nearbyMenuRef = useDismissable<HTMLDivElement>(() => setNearbyMenuOpen(false), {
-    outsideClick: nearbyMenuOpen,
-    escape: nearbyMenuOpen,
-  })
-
-  useEffect(() => {
-    setNearbyMenuOpen(false)
-  }, [activeTripId])
 
   // Hover highlight on the "Viewing" chip is ephemeral — reset whenever the viewed place changes
   useEffect(() => {
@@ -190,6 +181,9 @@ export default function App() {
 
   const handleLocatePlace = useCallback((place: Place) => {
     setFocusPlace({ lat: place.lat, lng: place.lng })
+    setPlaceFocusPlace(place)
+    setActiveTripId(null)
+    setCenter(place.lat, place.lng, '', '', '', EXPLORE_RADIUS_KM)
     setViewingPlace({ id: place.id, name: place.name })
     setPanel(null)
     if (isMobile) {
@@ -197,11 +191,13 @@ export default function App() {
     } else {
       setPopupPlaceId(place.id)
     }
-  }, [isMobile])
+  }, [isMobile, setCenter])
 
   const handleExplorePlace = useCallback((place: Place) => {
     setFocusPlace({ lat: place.lat, lng: place.lng })
-    setCenter(place.lat, place.lng, place.name, '', '', EXPLORE_RADIUS_KM)
+    setPlaceFocusPlace(place)
+    setActiveTripId(null)
+    setCenter(place.lat, place.lng, '', '', '', EXPLORE_RADIUS_KM)
     setViewingPlace(null)
     if (!isMobile) {
       setPanel('list')
@@ -209,6 +205,85 @@ export default function App() {
       setSheetState('hidden')
     }
   }, [setCenter, isMobile])
+
+  const activeTrip = trips.find(t => t.id === activeTripId) || null
+
+  // Unified focus: a single center point sourced from a place or a trip.
+  // A place focuses on its own coordinates; a trip focuses on the centroid
+  // of its places. The chip + radius selector in the FocusBar drive this.
+  const focus = useMemo<FocusEntity | null>(() => {
+    if (placeFocusPlace) {
+      return {
+        kind: 'place',
+        id: placeFocusPlace.id,
+        label: placeFocusPlace.name,
+        center: { lat: placeFocusPlace.lat, lng: placeFocusPlace.lng },
+        radius,
+      }
+    }
+    if (activeTrip) {
+      const tripPlaces = activeTrip.place_ids
+        .map(id => places.find(p => p.id === id))
+        .filter((p): p is Place => p !== undefined)
+      const centroid = getTripCentroid(tripPlaces)
+      if (!centroid) return null
+      return {
+        kind: 'trip',
+        id: activeTrip.id,
+        label: `${activeTrip.name} (${activeTrip.place_ids.length})`,
+        center: centroid,
+        radius,
+      }
+    }
+    return null
+  }, [placeFocusPlace, activeTrip, places, radius])
+
+  const setTripFocus = useCallback((trip: Trip) => {
+    const tripPlaces = trip.place_ids
+      .map(id => places.find(p => p.id === id))
+      .filter((p): p is Place => p !== undefined)
+    const centroid = getTripCentroid(tripPlaces)
+    if (!centroid) return
+    setPlaceFocusPlace(null)
+    setActiveTripId(trip.id)
+    setViewingPlace(null)
+    setCenter(centroid.lat, centroid.lng, '', '', '', getCoveringRadiusKm(centroid, tripPlaces))
+    setFitBoundsTrigger(n => n + 1)
+  }, [places, setCenter])
+
+  const clearFocusEntity = useCallback(() => {
+    setPlaceFocusPlace(null)
+    setActiveTripId(null)
+  }, [])
+
+  const handleClearFocus = useCallback(() => {
+    clearFocusEntity()
+    clearCenter()
+    setHoverRadiusKm(null)
+    setViewingPlace(null)
+    setSuppressFit(n => n + 1)
+  }, [clearFocusEntity, clearCenter])
+
+  const handleRadiusChange = useCallback((value: number) => {
+    setRadius(value)
+    setViewportBounds(null)
+    setViewingPlace(null)
+  }, [setRadius])
+
+  const handleCitySelect = useCallback((lat: number, lng: number, name: string, state: string, cc = '') => {
+    clearFocusEntity()
+    setCenter(lat, lng, name, state, cc)
+    setViewingPlace(null)
+  }, [clearFocusEntity, setCenter])
+
+  const handleShowAll = useCallback(() => {
+    clearFocusEntity()
+    clearCenter()
+    setViewportBounds(null)
+    setViewingPlace(null)
+    setHoverRadiusKm(null)
+    setFitBoundsTrigger(n => n + 1)
+  }, [clearFocusEntity, clearCenter])
 
   const filterRange = getFilterRange(filter)
   let filteredPlaces = matchedPlaces
@@ -252,35 +327,33 @@ export default function App() {
     filteredPlaces = filteredPlaces.filter(p => p.rating === ratingFilter)
   }
 
-  const activeTrip = trips.find(t => t.id === activeTripId) || null
-  if (activeTrip) {
-    filteredPlaces = filteredPlaces.filter(p => activeTrip.place_ids.includes(p.id))
+  // A focused trip always keeps its own places visible even if they fall
+  // outside the centroid radius, so trip pins never disappear from the map.
+  if (focus?.kind === 'trip' && activeTrip) {
+    const tripIds = new Set(activeTrip.place_ids)
+    const tripPlaces = places.filter(p => tripIds.has(p.id))
+    for (const p of tripPlaces) {
+      if (!filteredPlaces.some(x => x.id === p.id)) filteredPlaces.push(p)
+    }
   }
 
-  const tripNearbySuggestions = useMemo(() => {
-    if (!activeTrip) return []
-    const tripPlaces = activeTrip.place_ids
-      .map(id => places.find(p => p.id === id))
-      .filter((p): p is Place => p !== undefined)
-    return getNearbySuggestions(tripPlaces, places)
-  }, [activeTrip, places])
-
-  const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
+  const hasActiveFilters = focus !== null || filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
   const contextLabels = [
-    activeTrip ? `Trip: ${activeTrip.name}` : '',
-    !activeTrip ? (cityName || (center ? 'Nearby' : '')) : '',
-    !activeTrip && center ? `${radius} km` : '',
+    focus ? (focus.kind === 'trip' ? `🚗 Trip: ${focus.label}` : `📍 ${focus.label}`) : '',
+    !focus ? (cityName || (center ? 'Nearby' : '')) : '',
+    !focus && center ? `${radius} km` : '',
     filter !== 'all' ? FILTERS.find(f => f.key === filter)?.label : '',
     ...amenityFilters.slice(0, 2).map(formatAmenity),
     priceFilter ? formatPriceTier(priceFilter) : '',
     priorityFilter ? `${formatPriority(priorityFilter)} priority` : '',
     ratingFilter ? `${ratingFilter}★` : '',
   ].filter(Boolean)
-  const areaFilter: ActiveFilterChip | null = activeTrip ? {
-    type: 'viewing',
-    label: `🚗 Trip: ${activeTrip.name} (${activeTrip.place_ids.length})`,
-    onClear: () => { setActiveTripId(null); setFitBoundsTrigger(n => n + 1) },
-    onRecenter: () => setFitBoundsTrigger(n => n + 1),
+  const areaFilter: ActiveFilterChip | null = focus ? {
+    type: focus.kind,
+    label: `${focus.kind === 'trip' ? '🚗 Trip: ' : '📍 '}${focus.label} · ${radius} km`,
+    onClear: handleClearFocus,
+    onHover: (hover) => setHoverRadiusKm(hover ? radius : null),
+    onRecenter: handleRecenter,
   } : center ? {
     type: 'city',
     label: cityName ? `📍 ${cityName} · ${radius} km` : `📍 ${radius} km radius`,
@@ -321,6 +394,7 @@ export default function App() {
     const lng = (viewportBounds.east + viewportBounds.west) / 2
     const cornerDist = getDistanceKm(lat, lng, viewportBounds.north, viewportBounds.east)
     const radiusKm = Math.max(1, Math.ceil(cornerDist / 5) * 5)
+    clearFocusEntity()
     setViewingPlace(null)
     setBoundsRadius(null)
     setSuppressFit(n => n + 1)
@@ -385,7 +459,7 @@ export default function App() {
         )}
         <div className={`topbar-search${mobileSearchOpen ? '' : ' topbar-search--collapsed'}`}>
           <UnifiedSearchInput
-            onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
+            onCitySelect={handleCitySelect}
             onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
             center={center}
             stateName={stateName}
@@ -417,16 +491,12 @@ export default function App() {
             {areaFilter && (
               <div
                 className="header-radius-menu"
-                ref={activeTrip ? nearbyMenuRef : radiusMenuRef}
+                ref={radiusMenuRef}
               >
                 <FilterChip
-                  f={
-                    activeTrip
-                      ? { ...areaFilter, onRecenter: () => setNearbyMenuOpen(open => !open) }
-                      : { ...areaFilter, onRecenter: () => setRadiusMenuOpen(open => !open) }
-                  }
+                  f={{ ...areaFilter, onRecenter: () => setRadiusMenuOpen(open => !open) }}
                 />
-                {!activeTrip && radiusMenuOpen && (
+                {radiusMenuOpen && (
                   <div className="header-radius-popover">
                     <span>Radius</span>
                     <RadiusSelector
@@ -443,47 +513,6 @@ export default function App() {
                       }}
                       onHover={setHoverRadiusKm}
                     />
-                  </div>
-                )}
-                {activeTrip && nearbyMenuOpen && (
-                  <div className="header-nearby-popover">
-                    <div className="header-nearby-popover-head">
-                      <Compass size={13} />
-                      <span>Nearby places</span>
-                    </div>
-                    {tripNearbySuggestions.length > 0 ? (
-                      <ul className="header-nearby-list">
-                        {tripNearbySuggestions.map(({ place, minDistanceKm }) => (
-                          <li key={place.id} className="header-nearby-item">
-                            <div
-                              className="header-nearby-item-info"
-                              onClick={() => handleLocatePlace(place)}
-                              title="Show on map"
-                            >
-                              <strong>{toTitleCase(place.name)}</strong>
-                              <span>
-                                {minDistanceKm < 1
-                                  ? `${Math.round(minDistanceKm * 1000)} m away`
-                                  : `${minDistanceKm.toFixed(1)} km away`}
-                              </span>
-                            </div>
-                            <button
-                              type="button"
-                              className="btn btn-secondary btn-sm"
-                              onClick={() => addPlaceToTrip(activeTrip.id, place.id)}
-                            >
-                              <Plus size={13} /> Add
-                            </button>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <div className="header-nearby-empty">
-                        {activeTrip.place_ids.length === 0
-                          ? 'Add places to this trip first to find nearby suggestions.'
-                          : 'No nearby places found within 15 km of this trip.'}
-                      </div>
-                    )}
                   </div>
                 )}
               </div>
@@ -519,8 +548,8 @@ export default function App() {
       {/* Location controls — geolocation only, floats top-right */}
       <LocationControls
         isGeolocating={isGeolocating}
-        onReset={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
-        onShowAll={() => { clearCenter(); setViewportBounds(null); setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
+        onReset={() => { clearFocusEntity(); resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
+        onShowAll={handleShowAll}
         onFocusHere={handleFocusHere}
       />
 
@@ -534,7 +563,7 @@ export default function App() {
           category={mobileCategory}
           onCategoryChange={setMobileCategory}
           onSelect={handleSelectPlace}
-          onNearMe={() => { resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
+          onNearMe={() => { clearFocusEntity(); resetToGeolocation(); setViewportBounds(null); setViewingPlace(null) }}
           onOpenFilters={() => setMobileFiltersOpen(true)}
         />
       )}
@@ -594,6 +623,23 @@ export default function App() {
                 </button>
               </div>
             </div>
+            <FocusBar
+              focus={focus}
+              onClearFocus={handleClearFocus}
+              onRecenter={handleRecenter}
+              onRadiusChange={handleRadiusChange}
+              onHoverRadius={setHoverRadiusKm}
+              filter={filter}
+              onFilterChange={setFilter}
+              amenityFilters={amenityFilters}
+              onAmenityFiltersChange={setAmenityFilters}
+              priceFilter={priceFilter}
+              onPriceFilterChange={setPriceFilter}
+              priorityFilter={priorityFilter}
+              onPriorityFilterChange={setPriorityFilter}
+              ratingFilter={ratingFilter}
+              onRatingFilterChange={setRatingFilter}
+            />
             <div className="library-switcher" role="tablist" aria-label="Library sections">
               <button className={libraryTab === 'places' ? 'active' : ''} onClick={() => setLibraryTab('places')} role="tab" aria-selected={libraryTab === 'places'}>
                 Places <span>{places.length}</span>
@@ -602,22 +648,16 @@ export default function App() {
                 Trips <span>{trips.length}</span>
               </button>
             </div>
-            {activeTrip && (
-              <div className="trip-focus-banner">
-                <span>🚗 <strong>{activeTrip.name}</strong> · {activeTrip.place_ids.length} places</span>
-                <button onClick={() => { setActiveTripId(null); setFitBoundsTrigger(n => n + 1) }}>Exit focus</button>
-              </div>
-            )}
             {libraryTab === 'trips' ? (
               <TripsPanel
                 embedded
                 trips={trips} places={places} activeTripId={activeTripId}
-                onSelectTrip={trip => setActiveTripId(trip ? trip.id : null)}
+                onSelectTrip={trip => { if (trip) setTripFocus(trip); else setPlaceFocusPlace(null) }}
                 onAddTrip={addTrip} onUpdateTrip={editTrip}
-                onDeleteTrip={async id => { await deleteTrip(id); if (activeTripId === id) setActiveTripId(null) }}
+                onDeleteTrip={async id => { await deleteTrip(id); if (activeTripId === id) handleClearFocus() }}
                 onAddPlaceToTrip={addPlaceToTrip} onRemovePlaceFromTrip={removePlaceFromTrip}
                 onLocatePlace={handleLocatePlace} onClose={() => setPanel(null)}
-                onFocusTripOnMap={trip => { setActiveTripId(trip.id); setFitBoundsTrigger(n => n + 1); setViewingPlace(null) }}
+                onFocusTripOnMap={setTripFocus}
               />
             ) : (
               <>
@@ -638,17 +678,10 @@ export default function App() {
                 <div className="panel-body">
                 <PlacesList
                   places={filteredPlaces} onDelete={handleDeletePlace} onEdit={setEditingPlace} onLocate={handleLocatePlace}
-                  activeFilter={filter} center={center} stateName={stateName} cityName={cityName} radius={radius}
-                  onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
-                  onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
+                  onCitySelect={handleCitySelect}
                   onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
-                  onRecenter={handleRecenter} viewingPlace={viewingPlace}
-                  onClearViewing={() => { setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }} filter={filter} onFilterChange={setFilter}
-                  viewportBounds={viewportBounds} onClearBounds={() => { setViewportBounds(null); setFitBoundsTrigger(n => n + 1) }}
-                  boundsRadius={boundsRadius} onBoundsRadiusChange={(r) => { setBoundsRadius(r); setViewingPlace(null) }} onClearBoundsRadius={() => setBoundsRadius(null)}
-                  searchQuery={searchQuery} onSearchChange={setSearchQuery} onHoverRadius={setHoverRadiusKm} onHoverPlace={setHoverPlaceId}
-                  amenityFilters={amenityFilters} onAmenityFiltersChange={setAmenityFilters} priceFilter={priceFilter} onPriceFilterChange={setPriceFilter}
-                  priorityFilter={priorityFilter} onPriorityFilterChange={setPriorityFilter} ratingFilter={ratingFilter} onRatingFilterChange={setRatingFilter}
+                  center={center} stateName={stateName} cityName={cityName}
+                  searchQuery={searchQuery} onSearchChange={setSearchQuery} onHoverPlace={setHoverPlaceId}
                   onAddToTrip={place => setTripModalPlace(place)}
                   onExplore={handleExplorePlace}
                   confirmingId={confirmingId}
@@ -665,22 +698,21 @@ export default function App() {
             places={places}
             activeTripId={activeTripId}
             onSelectTrip={trip => {
-              setActiveTripId(trip ? trip.id : null)
+              if (trip) setTripFocus(trip)
+              else setPlaceFocusPlace(null)
             }}
             onAddTrip={addTrip}
             onUpdateTrip={editTrip}
             onDeleteTrip={async id => {
               await deleteTrip(id)
-              if (activeTripId === id) setActiveTripId(null)
+              if (activeTripId === id) handleClearFocus()
             }}
             onAddPlaceToTrip={addPlaceToTrip}
             onRemovePlaceFromTrip={removePlaceFromTrip}
             onLocatePlace={handleLocatePlace}
             onClose={() => setPanel(null)}
             onFocusTripOnMap={trip => {
-              setActiveTripId(trip.id)
-              setFitBoundsTrigger(n => n + 1)
-              setViewingPlace(null)
+              setTripFocus(trip)
               if (isMobile) {
                 setPanel(null)
                 setSheetState('hidden')
@@ -702,42 +734,37 @@ export default function App() {
                 </button>
               </div>
             </div>
+            <FocusBar
+              focus={focus}
+              onClearFocus={handleClearFocus}
+              onRecenter={handleRecenter}
+              onRadiusChange={handleRadiusChange}
+              onHoverRadius={setHoverRadiusKm}
+              filter={filter}
+              onFilterChange={setFilter}
+              amenityFilters={amenityFilters}
+              onAmenityFiltersChange={setAmenityFilters}
+              priceFilter={priceFilter}
+              onPriceFilterChange={setPriceFilter}
+              priorityFilter={priorityFilter}
+              onPriorityFilterChange={setPriorityFilter}
+              ratingFilter={ratingFilter}
+              onRatingFilterChange={setRatingFilter}
+            />
             <div className="panel-body">
               <PlacesList
                 places={filteredPlaces}
                 onDelete={handleDeletePlace}
                 onEdit={setEditingPlace}
                 onLocate={handleLocatePlace}
-                activeFilter={filter}
+                onCitySelect={handleCitySelect}
+                onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
                 center={center}
                 stateName={stateName}
                 cityName={cityName}
-                radius={radius}
-                onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
-                onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
-                onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
-                onRecenter={handleRecenter}
-                viewingPlace={viewingPlace}
-                onClearViewing={() => { setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }}
-                filter={filter}
-                onFilterChange={setFilter}
-                viewportBounds={viewportBounds}
-                onClearBounds={() => { setViewportBounds(null); setFitBoundsTrigger(n => n + 1) }}
-                boundsRadius={boundsRadius}
-                onBoundsRadiusChange={(r) => { setBoundsRadius(r); setViewingPlace(null) }}
-                onClearBoundsRadius={() => setBoundsRadius(null)}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
-                onHoverRadius={setHoverRadiusKm}
                 onHoverPlace={setHoverPlaceId}
-                amenityFilters={amenityFilters}
-                onAmenityFiltersChange={setAmenityFilters}
-                priceFilter={priceFilter}
-                onPriceFilterChange={setPriceFilter}
-                priorityFilter={priorityFilter}
-                onPriorityFilterChange={setPriorityFilter}
-                ratingFilter={ratingFilter}
-                onRatingFilterChange={setRatingFilter}
                 onAddToTrip={(place) => setTripModalPlace(place)}
                 onExplore={handleExplorePlace}
                 confirmingId={confirmingId}

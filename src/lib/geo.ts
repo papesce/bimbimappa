@@ -89,3 +89,31 @@ export function findOptimalRadius(
   const lastR = radii[radii.length - 1]
   return { radius: lastR, matchedPlaces: getPlacesWithinRadius(places, center, lastR) }
 }
+
+/**
+ * Geographic centre of a set of places (mean of coordinates). Returns `null`
+ * for an empty list; single-place trips resolve to that place's coordinates.
+ */
+export function getTripCentroid(places: Place[]): GeoPoint | null {
+  if (places.length === 0) return null
+  if (places.length === 1) return { lat: places[0].lat, lng: places[0].lng }
+  const sum = places.reduce(
+    (acc, p) => ({ lat: acc.lat + p.lat, lng: acc.lng + p.lng }),
+    { lat: 0, lng: 0 }
+  )
+  return { lat: sum.lat / places.length, lng: sum.lng / places.length }
+}
+
+const DEFAULT_RADII = [5, 10, 50, 100, 200]
+
+/**
+ * Smallest radius bucket that covers every place from `center`, so a trip's
+ * default radius never hides any of its own places. Falls back to the largest
+ * bucket, or `minRadius` when the list is empty.
+ */
+export function getCoveringRadiusKm(center: GeoPoint, places: Place[], radii: number[] = DEFAULT_RADII, minRadius = 5): number {
+  for (const r of radii) {
+    if (places.every(p => getDistanceKm(center.lat, center.lng, p.lat, p.lng) <= r)) return r
+  }
+  return radii[radii.length - 1] ?? minRadius
+}

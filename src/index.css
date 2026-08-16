@@ -575,6 +575,30 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   align-self: center;
 }
 
+/* ─── Focus bar (shared radius + filters above Library switcher) ── */
+.focus-bar {
+  padding-top: 14px;
+}
+
+.focus-bar-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 0 20px 12px;
+}
+
+.focus-bar-row .filter-chip {
+  max-width: 220px;
+}
+
+.focus-bar-radius-label {
+  font-size: 9px;
+  letter-spacing: 0.3px;
+  color: var(--sub);
+  font-weight: 600;
+}
+
 .panel-filter-grid {
   display: grid;
   grid-template-columns: repeat(1, minmax(0, 1fr));
@@ -1428,6 +1452,16 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
 .filter-chip--viewing {
   background: rgba(61, 90, 138, 0.08);
   border-color: rgba(61, 90, 138, 0.2);
+}
+
+.filter-chip--place {
+  background: rgba(255, 107, 107, 0.08);
+  border-color: rgba(255, 107, 107, 0.2);
+}
+
+.filter-chip--trip {
+  background: rgba(76, 175, 80, 0.08);
+  border-color: rgba(76, 175, 80, 0.2);
 }
 
 .filter-chip--city {

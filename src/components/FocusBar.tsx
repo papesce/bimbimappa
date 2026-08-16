@@ -1,0 +1,73 @@
+import FilterChip from './FilterChip'
+import RadiusSelector from './RadiusSelector'
+import PanelFilters from './PanelFilters'
+import type { ActiveFilterChip, FilterKey, FocusEntity, PriceTier, PriorityLevel } from '../types'
+
+export interface FocusBarProps {
+  focus: FocusEntity | null
+  onClearFocus: () => void
+  onRecenter: () => void
+  onRadiusChange: (km: number) => void
+  onHoverRadius?: (km: number | null) => void
+  filter: FilterKey
+  onFilterChange: (filter: FilterKey) => void
+  amenityFilters: string[]
+  onAmenityFiltersChange: (filters: string[]) => void
+  priceFilter: PriceTier | null
+  onPriceFilterChange: (value: PriceTier | null) => void
+  priorityFilter: PriorityLevel | null
+  onPriorityFilterChange: (value: PriorityLevel | null) => void
+  ratingFilter: number | null
+  onRatingFilterChange: (value: number | null) => void
+}
+
+export default function FocusBar({
+  focus,
+  onClearFocus,
+  onRecenter,
+  onRadiusChange,
+  onHoverRadius,
+  filter,
+  onFilterChange,
+  amenityFilters,
+  onAmenityFiltersChange,
+  priceFilter,
+  onPriceFilterChange,
+  priorityFilter,
+  onPriorityFilterChange,
+  ratingFilter,
+  onRatingFilterChange,
+}: FocusBarProps) {
+  const chip: ActiveFilterChip | null = focus ? {
+    type: focus.kind,
+    label: focus.label,
+    onClear: onClearFocus,
+    onRecenter,
+    onHover: (hover) => onHoverRadius?.(hover ? focus.radius : null),
+  } : null
+
+  return (
+    <div className="focus-bar">
+      {chip && (
+        <div className="focus-bar-row">
+          <FilterChip f={chip} />
+          <span className="focus-bar-radius-label">Radius</span>
+          <RadiusSelector value={focus!.radius} onChange={onRadiusChange} onHover={onHoverRadius} />
+          <span className="focus-bar-radius-label">Km</span>
+        </div>
+      )}
+      <PanelFilters
+        filter={filter}
+        onFilterChange={onFilterChange}
+        amenityFilters={amenityFilters}
+        onAmenityFiltersChange={onAmenityFiltersChange}
+        priceFilter={priceFilter}
+        onPriceFilterChange={onPriceFilterChange}
+        priorityFilter={priorityFilter}
+        onPriorityFilterChange={onPriorityFilterChange}
+        ratingFilter={ratingFilter}
+        onRatingFilterChange={onRatingFilterChange}
+      />
+    </div>
+  )
+}
