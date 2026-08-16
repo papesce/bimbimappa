@@ -10,7 +10,13 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
 });
 
-export type MarkerVariant = 'normal' | 'new' | 'hover';
+export type MarkerVariant =
+  | 'normal'
+  | 'new'
+  | 'hover'
+  | 'normal-dimmed'
+  | 'new-dimmed'
+  | 'hover-dimmed';
 
 const iconCache: Record<string, L.DivIcon> = {};
 
@@ -21,29 +27,50 @@ const iconCache: Record<string, L.DivIcon> = {};
 export function makePlaceIcon(
   category: PlaceCategory | null,
   variant: MarkerVariant = 'normal',
+  tripIndex?: number,
 ): L.DivIcon {
-  const cacheKey = `${category ?? 'other'}|${variant}`;
+  const isDimmed = variant.endsWith('-dimmed');
+  const cacheKey = `${category ?? 'other'}|${variant}|${tripIndex ?? ''}`;
   const cached = iconCache[cacheKey];
   if (cached) return cached;
 
   const { color } = getCategory(category);
-  const size = variant === 'new' ? 36 : 32;
+  const baseVariant = isDimmed
+    ? (variant.replace('-dimmed', '') as 'normal' | 'new' | 'hover')
+    : variant;
+  const size = baseVariant === 'new' ? 36 : 32;
   const ring =
-    variant !== 'normal'
+    baseVariant !== 'normal'
       ? `<div class="new-marker-ring" style="background:${color}59;"></div>`
       : '';
   const shadow =
-    variant === 'new'
+    baseVariant === 'new'
       ? 'box-shadow: 0 2px 12px rgba(0,0,0,0.4);'
-      : variant === 'hover'
+      : baseVariant === 'hover'
         ? `box-shadow: 0 0 0 4px ${color}59, 0 2px 12px rgba(0,0,0,0.35);`
         : 'box-shadow: 0 2px 8px rgba(0,0,0,0.3);';
   const badge = categoryIconHtml(category, size >= 36 ? 15 : 13);
 
+  const dimStyle = isDimmed ? 'opacity:0.35;filter:saturate(0.4);' : '';
+
+  const tripBadge =
+    tripIndex != null
+      ? `<div style="
+          position:absolute;top:-2px;right:-2px;
+          width:20px;height:20px;border-radius:50%;
+          background:white;border:1px solid rgba(0,0,0,0.15);
+          box-shadow:0 1px 3px rgba(0,0,0,0.25);
+          z-index:2;display:flex;align-items:center;justify-content:center;
+          font-family:system-ui,-apple-system,sans-serif;
+          font-size:11px;font-weight:600;color:#1a1a1a;
+          line-height:1;
+        ">${tripIndex}</div>`
+      : '';
+
   const icon = L.divIcon({
     className: '',
     html: `
-      <div style="position:relative;width:${size}px;height:${size}px;">
+      <div style="position:relative;width:${size}px;height:${size}px;${dimStyle}">
         ${ring}
         <div style="
           background:${color};
@@ -59,6 +86,7 @@ export function makePlaceIcon(
             ${badge}
           </span>
         </div>
+        ${tripBadge}
       </div>`,
     iconSize: [size, size],
     iconAnchor: [size / 2, size],

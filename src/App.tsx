@@ -581,6 +581,7 @@ export default function App() {
         <PlacesMap
           places={previewArea ? getPlacesWithinRadius(places, previewArea, radius) : filteredPlaces}
           focusPlaces={matchedPlaces}
+          activeTrip={activeTrip}
           center={center}
           radius={radius}
           onDelete={handleDeletePlace}

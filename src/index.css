@@ -2008,6 +2008,11 @@ body {
   }
 }
 
+/* ─── Dimmed marker (non-trip places when viewing a trip) ──────── */
+.leaflet-marker-icon.marker--dimmed {
+  pointer-events: none;
+}
+
 /* ─── Map popup ─────────────────────────────────────────────────── */
 .popup {
   position: relative;

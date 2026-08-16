@@ -3,7 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Circle, MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import { centerIcon, makePlaceIcon } from '../lib/leafletIcons';
-import type { GeoPoint, MapBounds, Place, ViewingPlace } from '../types';
+import type { GeoPoint, MapBounds, Place, Trip, ViewingPlace } from '../types';
 import BackToAreaButton from './BackToAreaButton';
 import BoundsTracker from './BoundsTracker';
 import ClosePopupOnDrag from './ClosePopupOnDrag';
@@ -15,6 +15,7 @@ import SafariGestureGuard from './SafariGestureGuard';
 export interface MapProps {
   places: Place[];
   focusPlaces: Place[];
+  activeTrip: Trip | null;
   center: GeoPoint | null;
   radius: number;
   onDelete: (id: string) => void;
@@ -60,6 +61,7 @@ function SearchCenterPopupContent({ radius }: { radius: number }) {
 export default function PlacesMap({
   places,
   focusPlaces,
+  activeTrip,
   center,
   radius,
   onDelete,
@@ -94,6 +96,15 @@ export default function PlacesMap({
   const markerRefs = useRef<Record<string, L.Marker | null>>({});
   const defaultCenter: [number, number] = [-34.6037, -58.3816];
   const defaultZoom = 5;
+
+  const tripIndexMap = useMemo(() => {
+    if (!activeTrip) return new Map<string, number>();
+    const m = new Map<string, number>();
+    for (const [i, id] of activeTrip.place_ids.entries()) {
+      m.set(id, i + 1);
+    }
+    return m;
+  }, [activeTrip]);
 
   // Show circle at full opacity on city/radius change, then fade out
   useEffect(() => {
@@ -199,14 +210,20 @@ export default function PlacesMap({
 
       {places.map(place => {
         const isNew = place.id === newPlaceId;
+        const tripIdx = tripIndexMap.get(place.id);
+        const isDimmed = activeTrip != null && tripIdx == null;
+        const baseVariant = isNew ? 'new' : hoverPlaceId === place.id ? 'hover' : 'normal';
+        const variant = isDimmed ? `${baseVariant}-dimmed` : baseVariant;
         return (
           <NewMarker
             key={place.id}
             place={place}
             icon={makePlaceIcon(
               place.category,
-              isNew ? 'new' : hoverPlaceId === place.id ? 'hover' : 'normal',
+              variant as Parameters<typeof makePlaceIcon>[1],
+              tripIdx,
             )}
+            dimmed={isDimmed}
             confirmingId={confirmingId}
             setConfirmingId={setConfirmingId}
             onDelete={onDelete}

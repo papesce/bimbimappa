@@ -18,6 +18,7 @@ import VisitedBadge from './VisitedBadge';
 export interface NewMarkerProps {
   place: Place;
   icon: L.DivIcon;
+  dimmed?: boolean;
   confirmingId: string | null;
   setConfirmingId: (id: string | null) => void;
   onDelete: (id: string) => void;
@@ -32,6 +33,7 @@ export interface NewMarkerProps {
 export default function NewMarker({
   place,
   icon,
+  dimmed,
   confirmingId,
   setConfirmingId,
   onDelete,
@@ -106,6 +108,7 @@ export default function NewMarker({
       ref={markerRef}
       position={[place.lat, place.lng]}
       icon={icon}
+      className={dimmed ? 'marker--dimmed' : undefined}
       eventHandlers={isMobile ? { click: () => onMobilePopup(place.id) } : undefined}
     >
       {!isMobile && (
