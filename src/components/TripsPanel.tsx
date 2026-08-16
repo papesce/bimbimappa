@@ -46,7 +46,6 @@ export default function TripsPanel({
   onPendingTripConsumed,
 }: TripsPanelProps) {
   const [selectedTripId, setSelectedTripId] = useState<string | null>(activeTripId);
-  const [editingTripId, setEditingTripId] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [localSearchQuery, setLocalSearchQuery] = useState('');
   const [sortOption, setSortOption] = useState<TripSortOption>('priority');
@@ -141,20 +140,17 @@ export default function TripsPanel({
         allPlaces={places}
         onBack={() => {
           setSelectedTripId(null);
-          setEditingTripId(null);
         }}
         onUpdateTrip={onUpdateTrip}
         onDeleteTrip={async id => {
           await onDeleteTrip(id);
           setSelectedTripId(null);
-          setEditingTripId(null);
           onSelectTrip(null);
         }}
         onAddPlace={onAddPlaceToTrip}
         onRemovePlace={onRemovePlaceFromTrip}
         onLocatePlace={onLocatePlace}
         onFocusTripOnMap={onFocusTripOnMap}
-        initialEditing={editingTripId === selectedTrip.id}
       />
     );
   }
@@ -410,13 +406,7 @@ export default function TripsPanel({
                   <div className="place-card-actions">
                     <TripActions
                       trip={trip}
-                      onViewTrip={t => {
-                        setEditingTripId(null);
-                        setSelectedTripId(t.id);
-                        onSelectTrip(t);
-                      }}
                       onEditTrip={t => {
-                        setEditingTripId(t.id);
                         setSelectedTripId(t.id);
                         onSelectTrip(t);
                       }}

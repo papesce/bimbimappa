@@ -1,4 +1,4 @@
-import { Eye, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { useDismissable } from '../hooks/useDismissable';
 import type { Trip } from '../types';
@@ -6,17 +6,11 @@ import ConfirmRow from './ConfirmRow';
 
 interface TripActionsProps {
   trip: Trip;
-  onViewTrip: (trip: Trip) => void;
   onEditTrip: (trip: Trip) => void;
   onDeleteTrip: (id: string) => Promise<void>;
 }
 
-export default function TripActions({
-  trip,
-  onViewTrip,
-  onEditTrip,
-  onDeleteTrip,
-}: TripActionsProps) {
+export default function TripActions({ trip, onEditTrip, onDeleteTrip }: TripActionsProps) {
   const [open, setOpen] = useState(false);
   const [confirming, setConfirming] = useState(false);
   const ref = useDismissable<HTMLDivElement>(() => setOpen(false));
@@ -36,16 +30,6 @@ export default function TripActions({
       {open && (
         <div className="place-actions-menu">
           <div className="place-actions-menu-primary">
-            <button
-              type="button"
-              className="place-action-btn"
-              onClick={() => {
-                setOpen(false);
-                onViewTrip(trip);
-              }}
-            >
-              <Eye size={12} /> View trip
-            </button>
             <button
               type="button"
               className="place-action-btn"

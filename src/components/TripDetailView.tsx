@@ -1,4 +1,4 @@
-import { ArrowLeft, Check, Compass, MapPin, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react';
+import { ArrowLeft, Check, Compass, MapPin, Pencil, Plus, Sparkles, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { getNearbySuggestions } from '../lib/geo';
 import { toTitleCase } from '../lib/text';
@@ -16,7 +16,6 @@ interface TripDetailViewProps {
   onAddPlace: (tripId: string, placeId: string) => Promise<void>;
   onLocatePlace: (place: Place) => void;
   onFocusTripOnMap: (trip: Trip) => void;
-  initialEditing?: boolean;
 }
 
 export default function TripDetailView({
@@ -29,14 +28,12 @@ export default function TripDetailView({
   onAddPlace,
   onLocatePlace,
   onFocusTripOnMap,
-  initialEditing = false,
 }: TripDetailViewProps) {
-  const [isEditing, setIsEditing] = useState(initialEditing);
+  const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(trip.name);
   const [priority, setPriority] = useState<TripPriority>(trip.priority);
   const [notes, setNotes] = useState(trip.notes || '');
   const [targetDate, setTargetDate] = useState(trip.target_date || '');
-  const [confirmDelete, setConfirmDelete] = useState(false);
   const [confirmingRemoveId, setConfirmingRemoveId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -338,39 +335,6 @@ export default function TripDetailView({
             </span>
           </div>
         )}
-
-        {/* Delete trip */}
-        <div className="trip-danger-section">
-          {confirmDelete ? (
-            <div className="trip-confirm-delete">
-              <p>Delete this trip?</p>
-              <div className="trip-confirm-delete-actions">
-                <button
-                  type="button"
-                  className="btn btn-danger btn-sm"
-                  onClick={() => onDeleteTrip(trip.id)}
-                >
-                  Yes, delete trip
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => setConfirmDelete(false)}
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              type="button"
-              className="btn-text-danger"
-              onClick={() => setConfirmDelete(true)}
-            >
-              <Trash2 size={14} /> Delete this trip
-            </button>
-          )}
-        </div>
       </div>
     </div>
   );
