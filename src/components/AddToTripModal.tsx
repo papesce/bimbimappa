@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus, X, Check, Compass, Sparkles } from 'lucide-react'
 import { toTitleCase } from '../lib/text'
+import { useDismissable } from '../hooks/useDismissable'
 import type { Place, Trip, TripInput, TripPriority } from '../types'
 
 interface AddToTripModalProps {
@@ -23,6 +24,7 @@ export default function AddToTripModal({
   const [newTripPriority, setNewTripPriority] = useState<TripPriority>(1)
   const [newTripNotes, setNewTripNotes] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const sheetRef = useDismissable<HTMLDivElement>(onClose)
 
   async function handleCreateNewTrip(e: React.FormEvent) {
     e.preventDefault()
@@ -44,8 +46,8 @@ export default function AddToTripModal({
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose} role="dialog" aria-modal="true">
-      <div className="modal-sheet add-to-trip-modal" onClick={e => e.stopPropagation()}>
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <div ref={sheetRef} className="modal-sheet add-to-trip-modal">
         <div className="modal-header">
           <div className="modal-header-title">
             <Compass size={18} className="modal-icon" />

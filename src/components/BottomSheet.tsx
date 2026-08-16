@@ -5,6 +5,7 @@ import { googleMapsUrl, wazeUrl } from '../lib/navigation'
 import { formatDateRange } from '../lib/date'
 import { toTitleCase } from '../lib/text'
 import { formatAmenity, formatPriceTier, formatPriority, formatRating } from '../lib/placeAttributes'
+import { useDismissable } from '../hooks/useDismissable'
 import BrandIcon from './BrandIcon'
 import CategoryBadge from './CategoryBadge'
 import ConfirmRow from './ConfirmRow'
@@ -45,6 +46,8 @@ export default function BottomSheet({
   const [isLightboxOpen, setLightboxOpen] = useState(false)
   const sheetRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState>({ startY: 0, startVisiblePx: 0, dragging: false, interactive: false })
+  useDismissable(onClose, { outsideClick: false, escape: !isLightboxOpen })
+  useDismissable(() => setLightboxOpen(false), { outsideClick: false, escape: isLightboxOpen })
   const HIDDEN_PX = 48
   const PEEK_PX = 205
 

@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { MapPin, List, Plus, X, Search, SlidersHorizontal, Compass } from 'lucide-react'
+import { MapPin, Library, Plus, X, Search, SlidersHorizontal } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
@@ -21,6 +21,7 @@ import { useTrips } from './hooks/useTrips'
 import { useAuth } from './hooks/useAuth'
 import { useMapFocus } from './hooks/useMapFocus'
 import { useIsMobile } from './hooks/useIsMobile'
+import { useDismissable } from './hooks/useDismissable'
 import { FILTERS, getFilterRange } from './lib/filters'
 import { formatAmenity, formatPriceTier, formatPriority } from './lib/placeAttributes'
 import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm } from './lib/geo'
@@ -37,6 +38,7 @@ export default function App() {
   const isMobile = useIsMobile()
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [panel, setPanel] = useState<PanelState>(null)
+  const [libraryTab, setLibraryTab] = useState<'places' | 'trips'>('places')
   const [activeTripId, setActiveTripId] = useState<string | null>(null)
   const [tripModalPlace, setTripModalPlace] = useState<Place | null>(null)
   const [editingPlace, setEditingPlace] = useState<Place | null>(null)
@@ -70,10 +72,18 @@ export default function App() {
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
 
   useEffect(() => {
-    if (!radiusMenuOpen) return
-    const timeout = window.setTimeout(() => setRadiusMenuOpen(false), 10000)
-    return () => window.clearTimeout(timeout)
-  }, [radiusMenuOpen])
+    if (panel !== 'library') return
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setPanel(null)
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [panel])
+
+  const radiusMenuRef = useDismissable<HTMLDivElement>(() => setRadiusMenuOpen(false), {
+    outsideClick: radiusMenuOpen,
+    escape: radiusMenuOpen,
+  })
 
   // Hover highlight on the "Viewing" chip is ephemeral — reset whenever the viewed place changes
   useEffect(() => {
@@ -386,7 +396,7 @@ export default function App() {
               }
             </span>
             {areaFilter && (
-              <div className="header-radius-menu">
+              <div className="header-radius-menu" ref={radiusMenuRef}>
                 <FilterChip f={{ ...areaFilter, onRecenter: () => setRadiusMenuOpen(open => !open) }} />
                 {radiusMenuOpen && (
                   <div className="header-radius-popover">
@@ -423,34 +433,15 @@ export default function App() {
                 : `${filteredPlaces.length} of ${places.length} places`}
             </span>
             <button
-              className={`icon-btn${panel === 'trips' ? ' active' : ''}`}
+              className={`icon-btn${panel === 'library' ? ' active' : ''}`}
               onClick={() => {
-                if (panel === 'trips') {
-                  setPanel(null)
-                } else {
-                  setPanel('trips')
-                  setSheetState('hidden')
-                }
+                if (panel === 'library') setPanel(null)
+                else { setPanel('library'); setSheetState('hidden') }
               }}
-              aria-label="Next trips"
-              title="Next trips"
+              aria-label="Library"
+              title="Library"
             >
-              <Compass size={18} />
-            </button>
-            <button
-              className={`icon-btn${panel === 'list' ? ' active' : ''}`}
-              onClick={() => {
-                if (panel === 'list') {
-                  setPanel(null)
-                } else {
-                  setPanel('list')
-                  setSheetState('hidden')
-                }
-              }}
-              aria-label="Saved places"
-              title="Saved places"
-            >
-              <List size={18} />
+              <Library size={18} />
             </button>
           </div>
         </div>
@@ -519,6 +510,85 @@ export default function App() {
             initialQuery={searchQuery}
             onShowInMap={(coords) => setPreviewArea(coords)}
           />
+        )}
+        {panel === 'library' && !editingPlace && (
+          <div className="panel library-panel">
+            <div className="panel-header">
+              <div className="panel-header-left">
+                <Library size={20} className="panel-header-icon" />
+                <h2>Library</h2>
+              </div>
+              <div className="panel-header-right">
+                <ExportButton />
+                <button className="icon-btn" onClick={() => setPanel(null)} aria-label="Close library" title="Close library">
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+            <div className="library-switcher" role="tablist" aria-label="Library sections">
+              <button className={libraryTab === 'places' ? 'active' : ''} onClick={() => setLibraryTab('places')} role="tab" aria-selected={libraryTab === 'places'}>
+                Places <span>{places.length}</span>
+              </button>
+              <button className={libraryTab === 'trips' ? 'active' : ''} onClick={() => setLibraryTab('trips')} role="tab" aria-selected={libraryTab === 'trips'}>
+                Trips <span>{trips.length}</span>
+              </button>
+            </div>
+            {activeTrip && (
+              <div className="trip-focus-banner">
+                <span>🚗 <strong>{activeTrip.name}</strong> · {activeTrip.place_ids.length} places</span>
+                <button onClick={() => { setActiveTripId(null); setFitBoundsTrigger(n => n + 1) }}>Exit focus</button>
+              </div>
+            )}
+            {libraryTab === 'trips' ? (
+              <TripsPanel
+                embedded
+                trips={trips} places={places} activeTripId={activeTripId}
+                onSelectTrip={trip => setActiveTripId(trip ? trip.id : null)}
+                onAddTrip={addTrip} onUpdateTrip={editTrip}
+                onDeleteTrip={async id => { await deleteTrip(id); if (activeTripId === id) setActiveTripId(null) }}
+                onAddPlaceToTrip={addPlaceToTrip} onRemovePlaceFromTrip={removePlaceFromTrip}
+                onLocatePlace={handleLocatePlace} onClose={() => setPanel(null)}
+                onFocusTripOnMap={trip => { setActiveTripId(trip.id); setFitBoundsTrigger(n => n + 1); setViewingPlace(null) }}
+              />
+            ) : (
+              <>
+                <div className="library-places-header">
+                  <div>
+                    <h3>Saved places</h3>
+                    <span>{filteredPlaces.length}{filteredPlaces.length !== places.length ? ` of ${places.length}` : ''} places</span>
+                  </div>
+                  <button
+                    className="icon-btn panel-add-btn library-add-place"
+                    onClick={() => setPanel('add')}
+                    aria-label="Add place"
+                    title="Add place"
+                  >
+                    <Plus size={18} />
+                  </button>
+                </div>
+                <div className="panel-body">
+                <PlacesList
+                  places={filteredPlaces} onDelete={handleDeletePlace} onEdit={setEditingPlace} onLocate={handleLocatePlace}
+                  activeFilter={filter} center={center} stateName={stateName} cityName={cityName} radius={radius}
+                  onRadiusChange={(r) => { setRadius(r); setViewportBounds(null); setViewingPlace(null) }}
+                  onCitySelect={(lat, lng, name, state) => { setCenter(lat, lng, name, state); setViewingPlace(null) }}
+                  onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
+                  onRecenter={handleRecenter} viewingPlace={viewingPlace}
+                  onClearViewing={() => { setViewingPlace(null); setFitBoundsTrigger(n => n + 1) }} filter={filter} onFilterChange={setFilter}
+                  viewportBounds={viewportBounds} onClearBounds={() => { setViewportBounds(null); setFitBoundsTrigger(n => n + 1) }}
+                  boundsRadius={boundsRadius} onBoundsRadiusChange={(r) => { setBoundsRadius(r); setViewingPlace(null) }} onClearBoundsRadius={() => setBoundsRadius(null)}
+                  searchQuery={searchQuery} onSearchChange={setSearchQuery} onHoverRadius={setHoverRadiusKm} onHoverPlace={setHoverPlaceId}
+                  amenityFilters={amenityFilters} onAmenityFiltersChange={setAmenityFilters} priceFilter={priceFilter} onPriceFilterChange={setPriceFilter}
+                  priorityFilter={priorityFilter} onPriorityFilterChange={setPriorityFilter} ratingFilter={ratingFilter} onRatingFilterChange={setRatingFilter}
+                  onAddToTrip={place => setTripModalPlace(place)}
+                  onExplore={handleExplorePlace}
+                  confirmingId={confirmingId}
+                  setConfirmingId={setConfirmingId}
+                />
+                </div>
+              </>
+            )}
+          </div>
         )}
         {panel === 'trips' && !editingPlace && (
           <TripsPanel
@@ -600,6 +670,9 @@ export default function App() {
                 ratingFilter={ratingFilter}
                 onRatingFilterChange={setRatingFilter}
                 onAddToTrip={(place) => setTripModalPlace(place)}
+                onExplore={handleExplorePlace}
+                confirmingId={confirmingId}
+                setConfirmingId={setConfirmingId}
               />
             </div>
           </div>

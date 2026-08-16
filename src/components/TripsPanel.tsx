@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react'
 import { Plus, Compass, Search, X, ArrowUpDown, Sparkles, MapPin } from 'lucide-react'
 import { toTitleCase } from '../lib/text'
+import { useDismissable } from '../hooks/useDismissable'
 import TripDetailView from './TripDetailView'
 import type { Place, Trip, TripInput, TripPriority, TripSortOption } from '../types'
 
@@ -17,6 +18,7 @@ interface TripsPanelProps {
   onLocatePlace: (place: Place) => void
   onClose: () => void
   onFocusTripOnMap: (trip: Trip) => void
+  embedded?: boolean
 }
 
 export default function TripsPanel({
@@ -32,6 +34,7 @@ export default function TripsPanel({
   onLocatePlace,
   onClose,
   onFocusTripOnMap,
+  embedded = false,
 }: TripsPanelProps) {
   const [selectedTripId, setSelectedTripId] = useState<string | null>(activeTripId)
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -44,6 +47,10 @@ export default function TripsPanel({
   const [newTargetDate, setNewTargetDate] = useState('')
   const [newNotes, setNewNotes] = useState('')
   const [isCreating, setIsCreating] = useState(false)
+  const createCardRef = useDismissable<HTMLDivElement>(() => setShowCreateModal(false), {
+    outsideClick: false,
+    escape: showCreateModal,
+  })
 
   const selectedTrip = useMemo(() => {
     if (!selectedTripId) return null
@@ -120,31 +127,48 @@ export default function TripsPanel({
         onRemovePlace={onRemovePlaceFromTrip}
         onLocatePlace={onLocatePlace}
         onFocusTripOnMap={onFocusTripOnMap}
+        onClose={onClose}
       />
     )
   }
 
   return (
     <div className="panel trips-panel">
-      <div className="panel-header">
-        <div className="panel-header-left">
-          <Compass size={20} className="panel-header-icon" />
-          <h2>Next Trips</h2>
-          <span className="panel-header-count">{trips.length}</span>
-        </div>
-        <div className="panel-header-right">
+      {embedded ? (
+        <div className="library-places-header">
+          <div>
+            <h3>Planned Trips</h3>
+            <span>{trips.length} {trips.length === 1 ? 'trip' : 'trips'}</span>
+          </div>
           <button
-            className="icon-btn panel-add-btn"
+            className="icon-btn panel-add-btn library-add-place"
             onClick={() => setShowCreateModal(true)}
             title="Create new trip"
           >
             <Plus size={18} />
           </button>
-          <button className="icon-btn" onClick={onClose} aria-label="Close panel">
-            <X size={18} />
-          </button>
         </div>
-      </div>
+      ) : (
+        <div className="panel-header">
+          <div className="panel-header-left">
+            <Compass size={20} className="panel-header-icon" />
+            <h2>Next Trips</h2>
+            <span className="panel-header-count">{trips.length}</span>
+          </div>
+          <div className="panel-header-right">
+            <button
+              className="icon-btn panel-add-btn"
+              onClick={() => setShowCreateModal(true)}
+              title="Create new trip"
+            >
+              <Plus size={18} />
+            </button>
+            <button className="icon-btn" onClick={onClose} aria-label="Close panel">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="trips-panel-controls">
         <div className="trips-search-bar">
@@ -182,9 +206,9 @@ export default function TripsPanel({
         </div>
       </div>
 
-      <div className="panel-body trips-panel-body">
+        <div className="panel-body trips-panel-body">
         {showCreateModal && (
-          <div className="trip-create-card">
+          <div className="trip-create-card" ref={createCardRef}>
             <div className="trip-create-card-header">
               <h3>
                 <Sparkles size={16} /> New Trip / Outing
@@ -315,7 +339,10 @@ export default function TripsPanel({
                 <li
                   key={trip.id}
                   className={`trip-item-card${isMapActive ? ' is-map-active' : ''}`}
-                  onClick={() => setSelectedTripId(trip.id)}
+                  onClick={() => {
+                    setSelectedTripId(trip.id)
+                    onSelectTrip(trip)
+                  }}
                 >
                   <div className="trip-item-top">
                     <div className="trip-item-info">

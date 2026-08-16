@@ -5,7 +5,7 @@ export interface ConfirmRowProps {
   confirmLabel?: string
   onConfirm: () => void
   onCancel: () => void
-  variant?: 'default' | 'dense' | 'inline'
+  variant?: 'default' | 'inline'
 }
 
 export default function ConfirmRow({ message = 'Remove this place?', confirmLabel = 'Remove', onConfirm, onCancel, variant = 'default' }: ConfirmRowProps) {
@@ -17,7 +17,7 @@ export default function ConfirmRow({ message = 'Remove this place?', confirmLabe
     )
   }
   return (
-    <div className={`confirm-row${variant === 'dense' ? ' confirm-row--dense' : ''}`}>
+    <div className="confirm-row">
       <span className="confirm-message">{message}</span>
       <div className="confirm-actions">
         <button className="confirm-btn danger" onClick={onConfirm}>

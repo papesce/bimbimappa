@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { MapPin } from 'lucide-react'
 import UnifiedSearchInput from './UnifiedSearchInput'
 import FilterChip from './FilterChip'
@@ -44,18 +43,12 @@ export interface PlacesListProps {
   ratingFilter: number | null
   onRatingFilterChange: (value: number | null) => void
   onAddToTrip?: (place: Place) => void
+  onExplore: (place: Place) => void
+  confirmingId: string | null
+  setConfirmingId: (id: string | null) => void
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, onRecenter, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, onHoverRadius, onHoverPlace, amenityFilters, onAmenityFiltersChange, priceFilter, onPriceFilterChange, priorityFilter, onPriorityFilterChange, ratingFilter, onRatingFilterChange, onAddToTrip }: PlacesListProps) {
-  const [confirmingId, setConfirmingId] = useState<string | null>(null)
-  const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!menuOpenId) return
-    const close = () => setMenuOpenId(null)
-    document.addEventListener('click', close)
-    return () => document.removeEventListener('click', close)
-  }, [menuOpenId])
+export default function PlacesList({ places, onDelete, onEdit, onLocate, activeFilter, center, stateName, cityName, radius, onRadiusChange, onCitySelect, onClear, onRecenter, viewingPlace, onClearViewing, filter, onFilterChange, viewportBounds, onClearBounds, boundsRadius, onBoundsRadiusChange, onClearBoundsRadius, searchQuery, onSearchChange, onHoverRadius, onHoverPlace, amenityFilters, onAmenityFiltersChange, priceFilter, onPriceFilterChange, priorityFilter, onPriorityFilterChange, ratingFilter, onRatingFilterChange, onAddToTrip, onExplore, confirmingId, setConfirmingId }: PlacesListProps) {
 
   const activeFilters: ActiveFilterChip[] = []
   if (center) {
@@ -213,11 +206,10 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, activeF
             place={place}
             confirmingId={confirmingId}
             setConfirmingId={setConfirmingId}
-            menuOpenId={menuOpenId}
-            setMenuOpenId={setMenuOpenId}
             onLocate={onLocate}
             onDelete={onDelete}
             onEdit={onEdit}
+            onExplore={onExplore}
             onHoverPlace={onHoverPlace}
             onAddToTrip={onAddToTrip}
           />

@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import { useDismissable } from '../hooks/useDismissable'
 import PanelFilters from './PanelFilters'
 import type { FilterKey, PriceTier, PriorityLevel } from '../types'
 
@@ -17,9 +18,10 @@ interface MobileFilterSheetProps {
 }
 
 export default function MobileFilterSheet(props: MobileFilterSheetProps) {
+  const sheetRef = useDismissable<HTMLElement>(props.onClose)
   return (
-    <div className="mobile-filter-backdrop" onClick={props.onClose}>
-      <section className="mobile-filter-sheet" onClick={e => e.stopPropagation()} aria-label="Browse filters">
+    <div className="mobile-filter-backdrop">
+      <section ref={sheetRef} className="mobile-filter-sheet" aria-label="Browse filters">
         <div className="mobile-filter-heading">
           <div><p className="eyebrow">Explore</p><h2>Filter places</h2></div>
           <button className="icon-btn" onClick={props.onClose} aria-label="Close filters"><X size={18} /></button>

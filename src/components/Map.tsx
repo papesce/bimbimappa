@@ -56,11 +56,6 @@ function SearchCenterPopupContent({ radius }: { radius: number }) {
 
 export default function Map({ places, focusPlaces, center, radius, onDelete, onEdit, focusPlace, onFocusDone, newPlaceId, popupPlaceId, onPopupDone, onViewportChange, viewingPlace, onViewArea, onDismissViewing, fitBoundsTrigger, previewArea, onPreviewAreaDone, suppressFit, hoverRadiusKm, boundsCenter, boundsRadius, isMobile, confirmingId, setConfirmingId, onMobilePopup, hoverPlaceId, onExplorePlace, onAddToTrip }: MapProps) {
   const hovering = hoverRadiusKm !== null
-  // confirmingId is lifted to App when mobile so BottomSheet can share it;
-  // on desktop it arrives as null/undefined and we alias local names for clarity.
-  const [localConfirmingId, setLocalConfirmingId] = useState<string | null>(null)
-  const activeConfirmingId = isMobile ? confirmingId : localConfirmingId
-  const setActiveConfirmingId = isMobile ? setConfirmingId : setLocalConfirmingId
   const [circleOpacity, setCircleOpacity] = useState(0)
   const circleFadeRef = useRef<number | null>(null)
   const markerRefs = useRef<Record<string, L.Marker | null>>({})
@@ -166,8 +161,8 @@ export default function Map({ places, focusPlaces, center, radius, onDelete, onE
           key={place.id}
           place={place}
           icon={makePlaceIcon(place.category, isNew ? 'new' : hoverPlaceId === place.id ? 'hover' : 'normal')}
-          confirmingId={activeConfirmingId}
-          setConfirmingId={setActiveConfirmingId}
+          confirmingId={confirmingId}
+          setConfirmingId={setConfirmingId}
           onDelete={onDelete}
           onEdit={onEdit}
           markerRefs={markerRefs}
