@@ -4,7 +4,7 @@ import RadiusSelector from './RadiusSelector'
 import { loadRecent, saveRecent } from '../lib/recentCities'
 import { searchNominatim } from '../lib/nominatim'
 import { toTitleCase } from '../lib/text'
-import type { FilterKey, GeoPoint, MapBounds, NominatimResult, Place, RecentCity } from '../types'
+import type { FilterKey, GeoPoint, MapBounds, NominatimResult, Place, RecentCity, Trip } from '../types'
 
 export interface UnifiedSearchInputProps {
   onCitySelect: (lat: number, lng: number, name: string, state: string, countryCode: string) => void
@@ -27,9 +27,11 @@ export interface UnifiedSearchInputProps {
   autoFocus?: boolean
   onFocusChange?: (focused: boolean) => void
   hideRadius?: boolean
+  trips?: Trip[]
+  onSelectTrip?: (trip: Trip) => void
 }
 
-export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange, onHoverRadius, variant = 'default', autoFocus, onFocusChange, hideRadius = false }: UnifiedSearchInputProps) {
+export default function UnifiedSearchInput({ onCitySelect, center, stateName, radius, onRadiusChange, cityName, places, onLocate, query, onQueryChange, viewportBounds, boundsRadius, onBoundsRadiusChange, onHoverRadius, variant = 'default', autoFocus, onFocusChange, hideRadius = false, trips, onSelectTrip }: UnifiedSearchInputProps) {
   const [cityResults, setCityResults] = useState<NominatimResult[]>([])
   const [open, setOpen] = useState(false)
   const [recent, setRecent] = useState<RecentCity[]>(loadRecent)
@@ -59,6 +61,14 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
         String(p.price_tier ?? '').includes(q) ||
         String(p.priority ?? '').includes(q) ||
         String(p.rating ?? '').includes(q)
+      )
+    : []
+
+  const matchedTrips = q.length >= 2 && trips
+    ? trips.filter(t =>
+        t.name.toLowerCase().includes(q) ||
+        t.notes?.toLowerCase().includes(q) ||
+        t.target_date?.toLowerCase().includes(q)
       )
     : []
 
@@ -133,6 +143,13 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
     onLocate(place)
   }
 
+  function handleSelectTrip(trip: Trip) {
+    if (blurRef.current) clearTimeout(blurRef.current)
+    setOpen(false)
+    onQueryChange('')
+    onSelectTrip?.(trip)
+  }
+
   function handleClearInput() {
     onQueryChange('')
     setCityResults([])
@@ -181,9 +198,10 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
   const showNoRecent = !hasCity && q.length === 0 && recent.length === 0 && open
   const showCityResults = showCitySection && q.length >= 2 && cityResults.length > 0
   const showPlaceResults = q.length >= 2 && matchedPlaces.length > 0
+  const showTripResults = q.length >= 2 && matchedTrips.length > 0
   const showNoResults = q.length >= 2 &&
-    ((showCitySection && cityResults.length === 0 && matchedPlaces.length === 0) ||
-     (!showCitySection && matchedPlaces.length === 0))
+    ((showCitySection && cityResults.length === 0 && matchedPlaces.length === 0 && matchedTrips.length === 0) ||
+     (!showCitySection && matchedPlaces.length === 0 && matchedTrips.length === 0))
 
   return (
     <div className={`unified-search${variant === 'topbar' ? ' unified-search--topbar' : ''}`}>
@@ -193,7 +211,11 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
           ref={inputRef}
           className="unified-search-input"
           type="text"
-          placeholder={hasCity ? "Search in this area…" : "Search places or filter by city…"}
+          placeholder={hasCity
+            ? "Search in this area…"
+            : trips
+              ? "Search places, trips, or cities…"
+              : "Search places or filter by city…"}
           value={query}
           onChange={handleChange}
           onFocus={handleFocus}
@@ -301,6 +323,29 @@ export default function UnifiedSearchInput({ onCitySelect, center, stateName, ra
                   <span className="unified-search-option-text">
                     <strong>{toTitleCase(place.name)}</strong>
                     <span className="unified-search-option-sub">{place.address}</span>
+                  </span>
+                </button>
+              ))}
+            </>
+          )}
+          {showTripResults && (
+            <>
+              <div className="unified-search-dropdown-header">
+                <span>🗺 Trips</span>
+              </div>
+              {matchedTrips.slice(0, 10).map((trip) => (
+                <button
+                  key={trip.id}
+                  className="unified-search-option"
+                  onMouseDown={(e) => { e.preventDefault(); handleSelectTrip(trip) }}
+                >
+                  <MapPin size={12} className="unified-search-option-icon" />
+                  <span className="unified-search-option-text">
+                    <strong>{toTitleCase(trip.name)}</strong>
+                    <span className="unified-search-option-sub">
+                      {trip.place_ids.length} {trip.place_ids.length === 1 ? 'place' : 'places'}
+                      {trip.target_date ? ` · 📅 ${trip.target_date}` : ''}
+                    </span>
                   </span>
                 </button>
               ))}

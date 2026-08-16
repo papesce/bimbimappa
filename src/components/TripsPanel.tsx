@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Plus, Compass, Search, X, ArrowUpDown, Sparkles, MapPin } from 'lucide-react'
 import { toTitleCase } from '../lib/text'
 import { useDismissable } from '../hooks/useDismissable'
@@ -19,6 +19,10 @@ interface TripsPanelProps {
   onClose: () => void
   onFocusTripOnMap: (trip: Trip) => void
   embedded?: boolean
+  searchQuery?: string
+  onSearchChange?: (query: string) => void
+  pendingTripId?: string | null
+  onPendingTripConsumed?: () => void
 }
 
 export default function TripsPanel({
@@ -35,11 +39,18 @@ export default function TripsPanel({
   onClose,
   onFocusTripOnMap,
   embedded = false,
+  searchQuery: controlledQuery,
+  onSearchChange,
+  pendingTripId,
+  onPendingTripConsumed,
 }: TripsPanelProps) {
   const [selectedTripId, setSelectedTripId] = useState<string | null>(activeTripId)
   const [showCreateModal, setShowCreateModal] = useState(false)
-  const [searchQuery, setSearchQuery] = useState('')
+  const [localSearchQuery, setLocalSearchQuery] = useState('')
   const [sortOption, setSortOption] = useState<TripSortOption>('priority')
+
+  const searchQuery = onSearchChange ? (controlledQuery ?? '') : localSearchQuery
+  const setSearchQuery = onSearchChange ?? setLocalSearchQuery
 
   // Form state for creating a new trip
   const [newName, setNewName] = useState('')
@@ -57,12 +68,21 @@ export default function TripsPanel({
     return trips.find(t => t.id === selectedTripId) || null
   }, [trips, selectedTripId])
 
+  useEffect(() => {
+    if (pendingTripId) {
+      setSelectedTripId(pendingTripId)
+      onPendingTripConsumed?.()
+    }
+  }, [pendingTripId])
+
   const filteredTrips = useMemo(() => {
     let result = [...trips]
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim()
       result = result.filter(
-        t => t.name.toLowerCase().includes(q) || (t.notes && t.notes.toLowerCase().includes(q))
+        t => t.name.toLowerCase().includes(q) ||
+          (t.notes && t.notes.toLowerCase().includes(q)) ||
+          (t.target_date && t.target_date.toLowerCase().includes(q))
       )
     }
 
@@ -171,24 +191,26 @@ export default function TripsPanel({
       )}
 
       <div className="trips-panel-controls">
-        <div className="trips-search-bar">
-          <Search size={15} />
-          <input
-            type="text"
-            placeholder="Search trips..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              className="trips-search-clear"
-              onClick={() => setSearchQuery('')}
-            >
-              <X size={13} />
-            </button>
-          )}
-        </div>
+        {!embedded && (
+          <div className="trips-search-bar">
+            <Search size={15} />
+            <input
+              type="text"
+              placeholder="Search trips..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                className="trips-search-clear"
+                onClick={() => setSearchQuery('')}
+              >
+                <X size={13} />
+              </button>
+            )}
+          </div>
+        )}
 
         <div className="trips-sort-selector">
           <ArrowUpDown size={13} />

@@ -701,6 +701,9 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   font-size: 11px;
 }
 .library-add-place { flex-shrink: 0; }
+.library-search-area {
+  padding: 6px 0 0;
+}
 .library-switcher {
   display: grid;
   grid-template-columns: 1fr 1fr;

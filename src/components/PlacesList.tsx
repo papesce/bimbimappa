@@ -20,10 +20,11 @@ export interface PlacesListProps {
   onExplore: (place: Place) => void
   confirmingId: string | null
   setConfirmingId: (id: string | null) => void
+  hideSearch?: boolean
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, onCitySelect, onClear, center, stateName, cityName, searchQuery, onSearchChange, onHoverPlace, onAddToTrip, onExplore, confirmingId, setConfirmingId }: PlacesListProps) {
-  const search = (
+export default function PlacesList({ places, onDelete, onEdit, onLocate, onCitySelect, onClear, center, stateName, cityName, searchQuery, onSearchChange, onHoverPlace, onAddToTrip, onExplore, confirmingId, setConfirmingId, hideSearch = false }: PlacesListProps) {
+  const search = hideSearch ? null : (
     <div className="panel-search-area">
       <UnifiedSearchInput
         onCitySelect={onCitySelect}
@@ -47,9 +48,9 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, onCityS
         <div className="panel-scroll-area">
           <div className="empty-state">
             <MapPin size={32} strokeWidth={1.5} />
-            <p>No places saved yet.</p>
+            <p>{searchQuery.trim() && hideSearch ? 'No places match your search.' : 'No places saved yet.'}</p>
             <p className="empty-sub">
-              Tap "Add place" to drop the first pin.
+              {searchQuery.trim() && hideSearch ? 'Try a different query or clear the search.' : 'Tap "Add place" to drop the first pin.'}
             </p>
           </div>
         </div>

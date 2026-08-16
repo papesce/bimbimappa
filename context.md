@@ -127,7 +127,7 @@ All policies are permissive (any request with the anon key can read, insert, upd
 
 ### 6. App Shell — `App.jsx`
 - Map fills viewport; topbar overlays top; side panel slides in from right
-- UI state: `panel` (`null | 'add' | 'list'`), `editingPlace`, `filter` (`'all' | 'week' | 'month'`)
+- UI state: `panel` (`null | 'add' | 'library' | 'trips'`), `editingPlace`, `filter` (`'all' | 'week' | 'month'`)
 - Client-side date filtering supports overlapping multi-day ranges via `getFilterRange()`
 - Only one panel open at a time; edit takes precedence
 

@@ -40,6 +40,7 @@ export default function App() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
   const [panel, setPanel] = useState<PanelState>(null)
   const [libraryTab, setLibraryTab] = useState<'places' | 'trips'>('places')
+  const [libraryTripRequest, setLibraryTripRequest] = useState<string | null>(null)
   const [activeTripId, setActiveTripId] = useState<string | null>(null)
   const [placeFocusPlace, setPlaceFocusPlace] = useState<Place | null>(null)
   const [tripModalPlace, setTripModalPlace] = useState<Place | null>(null)
@@ -200,7 +201,8 @@ export default function App() {
     setCenter(place.lat, place.lng, '', '', '', EXPLORE_RADIUS_KM)
     setViewingPlace(null)
     if (!isMobile) {
-      setPanel('list')
+      setLibraryTab('places')
+      setPanel('library')
     } else {
       setSheetState('hidden')
     }
@@ -255,6 +257,22 @@ export default function App() {
     setPlaceFocusPlace(null)
     setActiveTripId(null)
   }, [])
+
+  const handleSearchSelectTrip = useCallback((trip: Trip) => {
+    setLibraryTab('trips')
+    setLibraryTripRequest(trip.id)
+    if (isMobile) {
+      setPanel(null)
+      setSheetState('hidden')
+      setTripFocus(trip)
+    }
+  }, [isMobile, setTripFocus])
+
+  const handleMapSearchSelectTrip = useCallback((trip: Trip) => {
+    setPanel(null)
+    setSheetState('hidden')
+    setTripFocus(trip)
+  }, [setTripFocus])
 
   const handleClearFocus = useCallback(() => {
     clearFocusEntity()
@@ -342,9 +360,24 @@ export default function App() {
     }
   }
 
-  const hasActiveFilters = focus !== null || filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
+  // Library search narrows the saved-places list by the shared query.
+  const libraryPlaces = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase()
+    if (!q) return filteredPlaces
+    return filteredPlaces.filter(p =>
+      p.name?.toLowerCase().includes(q) ||
+      p.address?.toLowerCase().includes(q) ||
+      p.notes?.toLowerCase().includes(q) ||
+      p.category?.toLowerCase().includes(q) ||
+      p.amenities?.some(a => a.toLowerCase().includes(q)) ||
+      String(p.price_tier ?? '').includes(q) ||
+      String(p.priority ?? '').includes(q) ||
+      String(p.rating ?? '').includes(q)
+    )
+  }, [filteredPlaces, searchQuery])
+
+  const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
   const contextLabels = [
-    focus ? (focus.kind === 'trip' ? `🚗 Trip: ${focus.label}` : `📍 ${focus.label}`) : '',
     !focus ? (cityName || (center ? 'Nearby' : '')) : '',
     !focus && center ? `${radius} km` : '',
     filter !== 'all' ? FILTERS.find(f => f.key === filter)?.label : '',
@@ -380,7 +413,8 @@ export default function App() {
       setSheetState('hidden')
       setConfirmingId(null)
     } else {
-      setPanel('list')
+      setLibraryTab('places')
+      setPanel('library')
     }
   }
 
@@ -479,6 +513,8 @@ export default function App() {
             onLocate={handleLocatePlace}
             query={searchQuery}
             onQueryChange={setSearchQuery}
+            trips={trips}
+            onSelectTrip={handleMapSearchSelectTrip}
             onHoverRadius={setHoverRadiusKm}
             variant="topbar"
             autoFocus={mobileSearchOpen}
@@ -523,7 +559,7 @@ export default function App() {
               </div>
             )}
             {hasActiveFilters && (
-              <button className="topbar-context" onClick={() => isMobile ? setMobileFiltersOpen(true) : setPanel('list')} title="Show active filters">
+              <button className="topbar-context" onClick={() => { if (isMobile) setMobileFiltersOpen(true); else { setLibraryTab('places'); setPanel('library') } }} title="Show active filters">
                 <SlidersHorizontal size={14} />
                 <span>{contextLabels.filter(label => label && !label.includes('km') && label !== cityName).join(' · ') || 'Filters'}</span>
               </button>
@@ -628,6 +664,20 @@ export default function App() {
                 </button>
               </div>
             </div>
+            <div className="panel-search-area library-search-area">
+              <UnifiedSearchInput
+                onCitySelect={handleCitySelect}
+                onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
+                center={center} stateName={stateName} cityName={cityName}
+                places={filteredPlaces}
+                onLocate={handleLocatePlace}
+                query={searchQuery}
+                onQueryChange={setSearchQuery}
+                trips={trips}
+                onSelectTrip={handleSearchSelectTrip}
+                hideRadius
+              />
+            </div>
             <FocusBar
               focus={focus}
               areaChip={focus ? null : areaFilter}
@@ -665,13 +715,17 @@ export default function App() {
                 onAddPlaceToTrip={addPlaceToTrip} onRemovePlaceFromTrip={removePlaceFromTrip}
                 onLocatePlace={handleLocatePlace} onClose={() => setPanel(null)}
                 onFocusTripOnMap={setTripFocus}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                pendingTripId={libraryTripRequest}
+                onPendingTripConsumed={() => setLibraryTripRequest(null)}
               />
             ) : (
               <>
                 <div className="library-places-header">
                   <div>
                     <h3>Saved places</h3>
-                    <span>{filteredPlaces.length}{filteredPlaces.length !== places.length ? ` of ${places.length}` : ''} places</span>
+                    <span>{libraryPlaces.length}{libraryPlaces.length !== places.length ? ` of ${places.length}` : ''} places</span>
                   </div>
                   <button
                     className="icon-btn panel-add-btn library-add-place"
@@ -684,7 +738,7 @@ export default function App() {
                 </div>
                 <div className="panel-body">
                 <PlacesList
-                  places={filteredPlaces} onDelete={handleDeletePlace} onEdit={setEditingPlace} onLocate={handleLocatePlace}
+                  places={libraryPlaces} onDelete={handleDeletePlace} onEdit={setEditingPlace} onLocate={handleLocatePlace}
                   onCitySelect={handleCitySelect}
                   onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
                   center={center} stateName={stateName} cityName={cityName}
@@ -693,6 +747,7 @@ export default function App() {
                   onExplore={handleExplorePlace}
                   confirmingId={confirmingId}
                   setConfirmingId={setConfirmingId}
+                  hideSearch
                 />
                 </div>
               </>
@@ -726,61 +781,6 @@ export default function App() {
               }
             }}
           />
-        )}
-        {panel === 'list' && !editingPlace && (
-          <div className="panel">
-            <div className="panel-header">
-              <h2>Saved places</h2>
-              <div className="panel-header-right">
-                <button className="icon-btn panel-add-btn" onClick={() => setPanel('add')} title="Add place">
-                  <Plus size={18} />
-                </button>
-                <ExportButton />
-                <button className="icon-btn" onClick={() => setPanel(null)}>
-                  <X size={18} />
-                </button>
-              </div>
-            </div>
-            <FocusBar
-              focus={focus}
-              areaChip={focus ? null : areaFilter}
-              radiusValue={focusBarRadius}
-              onClearFocus={handleClearFocus}
-              onRecenter={handleRecenter}
-              onRadiusChange={handleFocusBarRadiusChange}
-              onHoverRadius={setHoverRadiusKm}
-              filter={filter}
-              onFilterChange={setFilter}
-              amenityFilters={amenityFilters}
-              onAmenityFiltersChange={setAmenityFilters}
-              priceFilter={priceFilter}
-              onPriceFilterChange={setPriceFilter}
-              priorityFilter={priorityFilter}
-              onPriorityFilterChange={setPriorityFilter}
-              ratingFilter={ratingFilter}
-              onRatingFilterChange={setRatingFilter}
-            />
-            <div className="panel-body">
-              <PlacesList
-                places={filteredPlaces}
-                onDelete={handleDeletePlace}
-                onEdit={setEditingPlace}
-                onLocate={handleLocatePlace}
-                onCitySelect={handleCitySelect}
-                onClear={() => { clearCenter(); setHoverRadiusKm(null); setViewingPlace(null); setSuppressFit(n => n + 1) }}
-                center={center}
-                stateName={stateName}
-                cityName={cityName}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onHoverPlace={setHoverPlaceId}
-                onAddToTrip={(place) => setTripModalPlace(place)}
-                onExplore={handleExplorePlace}
-                confirmingId={confirmingId}
-                setConfirmingId={setConfirmingId}
-              />
-            </div>
-          </div>
         )}
         {editingPlace && (
           <AddPlacePanel
