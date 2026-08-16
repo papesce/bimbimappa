@@ -1,13 +1,13 @@
-import { getCategory } from '../lib/categories'
-import type { PlaceCategory } from '../types'
+import { getCategory } from '../lib/categories';
+import type { PlaceCategory } from '../types';
 
 export interface CategoryBadgeProps {
-  category: PlaceCategory
-  showLabel?: boolean
+  category: PlaceCategory;
+  showLabel?: boolean;
 }
 
 export default function CategoryBadge({ category, showLabel = false }: CategoryBadgeProps) {
-  const { label, color, icon: Icon } = getCategory(category)
+  const { label, color, icon: Icon } = getCategory(category);
   return (
     <span className="category-badge" title={label}>
       <span className="category-badge-icon" style={{ background: color }}>
@@ -15,5 +15,5 @@ export default function CategoryBadge({ category, showLabel = false }: CategoryB
       </span>
       {showLabel && <span className="category-badge-label">{label}</span>}
     </span>
-  )
+  );
 }

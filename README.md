@@ -98,8 +98,8 @@ schema.sql            # Paste into Supabase SQL editor
 
 ## What's next (when you're ready)
 
-- **Categories / emoji tags** — beach, playground, museum, etc.
-- **Visited toggle** — mark places you've already been to
-- **Photo upload** — Supabase Storage, one extra column
-- **Filter by tag** — client-side, no DB changes needed
-- **PWA** — add to home screen, works offline (pins cached)
+- **Categories / emoji tags** — beach, playground, museum, etc. ✅
+- **Visited toggle** — mark places you've already been to ✅
+- **Photo upload** — Supabase Storage, one extra column ✅
+- **Filter by tag** — client-side, no DB changes needed ✅
+- **PWA** — add to home screen, works offline (pins cached) ✅

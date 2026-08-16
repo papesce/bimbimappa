@@ -1,13 +1,13 @@
-import type { GeoPoint } from './geo'
+import type { GeoPoint } from './geo';
 
 export interface ResolvedLocation extends GeoPoint {
-  formattedAddress: string
+  formattedAddress: string;
 }
 
 export interface GoogleGeocodeResponse {
-  status: string
+  status: string;
   results: Array<{
-    geometry: { location: GeoPoint }
-    formatted_address: string
-  }>
+    geometry: { location: GeoPoint };
+    formatted_address: string;
+  }>;
 }

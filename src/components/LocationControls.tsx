@@ -1,16 +1,22 @@
-import { Crosshair, Globe, LocateFixed } from 'lucide-react'
+import { Crosshair, Globe, LocateFixed } from 'lucide-react';
 
 export interface LocationControlsProps {
-  isGeolocating: boolean
-  onReset: () => void
-  onShowAll: () => void
-  onFocusHere: () => void
+  isGeolocating: boolean;
+  onReset: () => void;
+  onShowAll: () => void;
+  onFocusHere: () => void;
 }
 
-export default function LocationControls({ isGeolocating, onReset, onShowAll, onFocusHere }: LocationControlsProps) {
+export default function LocationControls({
+  isGeolocating,
+  onReset,
+  onShowAll,
+  onFocusHere,
+}: LocationControlsProps) {
   return (
     <div className="location-controls">
       <button
+        type="button"
         className={`location-bar-geo${isGeolocating ? ' spinning' : ''}`}
         onClick={onReset}
         title="Use my location"
@@ -19,6 +25,7 @@ export default function LocationControls({ isGeolocating, onReset, onShowAll, on
         <Crosshair size={16} />
       </button>
       <button
+        type="button"
         className="location-bar-geo"
         onClick={onShowAll}
         title="Show all places"
@@ -27,6 +34,7 @@ export default function LocationControls({ isGeolocating, onReset, onShowAll, on
         <Globe size={16} />
       </button>
       <button
+        type="button"
         className="location-bar-geo"
         onClick={onFocusHere}
         title="Focus on current view"
@@ -35,5 +43,5 @@ export default function LocationControls({ isGeolocating, onReset, onShowAll, on
         <LocateFixed size={16} />
       </button>
     </div>
-  )
+  );
 }

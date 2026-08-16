@@ -1,17 +1,17 @@
-import { CATEGORIES } from '../lib/categories'
-import type { PlaceCategory } from '../types'
+import { CATEGORIES } from '../lib/categories';
+import type { PlaceCategory } from '../types';
 
 export interface CategoryPickerProps {
-  value: PlaceCategory | null
-  onChange: (category: PlaceCategory | null) => void
+  value: PlaceCategory | null;
+  onChange: (category: PlaceCategory | null) => void;
 }
 
 export default function CategoryPicker({ value, onChange }: CategoryPickerProps) {
   return (
     <div className="category-picker">
       {CATEGORIES.map(c => {
-        const active = value === c.key
-        const Icon = c.icon
+        const active = value === c.key;
+        const Icon = c.icon;
         return (
           <button
             key={c.key}
@@ -26,8 +26,8 @@ export default function CategoryPicker({ value, onChange }: CategoryPickerProps)
             </span>
             <span className="category-chip-label">{c.label}</span>
           </button>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

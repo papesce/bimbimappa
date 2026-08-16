@@ -1,33 +1,42 @@
-import { X } from 'lucide-react'
-import type { ActiveFilterChip } from '../types'
+import { X } from 'lucide-react';
+import type { ActiveFilterChip } from '../types';
 
 export interface FilterChipProps {
-  f: ActiveFilterChip
+  f: ActiveFilterChip;
 }
 
 export default function FilterChip({ f }: FilterChipProps) {
-  const clickable = !!f.onRecenter
+  const clickable = !!f.onRecenter;
   return (
     <div
       className={`filter-chip filter-chip--${f.type}${clickable ? ' filter-chip--clickable' : ''}`}
-      onMouseEnter={f.onHover ? () => f.onHover?.(true) : undefined}
-      onMouseLeave={f.onHover ? () => f.onHover?.(false) : undefined}
     >
       {clickable ? (
-        <button type="button" className="filter-chip-main" onClick={f.onRecenter}>
+        <button
+          type="button"
+          className="filter-chip-main"
+          onClick={f.onRecenter}
+          onMouseEnter={f.onHover ? () => f.onHover?.(true) : undefined}
+          onMouseLeave={f.onHover ? () => f.onHover?.(false) : undefined}
+        >
           <span className="filter-chip-label">{f.label}</span>
         </button>
       ) : (
         <span className="filter-chip-label">{f.label}</span>
       )}
       <button
+        type="button"
         className="filter-chip-clear"
-        onClick={(e) => { e.stopPropagation(); f.onHover?.(false); f.onClear() }}
+        onClick={e => {
+          e.stopPropagation();
+          f.onHover?.(false);
+          f.onClear();
+        }}
         title={`Clear ${f.type} filter`}
         aria-label={`Clear ${f.type} filter`}
       >
         <X size={12} />
       </button>
     </div>
-  )
+  );
 }

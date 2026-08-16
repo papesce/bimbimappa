@@ -1,21 +1,21 @@
-import { useState, useMemo } from 'react'
-import { ArrowLeft, Compass, MapPin, Plus, Trash2, X, Sparkles, Pencil, Check } from 'lucide-react'
-import { toTitleCase } from '../lib/text'
-import { getNearbySuggestions } from '../lib/geo'
-import CategoryBadge from './CategoryBadge'
-import type { Place, Trip, TripInput, TripPriority } from '../types'
+import { ArrowLeft, Check, Compass, MapPin, Pencil, Plus, Sparkles, Trash2, X } from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { getNearbySuggestions } from '../lib/geo';
+import { toTitleCase } from '../lib/text';
+import type { Place, Trip, TripInput, TripPriority } from '../types';
+import CategoryBadge from './CategoryBadge';
 
 interface TripDetailViewProps {
-  trip: Trip
-  allPlaces: Place[]
-  onBack: () => void
-  onUpdateTrip: (id: string, updates: Partial<TripInput>) => Promise<Trip>
-  onDeleteTrip: (id: string) => Promise<void>
-  onRemovePlace: (tripId: string, placeId: string) => Promise<void>
-  onAddPlace: (tripId: string, placeId: string) => Promise<void>
-  onLocatePlace: (place: Place) => void
-  onFocusTripOnMap: (trip: Trip) => void
-  onClose: () => void
+  trip: Trip;
+  allPlaces: Place[];
+  onBack: () => void;
+  onUpdateTrip: (id: string, updates: Partial<TripInput>) => Promise<Trip>;
+  onDeleteTrip: (id: string) => Promise<void>;
+  onRemovePlace: (tripId: string, placeId: string) => Promise<void>;
+  onAddPlace: (tripId: string, placeId: string) => Promise<void>;
+  onLocatePlace: (place: Place) => void;
+  onFocusTripOnMap: (trip: Trip) => void;
+  onClose: () => void;
 }
 
 export default function TripDetailView({
@@ -30,47 +30,55 @@ export default function TripDetailView({
   onFocusTripOnMap,
   onClose,
 }: TripDetailViewProps) {
-  const [isEditing, setIsEditing] = useState(false)
-  const [name, setName] = useState(trip.name)
-  const [priority, setPriority] = useState<TripPriority>(trip.priority)
-  const [notes, setNotes] = useState(trip.notes || '')
-  const [targetDate, setTargetDate] = useState(trip.target_date || '')
-  const [confirmDelete, setConfirmDelete] = useState(false)
-  const [isSaving, setIsSaving] = useState(false)
+  const [isEditing, setIsEditing] = useState(false);
+  const [name, setName] = useState(trip.name);
+  const [priority, setPriority] = useState<TripPriority>(trip.priority);
+  const [notes, setNotes] = useState(trip.notes || '');
+  const [targetDate, setTargetDate] = useState(trip.target_date || '');
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   const tripPlaces = useMemo(() => {
     return trip.place_ids
       .map(id => allPlaces.find(p => p.id === id))
-      .filter((p): p is Place => p !== undefined)
-  }, [trip.place_ids, allPlaces])
+      .filter((p): p is Place => p !== undefined);
+  }, [trip.place_ids, allPlaces]);
 
   // Suggested nearby places within 15 km of any place in this trip that are not yet in the trip
-  const nearbySuggestions = useMemo(() => getNearbySuggestions(tripPlaces, allPlaces), [tripPlaces, allPlaces])
+  const nearbySuggestions = useMemo(
+    () => getNearbySuggestions(tripPlaces, allPlaces),
+    [tripPlaces, allPlaces],
+  );
 
   async function handleSaveEdit(e: React.FormEvent) {
-    e.preventDefault()
-    if (!name.trim()) return
-    setIsSaving(true)
+    e.preventDefault();
+    if (!name.trim()) return;
+    setIsSaving(true);
     try {
       await onUpdateTrip(trip.id, {
         name: name.trim(),
         priority,
         notes: notes.trim() || null,
         target_date: targetDate.trim() || null,
-      })
-      setIsEditing(false)
+      });
+      setIsEditing(false);
     } finally {
-      setIsSaving(false)
+      setIsSaving(false);
     }
   }
 
-  const priorityLabel = trip.priority === 1 ? 'High (Next Up)' : trip.priority === 2 ? 'Medium (Soon)' : 'Low (Someday)'
-  const priorityBadgeClass = `priority-badge--p${trip.priority}`
+  const priorityLabel =
+    trip.priority === 1
+      ? 'High (Next Up)'
+      : trip.priority === 2
+        ? 'Medium (Soon)'
+        : 'Low (Someday)';
+  const priorityBadgeClass = `priority-badge--p${trip.priority}`;
 
   return (
     <div className="trip-detail-view">
       <div className="trip-detail-header">
-        <button className="icon-btn" onClick={onBack} aria-label="Back to trips list">
+        <button type="button" className="icon-btn" onClick={onBack} aria-label="Back to trips list">
           <ArrowLeft size={18} />
         </button>
         <div className="trip-detail-header-title">
@@ -79,13 +87,20 @@ export default function TripDetailView({
         </div>
         <div className="trip-detail-header-actions">
           <button
+            type="button"
             className={`icon-btn${isEditing ? ' active' : ''}`}
             onClick={() => setIsEditing(val => !val)}
             title="Edit trip details"
           >
             <Pencil size={16} />
           </button>
-          <button className="icon-btn" onClick={onClose} aria-label="Close outings" title="Close outings">
+          <button
+            type="button"
+            className="icon-btn"
+            onClick={onClose}
+            aria-label="Close outings"
+            title="Close outings"
+          >
             <X size={18} />
           </button>
         </div>
@@ -107,7 +122,7 @@ export default function TripDetailView({
             </div>
 
             <div className="field">
-              <label>Priority</label>
+              <span>Priority</span>
               <div className="priority-selector">
                 <button
                   type="button"
@@ -158,22 +173,18 @@ export default function TripDetailView({
             </div>
 
             <div className="trip-edit-actions">
-              <button
-                type="submit"
-                className="btn btn-primary"
-                disabled={!name.trim() || isSaving}
-              >
+              <button type="submit" className="btn btn-primary" disabled={!name.trim() || isSaving}>
                 <Check size={14} /> {isSaving ? 'Saving...' : 'Save changes'}
               </button>
               <button
                 type="button"
                 className="btn btn-secondary"
                 onClick={() => {
-                  setName(trip.name)
-                  setPriority(trip.priority)
-                  setNotes(trip.notes || '')
-                  setTargetDate(trip.target_date || '')
-                  setIsEditing(false)
+                  setName(trip.name);
+                  setPriority(trip.priority);
+                  setNotes(trip.notes || '');
+                  setTargetDate(trip.target_date || '');
+                  setIsEditing(false);
                 }}
               >
                 Cancel
@@ -187,9 +198,7 @@ export default function TripDetailView({
                 📅 <strong>Target:</strong> {trip.target_date}
               </p>
             )}
-            {trip.notes && (
-              <p className="trip-summary-notes">"{trip.notes}"</p>
-            )}
+            {trip.notes && <p className="trip-summary-notes">"{trip.notes}"</p>}
             {tripPlaces.length > 0 && (
               <button
                 type="button"
@@ -226,7 +235,18 @@ export default function TripDetailView({
                       {place.category && <CategoryBadge category={place.category} />}
                     </div>
                   )}
-                  <div className="trip-place-info" onClick={() => onLocatePlace(place)}>
+                  <div
+                    className="trip-place-info"
+                    onClick={() => onLocatePlace(place)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onLocatePlace(place);
+                      }
+                    }}
+                  >
                     <div className="trip-place-title">
                       {place.category && <CategoryBadge category={place.category} />}
                       <strong>{toTitleCase(place.name)}</strong>
@@ -235,6 +255,7 @@ export default function TripDetailView({
                   </div>
                   <div className="trip-place-actions">
                     <button
+                      type="button"
                       className="icon-btn icon-btn--sm"
                       onClick={() => onLocatePlace(place)}
                       title="Show on map"
@@ -242,6 +263,7 @@ export default function TripDetailView({
                       <MapPin size={14} />
                     </button>
                     <button
+                      type="button"
                       className="icon-btn icon-btn--sm danger"
                       onClick={() => onRemovePlace(trip.id, place.id)}
                       title="Remove from this trip"
@@ -266,7 +288,18 @@ export default function TripDetailView({
             <ul className="trip-suggestions-list">
               {nearbySuggestions.map(({ place, minDistanceKm }) => (
                 <li key={place.id} className="trip-suggestion-item">
-                  <div className="trip-suggestion-body" onClick={() => onLocatePlace(place)}>
+                  <div
+                    className="trip-suggestion-body"
+                    onClick={() => onLocatePlace(place)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={e => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onLocatePlace(place);
+                      }
+                    }}
+                  >
                     <div className="trip-suggestion-title">
                       {place.category && <CategoryBadge category={place.category} />}
                       <strong>{toTitleCase(place.name)}</strong>
@@ -293,7 +326,9 @@ export default function TripDetailView({
         {tripPlaces.length > 0 && nearbySuggestions.length === 0 && (
           <div className="trip-suggestions-empty">
             <Sparkles size={14} />
-            <span>No nearby places within 15 km — save more places to get suggestions for this trip.</span>
+            <span>
+              No nearby places within 15 km — save more places to get suggestions for this trip.
+            </span>
           </div>
         )}
 
@@ -331,5 +366,5 @@ export default function TripDetailView({
         </div>
       </div>
     </div>
-  )
+  );
 }

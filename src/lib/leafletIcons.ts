@@ -1,39 +1,44 @@
-import L from 'leaflet'
-import { getCategory, categoryIconHtml } from './categories'
-import type { PlaceCategory } from '../types'
+import L from 'leaflet';
+import type { PlaceCategory } from '../types';
+import { categoryIconHtml, getCategory } from './categories';
 
 // Fix Leaflet's broken default icon paths in Vite
-delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl
+delete (L.Icon.Default.prototype as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
   shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-})
+});
 
-export type MarkerVariant = 'normal' | 'new' | 'hover'
+export type MarkerVariant = 'normal' | 'new' | 'hover';
 
-const iconCache: Record<string, L.DivIcon> = {}
+const iconCache: Record<string, L.DivIcon> = {};
 
 // One pin silhouette for every place; category varies color + inner glyph,
 // while `variant` overlays state (new pulse ring / hover glow). Keeps
 // "what kind of place" and "what the user is doing" as separate concerns.
 // Icons are cached per category+variant so markers keep stable identity.
-export function makePlaceIcon(category: PlaceCategory | null, variant: MarkerVariant = 'normal'): L.DivIcon {
-  const cacheKey = `${category ?? 'other'}|${variant}`
-  const cached = iconCache[cacheKey]
-  if (cached) return cached
+export function makePlaceIcon(
+  category: PlaceCategory | null,
+  variant: MarkerVariant = 'normal',
+): L.DivIcon {
+  const cacheKey = `${category ?? 'other'}|${variant}`;
+  const cached = iconCache[cacheKey];
+  if (cached) return cached;
 
-  const { color } = getCategory(category)
-  const size = variant === 'new' ? 36 : 32
-  const ring = variant !== 'normal'
-    ? `<div class="new-marker-ring" style="background:${color}59;"></div>`
-    : ''
-  const shadow = variant === 'new'
-    ? 'box-shadow: 0 2px 12px rgba(0,0,0,0.4);'
-    : variant === 'hover'
-      ? `box-shadow: 0 0 0 4px ${color}59, 0 2px 12px rgba(0,0,0,0.35);`
-      : 'box-shadow: 0 2px 8px rgba(0,0,0,0.3);'
-  const badge = categoryIconHtml(category, size >= 36 ? 15 : 13)
+  const { color } = getCategory(category);
+  const size = variant === 'new' ? 36 : 32;
+  const ring =
+    variant !== 'normal'
+      ? `<div class="new-marker-ring" style="background:${color}59;"></div>`
+      : '';
+  const shadow =
+    variant === 'new'
+      ? 'box-shadow: 0 2px 12px rgba(0,0,0,0.4);'
+      : variant === 'hover'
+        ? `box-shadow: 0 0 0 4px ${color}59, 0 2px 12px rgba(0,0,0,0.35);`
+        : 'box-shadow: 0 2px 8px rgba(0,0,0,0.3);';
+  const badge = categoryIconHtml(category, size >= 36 ? 15 : 13);
 
   const icon = L.divIcon({
     className: '',
@@ -58,9 +63,9 @@ export function makePlaceIcon(category: PlaceCategory | null, variant: MarkerVar
     iconSize: [size, size],
     iconAnchor: [size / 2, size],
     popupAnchor: [0, -(size + 4)],
-  })
-  iconCache[cacheKey] = icon
-  return icon
+  });
+  iconCache[cacheKey] = icon;
+  return icon;
 }
 
 export const centerIcon = L.divIcon({
@@ -93,7 +98,7 @@ export const centerIcon = L.divIcon({
   iconSize: [28, 28],
   iconAnchor: [14, 14],
   popupAnchor: [0, -16],
-})
+});
 
 // Coral marker for the AddPlacePanel mini-map — matches the main map, slightly smaller
 export const previewIcon = L.divIcon({
@@ -105,4 +110,4 @@ export const previewIcon = L.divIcon({
   "></div>`,
   iconSize: [22, 22],
   iconAnchor: [11, 22],
-})
+});

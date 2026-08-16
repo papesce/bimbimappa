@@ -1,6 +1,6 @@
-import type { GoogleGeocodeResponse, ResolvedLocation } from '../types'
+import type { GoogleGeocodeResponse, ResolvedLocation } from '../types';
 
-const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY
+const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
 
 /**
  * Converts a place name or address string into { lat, lng, formattedAddress }.
@@ -8,24 +8,24 @@ const API_KEY = import.meta.env.VITE_GOOGLE_PLACES_API_KEY
  */
 export async function geocodePlace(
   query: string,
-  { region }: { region?: string } = {}
+  { region }: { region?: string } = {},
 ): Promise<ResolvedLocation> {
-  const url = new URL('https://maps.googleapis.com/maps/api/geocode/json')
-  url.searchParams.set('address', query)
-  url.searchParams.set('key', API_KEY)
-  if (region) url.searchParams.set('region', region)
+  const url = new URL('https://maps.googleapis.com/maps/api/geocode/json');
+  url.searchParams.set('address', query);
+  url.searchParams.set('key', API_KEY);
+  if (region) url.searchParams.set('region', region);
 
-  const res = await fetch(url)
-  const data = await res.json() as GoogleGeocodeResponse
+  const res = await fetch(url);
+  const data = (await res.json()) as GoogleGeocodeResponse;
 
   if (data.status !== 'OK' || !data.results.length) {
-    throw new Error(`Couldn't find "${query}". Try a more specific address.`)
+    throw new Error(`Couldn't find "${query}". Try a more specific address.`);
   }
 
-  const result = data.results[0]
+  const result = data.results[0];
   return {
     lat: result.geometry.location.lat,
     lng: result.geometry.location.lng,
     formattedAddress: result.formatted_address,
-  }
+  };
 }

@@ -18,6 +18,7 @@ create table if not exists places (
   date_from   date,
   date_to     date,
   photo_url   text,              -- public Supabase Storage URL for the place photo
+  visited     boolean not null default false,
   deleted_at  timestamptz,       -- soft delete: set to now() instead of DELETE
   created_at  timestamptz default now()
 );

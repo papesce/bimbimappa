@@ -1,26 +1,28 @@
-import FilterChip from './FilterChip'
-import RadiusSelector from './RadiusSelector'
-import PanelFilters from './PanelFilters'
-import type { ActiveFilterChip, FilterKey, FocusEntity, PriceTier, PriorityLevel } from '../types'
+import type { ActiveFilterChip, FilterKey, FocusEntity, PriceTier, PriorityLevel } from '../types';
+import FilterChip from './FilterChip';
+import PanelFilters from './PanelFilters';
+import RadiusSelector from './RadiusSelector';
 
 export interface FocusBarProps {
-  focus: FocusEntity | null
-  areaChip: ActiveFilterChip | null
-  radiusValue: number
-  onClearFocus: () => void
-  onRecenter: () => void
-  onRadiusChange: (km: number) => void
-  onHoverRadius?: (km: number | null) => void
-  filter: FilterKey
-  onFilterChange: (filter: FilterKey) => void
-  amenityFilters: string[]
-  onAmenityFiltersChange: (filters: string[]) => void
-  priceFilter: PriceTier | null
-  onPriceFilterChange: (value: PriceTier | null) => void
-  priorityFilter: PriorityLevel | null
-  onPriorityFilterChange: (value: PriorityLevel | null) => void
-  ratingFilter: number | null
-  onRatingFilterChange: (value: number | null) => void
+  focus: FocusEntity | null;
+  areaChip: ActiveFilterChip | null;
+  radiusValue: number;
+  onClearFocus: () => void;
+  onRecenter: () => void;
+  onRadiusChange: (km: number) => void;
+  onHoverRadius?: (km: number | null) => void;
+  filter: FilterKey;
+  onFilterChange: (filter: FilterKey) => void;
+  amenityFilters: string[];
+  onAmenityFiltersChange: (filters: string[]) => void;
+  priceFilter: PriceTier | null;
+  onPriceFilterChange: (value: PriceTier | null) => void;
+  priorityFilter: PriorityLevel | null;
+  onPriorityFilterChange: (value: PriorityLevel | null) => void;
+  ratingFilter: number | null;
+  onRatingFilterChange: (value: number | null) => void;
+  visitedFilter: 'all' | 'visited' | 'unvisited';
+  onVisitedFilterChange: (value: 'all' | 'visited' | 'unvisited') => void;
 }
 
 export default function FocusBar({
@@ -41,14 +43,18 @@ export default function FocusBar({
   onPriorityFilterChange,
   ratingFilter,
   onRatingFilterChange,
+  visitedFilter,
+  onVisitedFilterChange,
 }: FocusBarProps) {
-  const chip: ActiveFilterChip | null = focus ? {
-    type: focus.kind,
-    label: focus.label,
-    onClear: onClearFocus,
-    onRecenter,
-    onHover: (hover) => onHoverRadius?.(hover ? focus.radius : null),
-  } : areaChip
+  const chip: ActiveFilterChip | null = focus
+    ? {
+        type: focus.kind,
+        label: focus.label,
+        onClear: onClearFocus,
+        onRecenter,
+        onHover: hover => onHoverRadius?.(hover ? focus.radius : null),
+      }
+    : areaChip;
 
   return (
     <div className="focus-bar">
@@ -73,7 +79,9 @@ export default function FocusBar({
         onPriorityFilterChange={onPriorityFilterChange}
         ratingFilter={ratingFilter}
         onRatingFilterChange={onRatingFilterChange}
+        visitedFilter={visitedFilter}
+        onVisitedFilterChange={onVisitedFilterChange}
       />
     </div>
-  )
+  );
 }

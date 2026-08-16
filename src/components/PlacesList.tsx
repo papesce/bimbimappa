@@ -1,29 +1,53 @@
-import { MapPin } from 'lucide-react'
-import UnifiedSearchInput from './UnifiedSearchInput'
-import PlaceCard from './PlaceCard'
-import type { GeoPoint, Place } from '../types'
+import { MapPin } from 'lucide-react';
+import type { GeoPoint, Place } from '../types';
+import PlaceCard from './PlaceCard';
+import UnifiedSearchInput from './UnifiedSearchInput';
 
 export interface PlacesListProps {
-  places: Place[]
-  onDelete: (id: string) => void
-  onEdit: (place: Place) => void
-  onLocate: (place: Place) => void
-  onCitySelect: (lat: number, lng: number, name: string, state: string, countryCode: string) => void
-  onClear: () => void
-  center: GeoPoint | null
-  stateName: string
-  cityName: string
-  searchQuery: string
-  onSearchChange: (query: string) => void
-  onHoverPlace?: (id: string | null) => void
-  onAddToTrip?: (place: Place) => void
-  onExplore: (place: Place) => void
-  confirmingId: string | null
-  setConfirmingId: (id: string | null) => void
-  hideSearch?: boolean
+  places: Place[];
+  onDelete: (id: string) => void;
+  onEdit: (place: Place) => void;
+  onLocate: (place: Place) => void;
+  onCitySelect: (
+    lat: number,
+    lng: number,
+    name: string,
+    state: string,
+    countryCode: string,
+  ) => void;
+  onClear: () => void;
+  center: GeoPoint | null;
+  stateName: string;
+  cityName: string;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  onHoverPlace?: (id: string | null) => void;
+  onAddToTrip?: (place: Place) => void;
+  onExplore: (place: Place) => void;
+  confirmingId: string | null;
+  setConfirmingId: (id: string | null) => void;
+  hideSearch?: boolean;
 }
 
-export default function PlacesList({ places, onDelete, onEdit, onLocate, onCitySelect, onClear, center, stateName, cityName, searchQuery, onSearchChange, onHoverPlace, onAddToTrip, onExplore, confirmingId, setConfirmingId, hideSearch = false }: PlacesListProps) {
+export default function PlacesList({
+  places,
+  onDelete,
+  onEdit,
+  onLocate,
+  onCitySelect,
+  onClear,
+  center,
+  stateName,
+  cityName,
+  searchQuery,
+  onSearchChange,
+  onHoverPlace,
+  onAddToTrip,
+  onExplore,
+  confirmingId,
+  setConfirmingId,
+  hideSearch = false,
+}: PlacesListProps) {
   const search = hideSearch ? null : (
     <div className="panel-search-area">
       <UnifiedSearchInput
@@ -39,7 +63,7 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, onCityS
         hideRadius
       />
     </div>
-  )
+  );
 
   if (places.length === 0) {
     return (
@@ -48,37 +72,43 @@ export default function PlacesList({ places, onDelete, onEdit, onLocate, onCityS
         <div className="panel-scroll-area">
           <div className="empty-state">
             <MapPin size={32} strokeWidth={1.5} />
-            <p>{searchQuery.trim() && hideSearch ? 'No places match your search.' : 'No places saved yet.'}</p>
+            <p>
+              {searchQuery.trim() && hideSearch
+                ? 'No places match your search.'
+                : 'No places saved yet.'}
+            </p>
             <p className="empty-sub">
-              {searchQuery.trim() && hideSearch ? 'Try a different query or clear the search.' : 'Tap "Add place" to drop the first pin.'}
+              {searchQuery.trim() && hideSearch
+                ? 'Try a different query or clear the search.'
+                : 'Tap "Add place" to drop the first pin.'}
             </p>
           </div>
         </div>
       </>
-    )
+    );
   }
 
   return (
     <>
       {search}
       <div className="panel-scroll-area">
-      <ul className="places-list">
-        {places.map((place) => (
-          <PlaceCard
-            key={place.id}
-            place={place}
-            confirmingId={confirmingId}
-            setConfirmingId={setConfirmingId}
-            onLocate={onLocate}
-            onDelete={onDelete}
-            onEdit={onEdit}
-            onExplore={onExplore}
-            onHoverPlace={onHoverPlace}
-            onAddToTrip={onAddToTrip}
-          />
-        ))}
-      </ul>
+        <ul className="places-list">
+          {places.map(place => (
+            <PlaceCard
+              key={place.id}
+              place={place}
+              confirmingId={confirmingId}
+              setConfirmingId={setConfirmingId}
+              onLocate={onLocate}
+              onDelete={onDelete}
+              onEdit={onEdit}
+              onExplore={onExplore}
+              onHoverPlace={onHoverPlace}
+              onAddToTrip={onAddToTrip}
+            />
+          ))}
+        </ul>
       </div>
     </>
-  )
+  );
 }

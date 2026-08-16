@@ -21,6 +21,7 @@
 | Authentication | Shared-secret URL token → localStorage |
 | Icons | Lucide React 0.383.0 |
 | Styling | Custom CSS (CSS variables, no framework) |
+| Linting | Biome 2.5.8 (recommended preset) |
 | Deployment | Vercel (primary) / Docker + GCP Cloud Run (alternative) |
 
 ---
@@ -178,6 +179,8 @@ See `docs/gcp_setup_guide.md` for the full walkthrough and GitHub Actions CI set
 npm install
 cp .env.example .env.local   # fill in real values
 npm run dev                   # http://localhost:5173
+npm run lint                  # check lint + format
+npm run lint:fix              # auto-fix lint + format
 ```
 
 ---
@@ -195,11 +198,11 @@ npm run dev                   # http://localhost:5173
 
 ## Roadmap (noted in README)
 
-- Category / emoji tags (home, museum, shopping, food, park, etc.)
-- Visited toggle
-- Photo upload via Supabase Storage
-- Filter by tag (client-side)
-- PWA (add-to-home-screen, offline cache)
+- Category / emoji tags (home, museum, shopping, food, park, etc.) ✅
+- Visited toggle ✅
+- Photo upload via Supabase Storage ✅
+- Filter by tag (client-side) ✅
+- PWA (add-to-home-screen, offline cache) ✅
 
 ---
 

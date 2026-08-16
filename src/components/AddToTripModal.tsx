@@ -1,15 +1,15 @@
-import { useState } from 'react'
-import { Plus, X, Check, Compass, Sparkles } from 'lucide-react'
-import { toTitleCase } from '../lib/text'
-import { useDismissable } from '../hooks/useDismissable'
-import type { Place, Trip, TripInput, TripPriority } from '../types'
+import { Check, Compass, Plus, Sparkles, X } from 'lucide-react';
+import { useState } from 'react';
+import { useDismissable } from '../hooks/useDismissable';
+import { toTitleCase } from '../lib/text';
+import type { Place, Trip, TripInput, TripPriority } from '../types';
 
 interface AddToTripModalProps {
-  place: Place
-  trips: Trip[]
-  onToggleTripPlace: (tripId: string, placeId: string) => Promise<void>
-  onCreateTrip: (input: TripInput) => Promise<Trip>
-  onClose: () => void
+  place: Place;
+  trips: Trip[];
+  onToggleTripPlace: (tripId: string, placeId: string) => Promise<void>;
+  onCreateTrip: (input: TripInput) => Promise<Trip>;
+  onClose: () => void;
 }
 
 export default function AddToTripModal({
@@ -19,29 +19,29 @@ export default function AddToTripModal({
   onCreateTrip,
   onClose,
 }: AddToTripModalProps) {
-  const [showCreate, setShowCreate] = useState(trips.length === 0)
-  const [newTripName, setNewTripName] = useState('')
-  const [newTripPriority, setNewTripPriority] = useState<TripPriority>(1)
-  const [newTripNotes, setNewTripNotes] = useState('')
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const sheetRef = useDismissable<HTMLDivElement>(onClose)
+  const [showCreate, setShowCreate] = useState(trips.length === 0);
+  const [newTripName, setNewTripName] = useState('');
+  const [newTripPriority, setNewTripPriority] = useState<TripPriority>(1);
+  const [newTripNotes, setNewTripNotes] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const sheetRef = useDismissable<HTMLDivElement>(onClose);
 
   async function handleCreateNewTrip(e: React.FormEvent) {
-    e.preventDefault()
-    if (!newTripName.trim()) return
-    setIsSubmitting(true)
+    e.preventDefault();
+    if (!newTripName.trim()) return;
+    setIsSubmitting(true);
     try {
       await onCreateTrip({
         name: newTripName.trim(),
         priority: newTripPriority,
         notes: newTripNotes.trim() || null,
         place_ids: [place.id],
-      })
-      onClose()
+      });
+      onClose();
     } catch (err) {
-      console.error('Failed to create trip:', err)
+      console.error('Failed to create trip:', err);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
   }
 
@@ -56,7 +56,7 @@ export default function AddToTripModal({
               <p className="modal-sub">{toTitleCase(place.name)}</p>
             </div>
           </div>
-          <button className="icon-btn" onClick={onClose} aria-label="Close modal">
+          <button type="button" className="icon-btn" onClick={onClose} aria-label="Close modal">
             <X size={18} />
           </button>
         </div>
@@ -64,12 +64,13 @@ export default function AddToTripModal({
         <div className="modal-body">
           {trips.length > 0 && (
             <div className="trips-checklist-section">
-              <label className="trips-checklist-label">Select Trips</label>
+              <span className="trips-checklist-label">Select Trips</span>
               <div className="trips-checklist">
                 {trips.map(trip => {
-                  const isChecked = trip.place_ids.includes(place.id)
-                  const priorityLabel = trip.priority === 1 ? 'High' : trip.priority === 2 ? 'Medium' : 'Low'
-                  const priorityClass = `priority-badge--p${trip.priority}`
+                  const isChecked = trip.place_ids.includes(place.id);
+                  const priorityLabel =
+                    trip.priority === 1 ? 'High' : trip.priority === 2 ? 'Medium' : 'Low';
+                  const priorityClass = `priority-badge--p${trip.priority}`;
                   return (
                     <button
                       key={trip.id}
@@ -85,12 +86,13 @@ export default function AddToTripModal({
                         <span className="trips-checklist-meta">
                           <span className={`priority-badge ${priorityClass}`}>{priorityLabel}</span>
                           <span className="trips-count-label">
-                            {trip.place_ids.length} {trip.place_ids.length === 1 ? 'place' : 'places'}
+                            {trip.place_ids.length}{' '}
+                            {trip.place_ids.length === 1 ? 'place' : 'places'}
                           </span>
                         </span>
                       </div>
                     </button>
-                  )
+                  );
                 })}
               </div>
             </div>
@@ -130,13 +132,12 @@ export default function AddToTripModal({
                   placeholder="e.g. Next Sunday Outing, Rainy Day Museums"
                   value={newTripName}
                   onChange={e => setNewTripName(e.target.value)}
-                  autoFocus
                   required
                 />
               </div>
 
               <div className="field">
-                <label>Trip Priority</label>
+                <span>Trip Priority</span>
                 <div className="priority-selector">
                   <button
                     type="button"
@@ -192,5 +193,5 @@ export default function AddToTripModal({
         </div>
       </div>
     </div>
-  )
+  );
 }

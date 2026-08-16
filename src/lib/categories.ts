@@ -1,14 +1,28 @@
-import { createElement } from 'react'
-import { renderToStaticMarkup } from 'react-dom/server'
-import { CircleDot, DraftingCompass, Drama, FerrisWheel, Home, Landmark, Leaf, Mic2, Mountain, ShoppingBag, Tent, Utensils, Tractor } from 'lucide-react'
-import type { LucideIcon } from 'lucide-react'
-import type { PlaceCategory } from '../types'
+import type { LucideIcon } from 'lucide-react';
+import {
+  CircleDot,
+  DraftingCompass,
+  Drama,
+  FerrisWheel,
+  Home,
+  Landmark,
+  Leaf,
+  Mic2,
+  Mountain,
+  ShoppingBag,
+  Tent,
+  Tractor,
+  Utensils,
+} from 'lucide-react';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import type { PlaceCategory } from '../types';
 
 export interface CategoryConfig {
-  key: PlaceCategory
-  label: string
-  color: string
-  icon: LucideIcon
+  key: PlaceCategory;
+  label: string;
+  color: string;
+  icon: LucideIcon;
 }
 
 // One consistent marker silhouette, varied by color + glyph so the map stays readable.
@@ -26,12 +40,15 @@ export const CATEGORIES: CategoryConfig[] = [
   { key: 'theater', label: 'Theater', color: '#A855F7', icon: Drama },
   { key: 'auditorium', label: 'Auditorium', color: '#6366F1', icon: Mic2 },
   { key: 'other', label: 'Other', color: '#FF6B6B', icon: CircleDot },
-]
+];
 
-const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map(c => [c.key, c])) as Record<PlaceCategory, CategoryConfig>
+const CATEGORY_MAP = Object.fromEntries(CATEGORIES.map(c => [c.key, c])) as Record<
+  PlaceCategory,
+  CategoryConfig
+>;
 
 export function getCategory(category: PlaceCategory | null | undefined): CategoryConfig {
-  return (category && CATEGORY_MAP[category]) || CATEGORY_MAP.other
+  return (category && CATEGORY_MAP[category]) || CATEGORY_MAP.other;
 }
 
 // SVG string for Leaflet divIcon html — same glyph as the React icon, rendered server-style.
@@ -41,6 +58,6 @@ export function categoryIconHtml(
   color = '#ffffff',
   strokeWidth = 2.5,
 ): string {
-  const { icon: Icon } = getCategory(category)
-  return renderToStaticMarkup(createElement(Icon, { size, color, strokeWidth }))
+  const { icon: Icon } = getCategory(category);
+  return renderToStaticMarkup(createElement(Icon, { size, color, strokeWidth }));
 }

@@ -1,27 +1,40 @@
-import { useState } from 'react'
-import { Compass, ExternalLink, MapPin, MoreVertical, Navigation, Pencil, Plus, Trash2 } from 'lucide-react'
-import { googleMapsUrl, wazeUrl } from '../lib/navigation'
-import { getLinks } from '../lib/links'
-import { useDismissable } from '../hooks/useDismissable'
-import BrandIcon from './BrandIcon'
-import ConfirmRow from './ConfirmRow'
-import type { Place } from '../types'
+import {
+  Compass,
+  ExternalLink,
+  MapPin,
+  MoreVertical,
+  Navigation,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react';
+import { useState } from 'react';
+import { useDismissable } from '../hooks/useDismissable';
+import { getLinks } from '../lib/links';
+import { googleMapsUrl, wazeUrl } from '../lib/navigation';
+import type { Place } from '../types';
+import BrandIcon from './BrandIcon';
+import ConfirmRow from './ConfirmRow';
 
 export interface PlaceActionsProps {
-  place: Place
-  confirmingId: string | null
-  setConfirmingId: (id: string | null) => void
-  onDelete: (id: string) => void
-  onEdit: (place: Place) => void
-  onExplore: (place: Place) => void
-  onAddToTrip?: (place: Place) => void
-  notes?: string | null
-  isMobile?: boolean
-  variant?: 'inline' | 'expanded' | 'menu'
+  place: Place;
+  confirmingId: string | null;
+  setConfirmingId: (id: string | null) => void;
+  onDelete: (id: string) => void;
+  onEdit: (place: Place) => void;
+  onExplore: (place: Place) => void;
+  onAddToTrip?: (place: Place) => void;
+  notes?: string | null;
+  isMobile?: boolean;
+  variant?: 'inline' | 'expanded' | 'menu';
 }
 
-export function isPlaceDeleteConfirming(id: string, confirmingId: string | null, place: Place): boolean {
-  return confirmingId === id && place.id === id
+export function isPlaceDeleteConfirming(
+  id: string,
+  confirmingId: string | null,
+  place: Place,
+): boolean {
+  return confirmingId === id && place.id === id;
 }
 
 export default function PlaceActions({
@@ -36,15 +49,17 @@ export default function PlaceActions({
   isMobile = false,
   variant = 'inline',
 }: PlaceActionsProps) {
-  const [moreOpen, setMoreOpen] = useState(false)
+  const [moreOpen, setMoreOpen] = useState(false);
   const moreRef = useDismissable<HTMLDivElement>(() => setMoreOpen(false), {
     outsideClick: moreOpen,
-    escape: moreOpen,
-  })
-  const links = getLinks(place)
-  const confirming = isPlaceDeleteConfirming(place.id, confirmingId, place)
-  const primaryLink = links.find(link => link.is_primary) || links[0] || null
-  const secondaryLinks = primaryLink ? links.filter(link => link.id !== primaryLink.id || link.url !== primaryLink.url) : links
+    closeOnEscape: moreOpen,
+  });
+  const links = getLinks(place);
+  const confirming = isPlaceDeleteConfirming(place.id, confirmingId, place);
+  const primaryLink = links.find(link => link.is_primary) || links[0] || null;
+  const secondaryLinks = primaryLink
+    ? links.filter(link => link.id !== primaryLink.id || link.url !== primaryLink.url)
+    : links;
 
   const moreContent = (
     <div className="place-actions-more">
@@ -73,29 +88,39 @@ export default function PlaceActions({
       {confirming ? (
         <ConfirmRow
           variant="inline"
-          onConfirm={() => { onDelete(place.id); setConfirmingId(null) }}
+          onConfirm={() => {
+            onDelete(place.id);
+            setConfirmingId(null);
+          }}
           onCancel={() => setConfirmingId(null)}
         />
       ) : (
-        <button className="place-actions-row-link danger" onClick={() => setConfirmingId(place.id)}>
+        <button
+          type="button"
+          className="place-actions-row-link danger"
+          onClick={() => setConfirmingId(place.id)}
+        >
           <Trash2 size={14} /> <span className="place-actions-link-label">Remove</span>
         </button>
       )}
     </div>
-  )
+  );
 
   const sourceLink = primaryLink ? (
     <a href={primaryLink.url} rel="noopener noreferrer" className="place-action-btn source-link">
       <ExternalLink size={12} /> Source
     </a>
   ) : (
-    <button className="place-action-btn source-link source-unavailable" disabled><ExternalLink size={12} /> Source</button>
-  )
+    <button type="button" className="place-action-btn source-link source-unavailable" disabled>
+      <ExternalLink size={12} /> Source
+    </button>
+  );
 
   if (variant === 'menu') {
     return (
       <div ref={moreRef} className="place-actions place-actions--menu">
         <button
+          type="button"
           className="action-btn place-actions-trigger"
           onClick={() => setMoreOpen(o => !o)}
           aria-expanded={moreOpen}
@@ -108,21 +133,38 @@ export default function PlaceActions({
           <div className="place-actions-menu">
             <div className="place-actions-menu-primary">
               {sourceLink}
-              <button className="place-action-btn explore" onClick={() => onExplore(place)}>
+              <button
+                type="button"
+                className="place-action-btn explore"
+                onClick={() => onExplore(place)}
+              >
                 <Compass size={12} /> Nearby
               </button>
               {onAddToTrip && (
-                <button className="place-action-btn trip" onClick={() => onAddToTrip(place)} title="Add to trip">
+                <button
+                  type="button"
+                  className="place-action-btn trip"
+                  onClick={() => onAddToTrip(place)}
+                  title="Add to trip"
+                >
                   <Plus size={12} /> Trip
                 </button>
               )}
-              <button className="place-action-btn" onClick={() => onEdit(place)}>
+              <button type="button" className="place-action-btn" onClick={() => onEdit(place)}>
                 <Pencil size={12} /> Edit
               </button>
-              <a href={googleMapsUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-action-btn navigate-link">
+              <a
+                href={googleMapsUrl(place.lat, place.lng)}
+                rel="noopener noreferrer"
+                className="place-action-btn navigate-link"
+              >
                 <MapPin size={12} /> Google Maps
               </a>
-              <a href={wazeUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-action-btn navigate-link">
+              <a
+                href={wazeUrl(place.lat, place.lng)}
+                rel="noopener noreferrer"
+                className="place-action-btn navigate-link"
+              >
                 <Navigation size={12} /> Waze
               </a>
             </div>
@@ -130,11 +172,14 @@ export default function PlaceActions({
           </div>
         )}
       </div>
-    )
+    );
   }
 
   return (
-    <div ref={moreRef} className={`place-actions place-actions--${variant} ${isMobile ? 'place-actions-mobile' : 'place-actions-desktop'}`}>
+    <div
+      ref={moreRef}
+      className={`place-actions place-actions--${variant} ${isMobile ? 'place-actions-mobile' : 'place-actions-desktop'}`}
+    >
       <div className="place-actions-primary">
         {sourceLink}
         {isMobile && (
@@ -146,24 +191,44 @@ export default function PlaceActions({
             <Navigation size={12} /> Navigate
           </a>
         )}
-        <button className="place-action-btn explore" onClick={() => onExplore(place)}>
+        <button type="button" className="place-action-btn explore" onClick={() => onExplore(place)}>
           <Compass size={12} /> Nearby
         </button>
         {onAddToTrip && (
-          <button className="place-action-btn trip" onClick={() => onAddToTrip(place)} title="Add to trip">
+          <button
+            type="button"
+            className="place-action-btn trip"
+            onClick={() => onAddToTrip(place)}
+            title="Add to trip"
+          >
             <Plus size={12} /> Trip
           </button>
         )}
         {!isMobile && (
-          <button className="place-action-btn" onClick={() => onEdit(place)}>
+          <button type="button" className="place-action-btn" onClick={() => onEdit(place)}>
             <Pencil size={12} /> Edit
           </button>
         )}
-        {!isMobile && <>
-          <a href={googleMapsUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-action-btn navigate-link"><MapPin size={12} /> Google Maps</a>
-          <a href={wazeUrl(place.lat, place.lng)} rel="noopener noreferrer" className="place-action-btn navigate-link"><Navigation size={12} /> Waze</a>
-        </>}
+        {!isMobile && (
+          <>
+            <a
+              href={googleMapsUrl(place.lat, place.lng)}
+              rel="noopener noreferrer"
+              className="place-action-btn navigate-link"
+            >
+              <MapPin size={12} /> Google Maps
+            </a>
+            <a
+              href={wazeUrl(place.lat, place.lng)}
+              rel="noopener noreferrer"
+              className="place-action-btn navigate-link"
+            >
+              <Navigation size={12} /> Waze
+            </a>
+          </>
+        )}
         <button
+          type="button"
           className="place-action-btn"
           onClick={() => setMoreOpen(o => !o)}
           aria-expanded={moreOpen}
@@ -175,5 +240,5 @@ export default function PlaceActions({
 
       {moreOpen && moreContent}
     </div>
-  )
+  );
 }
