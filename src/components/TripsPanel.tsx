@@ -1,4 +1,15 @@
-import { ArrowUpDown, Compass, Plus, Search, Sparkles, X } from 'lucide-react';
+import {
+  ArrowUpDown,
+  Calendar,
+  Compass,
+  Flag,
+  MapPin,
+  Plus,
+  Search,
+  Sparkles,
+  StickyNote,
+  X,
+} from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useDismissable } from '../hooks/useDismissable';
 import { toTitleCase } from '../lib/text';
@@ -19,6 +30,7 @@ interface TripsPanelProps {
   onLocatePlace: (place: Place) => void;
   onClose: () => void;
   onFocusTripOnMap: (trip: Trip) => void;
+  radius: number;
   embedded?: boolean;
   searchQuery?: string;
   onSearchChange?: (query: string) => void;
@@ -39,6 +51,7 @@ export default function TripsPanel({
   onLocatePlace,
   onClose,
   onFocusTripOnMap,
+  radius,
   embedded = false,
   searchQuery: controlledQuery,
   onSearchChange,
@@ -150,7 +163,7 @@ export default function TripsPanel({
         onAddPlace={onAddPlaceToTrip}
         onRemovePlace={onRemovePlaceFromTrip}
         onLocatePlace={onLocatePlace}
-        onFocusTripOnMap={onFocusTripOnMap}
+        radius={radius}
       />
     );
   }
@@ -250,82 +263,83 @@ export default function TripsPanel({
                 <X size={14} />
               </button>
             </div>
-            <form onSubmit={handleCreateTrip}>
-              <div className="field">
-                <label htmlFor="trip-create-name">Trip Name</label>
-                <input
-                  id="trip-create-name"
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Next Sunday in Como, Fall Colors"
-                  value={newName}
-                  onChange={e => setNewName(e.target.value)}
-                  required
-                />
+            <form onSubmit={handleCreateTrip} className="field-group">
+              <label className="field-label" htmlFor="trip-create-name">
+                <MapPin size={14} /> Trip Name
+              </label>
+              <input
+                id="trip-create-name"
+                type="text"
+                className="input"
+                placeholder="e.g. Next Sunday in Como, Fall Colors"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                required
+              />
+
+              <span className="field-label">
+                <Flag size={14} /> Priority
+              </span>
+              <div className="priority-selector">
+                <button
+                  type="button"
+                  className={`priority-btn priority-btn--p1${newPriority === 1 ? ' active' : ''}`}
+                  onClick={() => setNewPriority(1)}
+                >
+                  🔴 High
+                </button>
+                <button
+                  type="button"
+                  className={`priority-btn priority-btn--p2${newPriority === 2 ? ' active' : ''}`}
+                  onClick={() => setNewPriority(2)}
+                >
+                  🟡 Medium
+                </button>
+                <button
+                  type="button"
+                  className={`priority-btn priority-btn--p3${newPriority === 3 ? ' active' : ''}`}
+                  onClick={() => setNewPriority(3)}
+                >
+                  🔵 Low
+                </button>
               </div>
 
-              <div className="field">
-                <span>Priority</span>
-                <div className="priority-selector">
-                  <button
-                    type="button"
-                    className={`priority-btn priority-btn--p1${newPriority === 1 ? ' active' : ''}`}
-                    onClick={() => setNewPriority(1)}
-                  >
-                    🔴 High
-                  </button>
-                  <button
-                    type="button"
-                    className={`priority-btn priority-btn--p2${newPriority === 2 ? ' active' : ''}`}
-                    onClick={() => setNewPriority(2)}
-                  >
-                    🟡 Medium
-                  </button>
-                  <button
-                    type="button"
-                    className={`priority-btn priority-btn--p3${newPriority === 3 ? ' active' : ''}`}
-                    onClick={() => setNewPriority(3)}
-                  >
-                    🔵 Low
-                  </button>
-                </div>
-              </div>
+              <label className="field-label" htmlFor="trip-create-target-date">
+                <Calendar size={14} /> Target Date / Window{' '}
+                <span className="optional">(optional)</span>
+              </label>
+              <input
+                id="trip-create-target-date"
+                type="text"
+                className="input"
+                placeholder="e.g. This Weekend, Oct 12, Sunny Day"
+                value={newTargetDate}
+                onChange={e => setNewTargetDate(e.target.value)}
+              />
 
-              <div className="field">
-                <label htmlFor="trip-create-target-date">Target Date / Window (optional)</label>
-                <input
-                  id="trip-create-target-date"
-                  type="text"
-                  className="input"
-                  placeholder="e.g. This Weekend, Oct 12, Sunny Day"
-                  value={newTargetDate}
-                  onChange={e => setNewTargetDate(e.target.value)}
-                />
-              </div>
+              <label className="field-label" htmlFor="trip-create-notes">
+                <StickyNote size={14} /> Notes <span className="optional">(optional)</span>
+              </label>
+              <input
+                id="trip-create-notes"
+                type="text"
+                className="input"
+                placeholder="e.g. Check opening hours, pack stroller"
+                value={newNotes}
+                onChange={e => setNewNotes(e.target.value)}
+              />
 
-              <div className="field">
-                <label htmlFor="trip-create-notes">Notes (optional)</label>
-                <input
-                  id="trip-create-notes"
-                  type="text"
-                  className="input"
-                  placeholder="e.g. Check opening hours, pack stroller"
-                  value={newNotes}
-                  onChange={e => setNewNotes(e.target.value)}
-                />
-              </div>
-
-              <div className="trip-create-actions">
+              <div className="trip-edit-actions">
                 <button
                   type="submit"
-                  className="btn btn-primary"
+                  className="btn-primary"
                   disabled={!newName.trim() || isCreating}
                 >
                   {isCreating ? 'Creating...' : 'Create Trip'}
                 </button>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="btn-secondary"
                   onClick={() => setShowCreateModal(false)}
                 >
                   Cancel

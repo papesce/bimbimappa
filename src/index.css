@@ -1486,6 +1486,16 @@ body {
   color: var(--text);
 }
 
+.icon-btn.danger {
+  color: #e05555;
+  border: 1px solid #e05555;
+  background: rgba(224, 85, 85, 0.06);
+}
+.icon-btn.danger:hover {
+  color: #c94545;
+  background: rgba(224, 85, 85, 0.12);
+}
+
 .btn-danger {
   display: inline-flex;
   align-items: center;
@@ -2967,8 +2977,23 @@ body {
     min-width: 44px;
     min-height: 44px;
   }
+  .trip-place-actions .confirm-row {
+    flex-direction: column;
+    width: 100%;
+  }
+  .trip-place-actions .confirm-actions {
+    width: 100%;
+  }
+  .trip-place-actions .confirm-btn {
+    flex: 1;
+    justify-content: center;
+  }
   .trip-suggestion-item {
     min-height: 44px;
+  }
+  .trip-suggestions-list {
+    max-height: 260px;
+    overflow-y: auto;
   }
   .btn-danger.btn-sm,
   .btn-secondary.btn-sm {
@@ -4190,7 +4215,8 @@ body {
   color: var(--accent);
 }
 
-.trip-create-actions {
+.trip-create-actions,
+.trip-edit-actions {
   display: flex;
   gap: 8px;
   margin-top: 10px;

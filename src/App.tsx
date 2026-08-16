@@ -940,6 +940,7 @@ export default function App() {
                 onLocatePlace={handleLocatePlace}
                 onClose={() => setPanel(null)}
                 onFocusTripOnMap={setTripFocus}
+                radius={radius}
                 searchQuery={searchQuery}
                 onSearchChange={setSearchQuery}
                 pendingTripId={libraryTripRequest}
@@ -1021,6 +1022,7 @@ export default function App() {
                 setSheetState('hidden');
               }
             }}
+            radius={radius}
           />
         )}
         {editingPlace && (

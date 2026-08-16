@@ -1,4 +1,15 @@
-import { ArrowLeft, Check, Compass, MapPin, Pencil, Plus, Sparkles, X } from 'lucide-react';
+import {
+  ArrowLeft,
+  Calendar,
+  Check,
+  Flag,
+  MapPin,
+  Pencil,
+  Plus,
+  Sparkles,
+  StickyNote,
+  X,
+} from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { getNearbySuggestions } from '../lib/geo';
 import { toTitleCase } from '../lib/text';
@@ -15,7 +26,7 @@ interface TripDetailViewProps {
   onRemovePlace: (tripId: string, placeId: string) => Promise<void>;
   onAddPlace: (tripId: string, placeId: string) => Promise<void>;
   onLocatePlace: (place: Place) => void;
-  onFocusTripOnMap: (trip: Trip) => void;
+  radius: number;
 }
 
 export default function TripDetailView({
@@ -27,7 +38,7 @@ export default function TripDetailView({
   onRemovePlace,
   onAddPlace,
   onLocatePlace,
-  onFocusTripOnMap,
+  radius,
 }: TripDetailViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(trip.name);
@@ -43,10 +54,10 @@ export default function TripDetailView({
       .filter((p): p is Place => p !== undefined);
   }, [trip.place_ids, allPlaces]);
 
-  // Suggested nearby places within 15 km of any place in this trip that are not yet in the trip
+  // Suggested nearby places within selected radius of any place in this trip that are not yet in the trip
   const nearbySuggestions = useMemo(
-    () => getNearbySuggestions(tripPlaces, allPlaces),
-    [tripPlaces, allPlaces],
+    () => getNearbySuggestions(tripPlaces, allPlaces, { maxKm: radius }),
+    [tripPlaces, allPlaces, radius],
   );
 
   async function handleSaveEdit(e: React.FormEvent) {
@@ -98,77 +109,77 @@ export default function TripDetailView({
 
       <div className="trip-detail-body">
         {isEditing ? (
-          <form onSubmit={handleSaveEdit} className="trip-edit-form">
-            <div className="field">
-              <label htmlFor="edit-trip-name">Trip Name</label>
-              <input
-                id="edit-trip-name"
-                type="text"
-                className="input"
-                value={name}
-                onChange={e => setName(e.target.value)}
-                required
-              />
+          <form onSubmit={handleSaveEdit} className="field-group">
+            <label className="field-label" htmlFor="edit-trip-name">
+              <MapPin size={14} /> Trip Name
+            </label>
+            <input
+              id="edit-trip-name"
+              type="text"
+              className="input"
+              value={name}
+              onChange={e => setName(e.target.value)}
+              required
+            />
+
+            <span className="field-label">
+              <Flag size={14} /> Priority
+            </span>
+            <div className="priority-selector">
+              <button
+                type="button"
+                className={`priority-btn priority-btn--p1${priority === 1 ? ' active' : ''}`}
+                onClick={() => setPriority(1)}
+              >
+                🔴 High
+              </button>
+              <button
+                type="button"
+                className={`priority-btn priority-btn--p2${priority === 2 ? ' active' : ''}`}
+                onClick={() => setPriority(2)}
+              >
+                🟡 Medium
+              </button>
+              <button
+                type="button"
+                className={`priority-btn priority-btn--p3${priority === 3 ? ' active' : ''}`}
+                onClick={() => setPriority(3)}
+              >
+                🔵 Low
+              </button>
             </div>
 
-            <div className="field">
-              <span>Priority</span>
-              <div className="priority-selector">
-                <button
-                  type="button"
-                  className={`priority-btn priority-btn--p1${priority === 1 ? ' active' : ''}`}
-                  onClick={() => setPriority(1)}
-                >
-                  🔴 High
-                </button>
-                <button
-                  type="button"
-                  className={`priority-btn priority-btn--p2${priority === 2 ? ' active' : ''}`}
-                  onClick={() => setPriority(2)}
-                >
-                  🟡 Medium
-                </button>
-                <button
-                  type="button"
-                  className={`priority-btn priority-btn--p3${priority === 3 ? ' active' : ''}`}
-                  onClick={() => setPriority(3)}
-                >
-                  🔵 Low
-                </button>
-              </div>
-            </div>
+            <label className="field-label" htmlFor="edit-trip-target-date">
+              <Calendar size={14} /> Target Date / Timeframe
+            </label>
+            <input
+              id="edit-trip-target-date"
+              type="text"
+              className="input"
+              placeholder="e.g. Next Saturday, Oct 12-14, Fall Break"
+              value={targetDate}
+              onChange={e => setTargetDate(e.target.value)}
+            />
 
-            <div className="field">
-              <label htmlFor="edit-trip-target-date">Target Date / Timeframe</label>
-              <input
-                id="edit-trip-target-date"
-                type="text"
-                className="input"
-                placeholder="e.g. Next Saturday, Oct 12-14, Fall Break"
-                value={targetDate}
-                onChange={e => setTargetDate(e.target.value)}
-              />
-            </div>
-
-            <div className="field">
-              <label htmlFor="edit-trip-notes">Notes</label>
-              <textarea
-                id="edit-trip-notes"
-                className="input textarea"
-                rows={2}
-                value={notes}
-                onChange={e => setNotes(e.target.value)}
-                placeholder="Notes for this trip..."
-              />
-            </div>
+            <label className="field-label" htmlFor="edit-trip-notes">
+              <StickyNote size={14} /> Notes
+            </label>
+            <textarea
+              id="edit-trip-notes"
+              className="input textarea"
+              rows={2}
+              value={notes}
+              onChange={e => setNotes(e.target.value)}
+              placeholder="Notes for this trip..."
+            />
 
             <div className="trip-edit-actions">
-              <button type="submit" className="btn btn-primary" disabled={!name.trim() || isSaving}>
+              <button type="submit" className="btn-primary" disabled={!name.trim() || isSaving}>
                 <Check size={14} /> {isSaving ? 'Saving...' : 'Save changes'}
               </button>
               <button
                 type="button"
-                className="btn btn-secondary"
+                className="btn-secondary"
                 onClick={() => {
                   setName(trip.name);
                   setPriority(trip.priority);
@@ -189,15 +200,6 @@ export default function TripDetailView({
               </p>
             )}
             {trip.notes && <p className="trip-summary-notes">"{trip.notes}"</p>}
-            {tripPlaces.length > 0 && (
-              <button
-                type="button"
-                className="btn btn-primary trip-focus-map-btn"
-                onClick={() => onFocusTripOnMap(trip)}
-              >
-                <Compass size={16} /> View all {tripPlaces.length} places on Map
-              </button>
-            )}
           </div>
         )}
 
@@ -255,24 +257,14 @@ export default function TripDetailView({
                         onCancel={() => setConfirmingRemoveId(null)}
                       />
                     ) : (
-                      <>
-                        <button
-                          type="button"
-                          className="icon-btn icon-btn--sm"
-                          onClick={() => onLocatePlace(place)}
-                          title="Show on map"
-                        >
-                          <MapPin size={14} />
-                        </button>
-                        <button
-                          type="button"
-                          className="icon-btn icon-btn--sm danger"
-                          onClick={() => setConfirmingRemoveId(place.id)}
-                          title="Remove from this trip"
-                        >
-                          <X size={14} />
-                        </button>
-                      </>
+                      <button
+                        type="button"
+                        className="icon-btn icon-btn--sm danger"
+                        onClick={() => setConfirmingRemoveId(place.id)}
+                        title="Remove from this trip"
+                      >
+                        <X size={14} />
+                      </button>
                     )}
                   </div>
                 </li>
@@ -331,7 +323,8 @@ export default function TripDetailView({
           <div className="trip-suggestions-empty">
             <Sparkles size={14} />
             <span>
-              No nearby places within 15 km — save more places to get suggestions for this trip.
+              No nearby places within {radius} km — save more places to get suggestions for this
+              trip.
             </span>
           </div>
         )}
