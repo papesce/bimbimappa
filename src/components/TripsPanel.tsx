@@ -148,7 +148,6 @@ export default function TripsPanel({
         onRemovePlace={onRemovePlaceFromTrip}
         onLocatePlace={onLocatePlace}
         onFocusTripOnMap={onFocusTripOnMap}
-        onClose={onClose}
       />
     );
   }

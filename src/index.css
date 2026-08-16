@@ -134,7 +134,7 @@ body {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid var(--border);
-  border-radius: 50%;
+  border-radius: 50% !important;
   box-shadow: var(--elev-1);
   color: var(--sub);
   transition:
@@ -821,6 +821,53 @@ body {
   user-select: none;
 }
 
+/* ─── Collapsible section ────────────────────────────────────────── */
+.collapsible-section {
+  border-top: 1px solid var(--border);
+  margin-top: 6px;
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 20px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+}
+
+.collapsible-header .field-label {
+  margin: 0;
+}
+
+.collapsible-chevron {
+  color: var(--sub);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.collapsible-section.open .collapsible-chevron {
+  transform: rotate(180deg);
+}
+
+.collapsible-body {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.25s ease;
+}
+
+.collapsible-section.open .collapsible-body {
+  grid-template-rows: 1fr;
+}
+
+.collapsible-content {
+  overflow: hidden;
+}
+
 /* ─── Form elements ─────────────────────────────────────────────── */
 .field-group {
   padding: 16px 20px 0;
@@ -1429,6 +1476,56 @@ body {
 }
 .icon-btn:hover {
   color: var(--text);
+}
+
+.icon-btn--sm {
+  padding: 2px;
+  border-radius: 4px;
+}
+.icon-btn--sm:hover {
+  color: var(--text);
+}
+
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  background: #e05555;
+  color: white;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-family: inherit;
+  justify-content: center;
+}
+.btn-danger:hover {
+  background: #c93c3c;
+}
+
+.btn-text-danger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: none;
+  color: #e05555;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+  padding: 0;
+}
+.btn-text-danger:hover {
+  color: #c93c3c;
+}
+
+.btn-sm {
+  padding: 7px 14px;
+  font-size: 13px;
 }
 
 .panel-add-btn {
@@ -2820,6 +2917,18 @@ body {
   .date-clear {
     flex: 0 0 28px;
     align-self: center;
+  }
+  .trip-place-actions .icon-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  .trip-suggestion-item {
+    min-height: 44px;
+  }
+  .btn-danger.btn-sm,
+  .btn-secondary.btn-sm {
+    min-height: 44px;
+    padding: 10px 16px;
   }
 }
 

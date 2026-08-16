@@ -37,6 +37,7 @@ import type {
   Status,
 } from '../types';
 import CategoryPicker from './CategoryPicker';
+import CollapsibleSection from './CollapsibleSection';
 import LocationPreview from './LocationPreview';
 
 export interface AddPlacePanelProps {
@@ -374,68 +375,75 @@ export default function AddPlacePanel({
               required
             />
 
-            <span className="field-label" style={{ marginTop: '12px' }}>
-              <Tag size={14} /> Category <span className="optional">(optional)</span>
-            </span>
-            <CategoryPicker value={category} onChange={setCategory} />
-
-            <label
-              className="field-label"
-              htmlFor="add-place-amenities"
-              style={{ marginTop: '12px' }}
+            <CollapsibleSection
+              title={
+                <span className="field-label">
+                  <Tag size={14} /> Category <span className="optional">(optional)</span>
+                </span>
+              }
             >
-              <Tag size={14} /> Amenities <span className="optional">(optional)</span>
-            </label>
-            <div className="amenity-input-row">
-              <input
-                id="add-place-amenities"
-                className="input"
-                placeholder="Add amenity and press Enter"
-                value={amenityInput}
-                onChange={e => setAmenityInput(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key !== 'Enter') return;
-                  e.preventDefault();
-                  const next = amenityInput.trim().toLowerCase().replace(/\s+/g, '_');
-                  if (!next || amenities.includes(next)) return;
-                  setAmenities(prev => [...prev, next]);
-                  setAmenityInput('');
-                }}
-              />
-            </div>
-            <div className="amenity-chip-grid">
-              {AMENITY_OPTIONS.map(option => {
-                const active = amenities.includes(option);
-                return (
-                  <button
-                    key={option}
-                    type="button"
-                    className={`amenity-chip${active ? ' active' : ''}`}
-                    onClick={() =>
-                      setAmenities(prev =>
-                        active ? prev.filter(a => a !== option) : [...prev, option],
-                      )
-                    }
-                  >
-                    {formatAmenity(option)}
-                  </button>
-                );
-              })}
-            </div>
-            {amenities.length > 0 && (
-              <div className="selected-amenities">
-                {amenities.map(a => (
-                  <button
-                    key={a}
-                    type="button"
-                    className="selected-amenity"
-                    onClick={() => setAmenities(prev => prev.filter(x => x !== a))}
-                  >
-                    {formatAmenity(a)} <X size={12} />
-                  </button>
-                ))}
+              <CategoryPicker value={category} onChange={setCategory} />
+            </CollapsibleSection>
+
+            <CollapsibleSection
+              title={
+                <label className="field-label" htmlFor="add-place-amenities">
+                  <Tag size={14} /> Amenities <span className="optional">(optional)</span>
+                </label>
+              }
+              defaultOpen={false}
+            >
+              <div className="amenity-input-row">
+                <input
+                  id="add-place-amenities"
+                  className="input"
+                  placeholder="Add amenity and press Enter"
+                  value={amenityInput}
+                  onChange={e => setAmenityInput(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key !== 'Enter') return;
+                    e.preventDefault();
+                    const next = amenityInput.trim().toLowerCase().replace(/\s+/g, '_');
+                    if (!next || amenities.includes(next)) return;
+                    setAmenities(prev => [...prev, next]);
+                    setAmenityInput('');
+                  }}
+                />
               </div>
-            )}
+              <div className="amenity-chip-grid">
+                {AMENITY_OPTIONS.map(option => {
+                  const active = amenities.includes(option);
+                  return (
+                    <button
+                      key={option}
+                      type="button"
+                      className={`amenity-chip${active ? ' active' : ''}`}
+                      onClick={() =>
+                        setAmenities(prev =>
+                          active ? prev.filter(a => a !== option) : [...prev, option],
+                        )
+                      }
+                    >
+                      {formatAmenity(option)}
+                    </button>
+                  );
+                })}
+              </div>
+              {amenities.length > 0 && (
+                <div className="selected-amenities">
+                  {amenities.map(a => (
+                    <button
+                      key={a}
+                      type="button"
+                      className="selected-amenity"
+                      onClick={() => setAmenities(prev => prev.filter(x => x !== a))}
+                    >
+                      {formatAmenity(a)} <X size={12} />
+                    </button>
+                  ))}
+                </div>
+              )}
+            </CollapsibleSection>
 
             <div className="detail-grid" style={{ marginTop: '12px' }}>
               <div>

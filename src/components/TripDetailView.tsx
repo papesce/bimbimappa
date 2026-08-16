@@ -4,6 +4,7 @@ import { getNearbySuggestions } from '../lib/geo';
 import { toTitleCase } from '../lib/text';
 import type { Place, Trip, TripInput, TripPriority } from '../types';
 import CategoryBadge from './CategoryBadge';
+import ConfirmRow from './ConfirmRow';
 
 interface TripDetailViewProps {
   trip: Trip;
@@ -15,7 +16,6 @@ interface TripDetailViewProps {
   onAddPlace: (tripId: string, placeId: string) => Promise<void>;
   onLocatePlace: (place: Place) => void;
   onFocusTripOnMap: (trip: Trip) => void;
-  onClose: () => void;
 }
 
 export default function TripDetailView({
@@ -28,7 +28,6 @@ export default function TripDetailView({
   onAddPlace,
   onLocatePlace,
   onFocusTripOnMap,
-  onClose,
 }: TripDetailViewProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(trip.name);
@@ -36,6 +35,7 @@ export default function TripDetailView({
   const [notes, setNotes] = useState(trip.notes || '');
   const [targetDate, setTargetDate] = useState(trip.target_date || '');
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmingRemoveId, setConfirmingRemoveId] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
 
   const tripPlaces = useMemo(() => {
@@ -93,15 +93,6 @@ export default function TripDetailView({
             title="Edit trip details"
           >
             <Pencil size={16} />
-          </button>
-          <button
-            type="button"
-            className="icon-btn"
-            onClick={onClose}
-            aria-label="Close outings"
-            title="Close outings"
-          >
-            <X size={18} />
           </button>
         </div>
       </div>
@@ -254,22 +245,36 @@ export default function TripDetailView({
                     <p className="trip-place-address">{place.address}</p>
                   </div>
                   <div className="trip-place-actions">
-                    <button
-                      type="button"
-                      className="icon-btn icon-btn--sm"
-                      onClick={() => onLocatePlace(place)}
-                      title="Show on map"
-                    >
-                      <MapPin size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      className="icon-btn icon-btn--sm danger"
-                      onClick={() => onRemovePlace(trip.id, place.id)}
-                      title="Remove from this trip"
-                    >
-                      <X size={14} />
-                    </button>
+                    {confirmingRemoveId === place.id ? (
+                      <ConfirmRow
+                        message="Remove from this trip?"
+                        confirmLabel="Remove"
+                        onConfirm={() => {
+                          onRemovePlace(trip.id, place.id);
+                          setConfirmingRemoveId(null);
+                        }}
+                        onCancel={() => setConfirmingRemoveId(null)}
+                      />
+                    ) : (
+                      <>
+                        <button
+                          type="button"
+                          className="icon-btn icon-btn--sm"
+                          onClick={() => onLocatePlace(place)}
+                          title="Show on map"
+                        >
+                          <MapPin size={14} />
+                        </button>
+                        <button
+                          type="button"
+                          className="icon-btn icon-btn--sm danger"
+                          onClick={() => setConfirmingRemoveId(place.id)}
+                          title="Remove from this trip"
+                        >
+                          <X size={14} />
+                        </button>
+                      </>
+                    )}
                   </div>
                 </li>
               ))}
