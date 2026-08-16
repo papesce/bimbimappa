@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
-import { MapPin, Library, Plus, X, Search, SlidersHorizontal } from 'lucide-react'
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react'
+import { MapPin, Library, Plus, X, Search, SlidersHorizontal, Compass } from 'lucide-react'
 import Map from './components/Map'
 import AddPlacePanel from './components/AddPlacePanel'
 import PlacesList from './components/PlacesList'
@@ -24,7 +24,8 @@ import { useIsMobile } from './hooks/useIsMobile'
 import { useDismissable } from './hooks/useDismissable'
 import { FILTERS, getFilterRange } from './lib/filters'
 import { formatAmenity, formatPriceTier, formatPriority } from './lib/placeAttributes'
-import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm } from './lib/geo'
+import { getPlacesWithinBounds, getPlacesWithinRadius, getDistanceKm, getNearbySuggestions } from './lib/geo'
+import { toTitleCase } from './lib/text'
 import './index.css'
 import type { ActiveFilterChip, FilterKey, GeoPoint, MapBounds, PanelState, Place, PlaceCategory, PlaceInput, SheetState, ViewingPlace, PriceTier, PriorityLevel } from './types'
 
@@ -67,6 +68,7 @@ export default function App() {
   const [browseQuery, setBrowseQuery] = useState('')
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false)
   const [radiusMenuOpen, setRadiusMenuOpen] = useState(false)
+  const [nearbyMenuOpen, setNearbyMenuOpen] = useState(false)
   const undoTimeoutRef = useRef<number | null>(null)
 
   useEffect(() => () => { if (undoTimeoutRef.current) clearTimeout(undoTimeoutRef.current) }, [])
@@ -84,6 +86,15 @@ export default function App() {
     outsideClick: radiusMenuOpen,
     escape: radiusMenuOpen,
   })
+
+  const nearbyMenuRef = useDismissable<HTMLDivElement>(() => setNearbyMenuOpen(false), {
+    outsideClick: nearbyMenuOpen,
+    escape: nearbyMenuOpen,
+  })
+
+  useEffect(() => {
+    setNearbyMenuOpen(false)
+  }, [activeTripId])
 
   // Hover highlight on the "Viewing" chip is ephemeral — reset whenever the viewed place changes
   useEffect(() => {
@@ -246,11 +257,19 @@ export default function App() {
     filteredPlaces = filteredPlaces.filter(p => activeTrip.place_ids.includes(p.id))
   }
 
-  const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null || activeTripId !== null
+  const tripNearbySuggestions = useMemo(() => {
+    if (!activeTrip) return []
+    const tripPlaces = activeTrip.place_ids
+      .map(id => places.find(p => p.id === id))
+      .filter((p): p is Place => p !== undefined)
+    return getNearbySuggestions(tripPlaces, places)
+  }, [activeTrip, places])
+
+  const hasActiveFilters = filter !== 'all' || amenityFilters.length > 0 || priceFilter !== null || priorityFilter !== null || ratingFilter !== null
   const contextLabels = [
     activeTrip ? `Trip: ${activeTrip.name}` : '',
-    cityName || (center ? 'Nearby' : ''),
-    center ? `${radius} km` : '',
+    !activeTrip ? (cityName || (center ? 'Nearby' : '')) : '',
+    !activeTrip && center ? `${radius} km` : '',
     filter !== 'all' ? FILTERS.find(f => f.key === filter)?.label : '',
     ...amenityFilters.slice(0, 2).map(formatAmenity),
     priceFilter ? formatPriceTier(priceFilter) : '',
@@ -396,9 +415,18 @@ export default function App() {
               }
             </span>
             {areaFilter && (
-              <div className="header-radius-menu" ref={radiusMenuRef}>
-                <FilterChip f={{ ...areaFilter, onRecenter: () => setRadiusMenuOpen(open => !open) }} />
-                {radiusMenuOpen && (
+              <div
+                className="header-radius-menu"
+                ref={activeTrip ? nearbyMenuRef : radiusMenuRef}
+              >
+                <FilterChip
+                  f={
+                    activeTrip
+                      ? { ...areaFilter, onRecenter: () => setNearbyMenuOpen(open => !open) }
+                      : { ...areaFilter, onRecenter: () => setRadiusMenuOpen(open => !open) }
+                  }
+                />
+                {!activeTrip && radiusMenuOpen && (
                   <div className="header-radius-popover">
                     <span>Radius</span>
                     <RadiusSelector
@@ -415,6 +443,47 @@ export default function App() {
                       }}
                       onHover={setHoverRadiusKm}
                     />
+                  </div>
+                )}
+                {activeTrip && nearbyMenuOpen && (
+                  <div className="header-nearby-popover">
+                    <div className="header-nearby-popover-head">
+                      <Compass size={13} />
+                      <span>Nearby places</span>
+                    </div>
+                    {tripNearbySuggestions.length > 0 ? (
+                      <ul className="header-nearby-list">
+                        {tripNearbySuggestions.map(({ place, minDistanceKm }) => (
+                          <li key={place.id} className="header-nearby-item">
+                            <div
+                              className="header-nearby-item-info"
+                              onClick={() => handleLocatePlace(place)}
+                              title="Show on map"
+                            >
+                              <strong>{toTitleCase(place.name)}</strong>
+                              <span>
+                                {minDistanceKm < 1
+                                  ? `${Math.round(minDistanceKm * 1000)} m away`
+                                  : `${minDistanceKm.toFixed(1)} km away`}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              className="btn btn-secondary btn-sm"
+                              onClick={() => addPlaceToTrip(activeTrip.id, place.id)}
+                            >
+                              <Plus size={13} /> Add
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <div className="header-nearby-empty">
+                        {activeTrip.place_ids.length === 0
+                          ? 'Add places to this trip first to find nearby suggestions.'
+                          : 'No nearby places found within 15 km of this trip.'}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>

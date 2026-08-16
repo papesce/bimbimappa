@@ -279,6 +279,81 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   background: none;
 }
 
+.header-nearby-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: var(--z-popover);
+  min-width: 280px;
+  max-width: 320px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: white;
+  box-shadow: var(--elev-2);
+}
+
+.header-nearby-popover-head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 4px 8px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  color: var(--sub);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.header-nearby-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header-nearby-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 4px;
+  border-radius: 8px;
+}
+
+.header-nearby-item:hover {
+  background: rgba(61, 90, 138, 0.06);
+}
+
+.header-nearby-item-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  cursor: pointer;
+}
+
+.header-nearby-item-info strong {
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header-nearby-item-info span {
+  font-size: 11px;
+  color: var(--sub);
+}
+
+.header-nearby-empty {
+  padding: 8px 4px;
+  font-size: 12px;
+  color: var(--sub);
+}
+
 .mobile-topbar-summary {
   display: none;
 }
@@ -2298,7 +2373,7 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   .mobile-search-toggle ~ .topbar-right .topbar-chips { grid-column: 1 / -1; padding-left: 48px; justify-content: flex-end; }
   .topbar-context { max-width: 150px; }
   .topbar-chips .filter-chip { max-width: 150px; flex-shrink: 1; min-width: 0; }
-  .header-radius-popover { left: auto; right: 0; max-width: calc(100vw - 24px); overflow-x: auto; }
+  .header-radius-popover, .header-nearby-popover { left: auto; right: 0; max-width: calc(100vw - 24px); overflow-x: auto; }
   .pin-count { display: none; }
   .mobile-topbar-summary { display: inline; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--sub); font-size: 11px; line-height: 16px; }
   .location-controls { top: calc(120px + env(safe-area-inset-top, 0px)); right: 12px; }
@@ -3573,6 +3648,22 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   font-size: 10px;
   color: #15803d;
   font-weight: 600;
+}
+
+.trip-suggestions-empty {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+  color: var(--sub);
+  font-size: 12px;
+}
+
+.trip-suggestions-empty svg {
+  flex-shrink: 0;
 }
 
 .trip-danger-section {

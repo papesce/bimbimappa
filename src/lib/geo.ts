@@ -35,6 +35,42 @@ export function getPlacesWithinBounds(places: Place[], bounds: MapBounds): Place
   )
 }
 
+export interface NearbySuggestion {
+  place: Place
+  minDistanceKm: number
+}
+
+/**
+ * Find saved places not already in the trip that sit within `maxKm` of any
+ * place in the trip, sorted by proximity. Returns up to `limit` results.
+ */
+export function getNearbySuggestions(
+  tripPlaces: Place[],
+  allPlaces: Place[],
+  { maxKm = 15, limit = 6 }: { maxKm?: number; limit?: number } = {}
+): NearbySuggestion[] {
+  if (tripPlaces.length === 0) return []
+  const tripIds = new Set(tripPlaces.map(p => p.id))
+
+  const suggestionsWithDistance: NearbySuggestion[] = []
+
+  for (const candidate of allPlaces) {
+    if (tripIds.has(candidate.id)) continue
+    let minDistance = Infinity
+    for (const tripPlace of tripPlaces) {
+      const dist = getDistanceKm(tripPlace.lat, tripPlace.lng, candidate.lat, candidate.lng)
+      if (dist < minDistance) minDistance = dist
+    }
+    if (minDistance <= maxKm) {
+      suggestionsWithDistance.push({ place: candidate, minDistanceKm: minDistance })
+    }
+  }
+
+  return suggestionsWithDistance
+    .sort((a, b) => a.minDistanceKm - b.minDistanceKm)
+    .slice(0, limit)
+}
+
 /**
  * Walk the radii array (smallest → largest) and return the first bucket
  * that contains at least `minResults` places. If none do, return the

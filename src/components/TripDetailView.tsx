@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react'
 import { ArrowLeft, Compass, MapPin, Plus, Trash2, X, Sparkles, Pencil, Check } from 'lucide-react'
 import { toTitleCase } from '../lib/text'
-import { getDistanceKm } from '../lib/geo'
+import { getNearbySuggestions } from '../lib/geo'
 import CategoryBadge from './CategoryBadge'
 import type { Place, Trip, TripInput, TripPriority } from '../types'
 
@@ -45,29 +45,7 @@ export default function TripDetailView({
   }, [trip.place_ids, allPlaces])
 
   // Suggested nearby places within 15 km of any place in this trip that are not yet in the trip
-  const nearbySuggestions = useMemo(() => {
-    if (tripPlaces.length === 0) return []
-    const unassignedPlaces = allPlaces.filter(p => !trip.place_ids.includes(p.id))
-
-    const suggestionsWithDistance: { place: Place; minDistanceKm: number }[] = []
-
-    for (const unassigned of unassignedPlaces) {
-      let minDistance = Infinity
-      for (const tripPlace of tripPlaces) {
-        const dist = getDistanceKm(tripPlace.lat, tripPlace.lng, unassigned.lat, unassigned.lng)
-        if (dist < minDistance) {
-          minDistance = dist
-        }
-      }
-      if (minDistance <= 15) {
-        suggestionsWithDistance.push({ place: unassigned, minDistanceKm: minDistance })
-      }
-    }
-
-    return suggestionsWithDistance
-      .sort((a, b) => a.minDistanceKm - b.minDistanceKm)
-      .slice(0, 6)
-  }, [tripPlaces, allPlaces, trip.place_ids])
+  const nearbySuggestions = useMemo(() => getNearbySuggestions(tripPlaces, allPlaces), [tripPlaces, allPlaces])
 
   async function handleSaveEdit(e: React.FormEvent) {
     e.preventDefault()
@@ -309,6 +287,13 @@ export default function TripDetailView({
                 </li>
               ))}
             </ul>
+          </div>
+        )}
+
+        {tripPlaces.length > 0 && nearbySuggestions.length === 0 && (
+          <div className="trip-suggestions-empty">
+            <Sparkles size={14} />
+            <span>No nearby places within 15 km — save more places to get suggestions for this trip.</span>
           </div>
         )}
 
