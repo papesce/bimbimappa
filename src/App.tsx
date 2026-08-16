@@ -264,11 +264,16 @@ export default function App() {
     setSuppressFit(n => n + 1)
   }, [clearFocusEntity, clearCenter])
 
-  const handleRadiusChange = useCallback((value: number) => {
-    setRadius(value)
-    setViewportBounds(null)
-    setViewingPlace(null)
-  }, [setRadius])
+  const focusBarRadius = center ? radius : (boundsRadius ?? radius)
+  const handleFocusBarRadiusChange = useCallback((value: number) => {
+    if (center) {
+      setRadius(value)
+      setViewportBounds(null)
+      setViewingPlace(null)
+    } else {
+      setBoundsRadius(value)
+    }
+  }, [center, setRadius])
 
   const handleCitySelect = useCallback((lat: number, lng: number, name: string, state: string, cc = '') => {
     clearFocusEntity()
@@ -625,9 +630,11 @@ export default function App() {
             </div>
             <FocusBar
               focus={focus}
+              areaChip={focus ? null : areaFilter}
+              radiusValue={focusBarRadius}
               onClearFocus={handleClearFocus}
               onRecenter={handleRecenter}
-              onRadiusChange={handleRadiusChange}
+              onRadiusChange={handleFocusBarRadiusChange}
               onHoverRadius={setHoverRadiusKm}
               filter={filter}
               onFilterChange={setFilter}
@@ -736,9 +743,11 @@ export default function App() {
             </div>
             <FocusBar
               focus={focus}
+              areaChip={focus ? null : areaFilter}
+              radiusValue={focusBarRadius}
               onClearFocus={handleClearFocus}
               onRecenter={handleRecenter}
-              onRadiusChange={handleRadiusChange}
+              onRadiusChange={handleFocusBarRadiusChange}
               onHoverRadius={setHoverRadiusKm}
               filter={filter}
               onFilterChange={setFilter}

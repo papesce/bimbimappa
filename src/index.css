@@ -592,6 +592,13 @@ body { overflow: hidden; background: var(--ink); color: var(--text); }
   max-width: 220px;
 }
 
+.focus-bar-radius {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 6px;
+}
+
 .focus-bar-radius-label {
   font-size: 9px;
   letter-spacing: 0.3px;

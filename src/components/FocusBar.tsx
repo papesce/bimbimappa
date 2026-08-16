@@ -5,6 +5,8 @@ import type { ActiveFilterChip, FilterKey, FocusEntity, PriceTier, PriorityLevel
 
 export interface FocusBarProps {
   focus: FocusEntity | null
+  areaChip: ActiveFilterChip | null
+  radiusValue: number
   onClearFocus: () => void
   onRecenter: () => void
   onRadiusChange: (km: number) => void
@@ -23,6 +25,8 @@ export interface FocusBarProps {
 
 export default function FocusBar({
   focus,
+  areaChip,
+  radiusValue,
   onClearFocus,
   onRecenter,
   onRadiusChange,
@@ -44,16 +48,18 @@ export default function FocusBar({
     onClear: onClearFocus,
     onRecenter,
     onHover: (hover) => onHoverRadius?.(hover ? focus.radius : null),
-  } : null
+  } : areaChip
 
   return (
     <div className="focus-bar">
       {chip && (
         <div className="focus-bar-row">
           <FilterChip f={chip} />
-          <span className="focus-bar-radius-label">Radius</span>
-          <RadiusSelector value={focus!.radius} onChange={onRadiusChange} onHover={onHoverRadius} />
-          <span className="focus-bar-radius-label">Km</span>
+          <span className="focus-bar-radius">
+            <span className="focus-bar-radius-label">Radius</span>
+            <RadiusSelector value={radiusValue} onChange={onRadiusChange} onHover={onHoverRadius} />
+            <span className="focus-bar-radius-label">Km</span>
+          </span>
         </div>
       )}
       <PanelFilters
