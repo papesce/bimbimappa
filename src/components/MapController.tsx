@@ -28,6 +28,35 @@ export default function MapController({
 }: MapControllerProps) {
   const map = useMap();
 
+  // Leaflet calculates which 256px tile rows to request from the size it sees at
+  // initialization. On Safari (and while dynamic viewport units settle), the map
+  // container can grow afterwards without Leaflet receiving a reliable resize
+  // event, leaving the newly exposed area gray. Keep its internal size in sync
+  // with the rendered container.
+  useEffect(() => {
+    const container = map.getContainer();
+    let frameId: number | null = null;
+
+    const invalidateSize = () => {
+      if (frameId !== null) cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        frameId = null;
+        map.invalidateSize({ animate: false, pan: false });
+      });
+    };
+
+    const observer = new ResizeObserver(invalidateSize);
+    observer.observe(container);
+    window.visualViewport?.addEventListener('resize', invalidateSize);
+    invalidateSize();
+
+    return () => {
+      observer.disconnect();
+      window.visualViewport?.removeEventListener('resize', invalidateSize);
+      if (frameId !== null) cancelAnimationFrame(frameId);
+    };
+  }, [map]);
+
   // Fit the camera to the full radius circle + any matched markers
   useEffect(() => {
     if (previewArea) return;
